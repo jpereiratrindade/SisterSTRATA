@@ -17,6 +17,7 @@ namespace World3D::Rendering {
 
 
 struct UniformBufferObject {
+    alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
 };
@@ -29,6 +30,7 @@ public:
     void beginFrame(const Camera& camera); 
     void render(const Scene& scene); // New
     void endFrame();
+    void recreateSwapchain(); // Handling Resize
     void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
 
     [[nodiscard]] vk::RenderPass getRenderPass() const { return renderPass_; }

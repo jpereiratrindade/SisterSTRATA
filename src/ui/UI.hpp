@@ -2,6 +2,8 @@
 
 #include <SDL2/SDL.h>
 #include <vulkan/vulkan.hpp>
+#include <functional>
+#include "application/dtos/UIData.hpp"
 
 namespace UI {
 
@@ -21,12 +23,24 @@ class UserInterface {
 public:
     void init(SDL_Window* window, const VulkanInitInfo& info);
     void shutdown();
+
+    // Callbacks
+    std::function<void()> onLoadDemo;
+    std::function<void()> onExit;
     
     void beginFrame();
-    void render(vk::CommandBuffer cmd); // New render takes command buffer
+    void draw(const Application::DTO::UIData& data);
+    void render(vk::CommandBuffer cmd); // Final backend flush
     void endFrame(); 
 
     void processEvent(const SDL_Event* event);
+
+    bool wantsToCaptureMouse() const;
+    bool wantsToCaptureKeyboard() const;
+
+private:
+    SDL_Window* window_ = nullptr;
+    float dpiScale_ = 1.0f;
 };
 
 } // namespace UI

@@ -49,6 +49,7 @@ target_include_directories(world3d PUBLIC
 
 target_link_libraries(world3d PUBLIC 
     core 
+    infrastructure
     Vulkan::Vulkan
     ${SDL2_LIBRARIES}
 )

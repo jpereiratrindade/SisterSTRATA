@@ -21,6 +21,8 @@ std::vector<Rendering::Vertex> ScientificAdapter::convert(
         // Normalize Z somewhat for coloring (assuming range -10 to 10 for demo)
         float normalizedZ = (v.pos.z + 10.0f) / 20.0f;
         v.color = {normalizedZ, 0.2f, 1.0f - normalizedZ}; // Blue to Red gradient
+        v.normal = {0.0f, 0.0f, 1.0f};
+        v.uv = {0.0f, 0.0f};
 
         vertices.push_back(v);
     }

@@ -20,6 +20,7 @@ public:
     [[nodiscard]] vk::SurfaceKHR getSurface() const { return surface_; }
     [[nodiscard]] vk::Queue getGraphicsQueue() const { return graphicsQueue_; }
     [[nodiscard]] uint32_t getGraphicsQueueFamilyIndex() const { return graphicsQueueFamilyIndex_; }
+    [[nodiscard]] SDL_Window* getWindow() const { return window_; }
 
 private:
     void createInstance(SDL_Window* window, const std::string& appName);
@@ -40,6 +41,7 @@ private:
     
     vk::Queue graphicsQueue_;
     uint32_t graphicsQueueFamilyIndex_ = -1;
+    SDL_Window* window_ = nullptr;
 
     const std::vector<const char*> validationLayers = {
         "VK_LAYER_KHRONOS_validation"

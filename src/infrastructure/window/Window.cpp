@@ -23,7 +23,7 @@ Window::Window(const std::string& title, int width, int height) {
         title.c_str(),
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         width, height,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
     );
 
     if (!window_) {

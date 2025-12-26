@@ -17,7 +17,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     return VK_FALSE;
 }
 
-VulkanContext::VulkanContext(SDL_Window* window, const std::string& appName) {
+VulkanContext::VulkanContext(SDL_Window* window, const std::string& appName) : window_(window) {
     createInstance(window, appName);
     setupDebugMessenger();
     createSurface(window); 

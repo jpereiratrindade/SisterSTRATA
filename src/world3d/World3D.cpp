@@ -14,7 +14,7 @@ void init(SDL_Window* window) {
         g_Engine->init(window);
         
         // Load demo data by default for now
-        g_Engine->uploadDemoData();
+        // g_Engine->uploadDemoData();
         
     } catch (const std::exception& e) {
         std::cerr << "[World3D] Failed to initialize: " << e.what() << std::endl;
@@ -29,8 +29,9 @@ void shutdown() {
 
 void loadDemoCloud() {
     // Now handled in init or via Engine API
-    // g_Engine->uploadDemoData(); 
-    // Keeping this empty or deprecated as Engine handles it in init for now
+    if (g_Engine) {
+        g_Engine->uploadDemoDataAsync();
+    }
 }
 
 vk::Instance getInstance() { return g_Engine ? g_Engine->getContext()->getInstance() : nullptr; }
@@ -66,9 +67,9 @@ void processEvent(const SDL_Event& event) {
     }
 }
 
-void endFrame() { 
+void endFrame(std::function<void(vk::CommandBuffer)> overlayCallback) { 
     if (g_Engine) {
-        g_Engine->render();
+        g_Engine->render(overlayCallback);
     }
 }
 

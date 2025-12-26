@@ -3,6 +3,7 @@ find_package(SDL2 REQUIRED)
 add_library(infrastructure
     window/Window.cpp
     threading/ThreadPool.cpp
+    threading/CommandQueue.hpp
     filesystem/StdFileSystem.hpp
 )
 

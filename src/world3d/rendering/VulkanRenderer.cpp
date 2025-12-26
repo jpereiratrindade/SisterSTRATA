@@ -153,7 +153,7 @@ void VulkanRenderer::beginFrame(const Camera& camera) {
     vk::CommandBufferBeginInfo beginInfo;
     cmd.begin(beginInfo);
 
-    vk::ClearValue clearColor(std::array<float, 4>{0.53f, 0.81f, 0.92f, 1.0f});
+    vk::ClearValue clearColor(std::array<float, 4>{0.05f, 0.05f, 0.08f, 1.0f});
     vk::RenderPassBeginInfo renderPassInfo(
         renderPass_,
         framebuffers_[imageIndex_],
@@ -317,10 +317,40 @@ void VulkanRenderer::createDescriptorSets() {
 
 void VulkanRenderer::updateUniformBuffer(uint32_t currentImage, const Camera& camera) {
     UniformBufferObject ubo{};
+    ubo.model = glm::mat4(1.0f);
     ubo.view = camera.getViewMatrix();
     ubo.proj = camera.getProjectionMatrix();
 
     memcpy(uniformBuffersMapped_[currentImage], &ubo, sizeof(ubo));
+}
+
+void VulkanRenderer::recreateSwapchain() {
+    auto device = context_->getDevice();
+    device.waitIdle();
+
+    int w = 0, h = 0;
+    SDL_Window* window = context_->getWindow();
+    // Use Drawable Size for pixel-perfect match (Retina/HiDPI support in future)
+    // But currently using window size since we stripped HighDPI flag.
+    SDL_Vulkan_GetDrawableSize(window, &w, &h);
+
+    // Handle minimization
+    while (w == 0 || h == 0) {
+        SDL_Vulkan_GetDrawableSize(window, &w, &h);
+        SDL_WaitEvent(nullptr);
+    }
+
+    swapchain_->recreate(w, h);
+
+    // Recreate Framebuffers dependent on Swapchain size
+    for (auto framebuffer : framebuffers_) {
+        device.destroyFramebuffer(framebuffer);
+    }
+    createFramebuffers();
+    
+    // Note: RenderPass and Pipelines usually don't need recreation on resize 
+    // IF the Swapchain Image Format doesn't change.
+    // Dynamic State (Viewport/Scissor) handles the size change in beginFrame command recording.
 }
 
 } // namespace World3D::Rendering

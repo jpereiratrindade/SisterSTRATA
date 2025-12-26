@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <iostream>
 
+// Forced rebuild for Vertex struct update
 namespace World3D::Rendering {
 
 Pipeline::Pipeline(VulkanContext& context, vk::RenderPass renderPass, vk::PrimitiveTopology topology) 

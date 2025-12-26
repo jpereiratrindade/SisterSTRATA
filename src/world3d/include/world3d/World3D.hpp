@@ -1,8 +1,10 @@
 #pragma once
 
+#include <functional> // Added
 #include <vector>
 #include <vulkan/vulkan.hpp>
 #include <SDL2/SDL_events.h>
+
 
 struct SDL_Window;
 
@@ -29,7 +31,7 @@ void loadDemoCloud(); // New test function
 void processEvent(const SDL_Event& event); // New input handler
 
 void beginFrame();
-void endFrame();
+void endFrame(std::function<void(vk::CommandBuffer)> overlayCallback = nullptr);
 vk::CommandBuffer getCurrentCommandBuffer();
 
 } // namespace World3D
