@@ -1,0 +1,16 @@
+# Build directories
+build/
+bin/
+lib/
+*.a
+*.o
+*.spv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*~
+
+# User specific
+.gemini/
