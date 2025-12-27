@@ -6,6 +6,7 @@
 #include <SDL2/SDL_events.h>
 #include <glm/glm.hpp>
 #include "core/domain/soils/Scorpan.hpp" // New
+#include "core/domain/soils/SiBCS.hpp"
 
 
 struct SDL_Window;
@@ -57,7 +58,9 @@ struct SlopeStats {
     int total;
 };
 void applySlopeAnalysis();
-void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params, int visualizationLevel = 1); // Updated
+
+
+void applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& params, int visualizationLevel, const ::Core::Domain::Soils::SiBCSFilter& filter);
 SlopeStats getSlopeAnalysisStats();
 bool saveReport(const std::string& path);
 // Tools

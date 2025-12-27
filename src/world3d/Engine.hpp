@@ -15,6 +15,7 @@
 #include <atomic>
 #include <glm/glm.hpp> 
 #include "core/domain/soils/Scorpan.hpp"
+#include "core/domain/soils/SiBCS.hpp" // Moved here
 
 namespace World3D {
 
@@ -56,9 +57,13 @@ public:
 
 
 
+
+
+// ...
+
     // Analysis
     void applySlopeVisualization();
-    void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params, int visualizationLevel = 1); // Updated
+    void applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& params, int visualizationLevel, const ::Core::Domain::Soils::SiBCSFilter& filter);
 
     struct SlopeStats {
         int countFlat = 0;

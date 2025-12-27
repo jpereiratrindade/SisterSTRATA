@@ -53,14 +53,14 @@ void SoilSimPanel::drawSiBCS(bool* open) {
         ImGui::TextWrapped("Visualization and Classification (Outputs).");
         ImGui::Separator();
         
-        // Execution Button IS HERE
+        // Execution Button
         if (ImGui::Button("Update Simulation", ImVec2(-1, 40))) {
-            World3D::applySoilSimulation(params_, visualizationLevel_);
+            World3D::applySoilSimulation(params_, visualizationLevel_, filter_);
         }
         
         ImGui::Separator();
         
-        ImGui::Text("Visualization Level");
+        ImGui::Text("Visualization Level (Colors)");
         const char* levels[] = { 
             "1. Order (Ordem)", 
             "2. Suborder (Subordem)", 
@@ -69,10 +69,72 @@ void SoilSimPanel::drawSiBCS(bool* open) {
             "5. Family (Família)",
             "6. Series (Série)"
         };
-        // We use 0-based index for ImGui, but 1-based for logic
         int currentLevelIndex = visualizationLevel_ - 1;
         if (ImGui::Combo("Level", &currentLevelIndex, levels, IM_ARRAYSIZE(levels))) {
             visualizationLevel_ = currentLevelIndex + 1;
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Filters (Multi-Select)");
+        
+        // Filter 1: Orders
+        if (ImGui::BeginCombo("Orders", "Select Allowed...")) {
+            for (auto order : Core::Domain::Soils::SiBCSHelper::getAllOrders()) {
+                bool isSelected = false;
+                for (auto allowed : filter_.allowedOrders) if (allowed == order) isSelected = true;
+                
+                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(order).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    if (isSelected) { // Remove
+                        auto it = std::remove(filter_.allowedOrders.begin(), filter_.allowedOrders.end(), order);
+                        filter_.allowedOrders.erase(it, filter_.allowedOrders.end());
+                    } else { // Add
+                        filter_.allowedOrders.push_back(order);
+                    }
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        // Filter 2: Suborders
+        if (ImGui::BeginCombo("Suborders", "Select Allowed...")) {
+            for (auto sub : Core::Domain::Soils::SiBCSHelper::getAllSuborders()) {
+                bool isSelected = false;
+                for (auto allowed : filter_.allowedSuborders) if (allowed == sub) isSelected = true;
+                
+                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(sub).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    if (isSelected) {
+                        auto it = std::remove(filter_.allowedSuborders.begin(), filter_.allowedSuborders.end(), sub);
+                        filter_.allowedSuborders.erase(it, filter_.allowedSuborders.end());
+                    } else {
+                        filter_.allowedSuborders.push_back(sub);
+                    }
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        // Filter 3: Great Groups
+        if (ImGui::BeginCombo("Gr. Groups", "Select Allowed...")) {
+            for (auto group : Core::Domain::Soils::SiBCSHelper::getAllGreatGroups()) {
+                bool isSelected = false;
+                for (auto allowed : filter_.allowedGreatGroups) if (allowed == group) isSelected = true;
+                
+                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(group).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    if (isSelected) {
+                        auto it = std::remove(filter_.allowedGreatGroups.begin(), filter_.allowedGreatGroups.end(), group);
+                        filter_.allowedGreatGroups.erase(it, filter_.allowedGreatGroups.end());
+                    } else {
+                        filter_.allowedGreatGroups.push_back(group);
+                    }
+                }
+            }
+            ImGui::EndCombo();
+        }
+        
+        if (ImGui::Button("Clear Filters")) {
+            filter_.allowedOrders.clear();
+            filter_.allowedSuborders.clear();
+            filter_.allowedGreatGroups.clear();
         }
 
         ImGui::Spacing();

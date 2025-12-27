@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <glm/glm.hpp>
 
 namespace Core::Domain::Soils {
@@ -86,8 +87,43 @@ struct SiBCSClassification {
     }
 };
 
+// Filter Struct for Multi-Select
+struct SiBCSFilter {
+    std::vector<SiBCSOrder> allowedOrders;
+    std::vector<SiBCSSuborder> allowedSuborders;
+    std::vector<SiBCSGreatGroup> allowedGreatGroups;
+    // ... extend if needed for lower levels, keeping it simple for now
+    
+    bool isEmpty() const {
+        return allowedOrders.empty() && allowedSuborders.empty() && allowedGreatGroups.empty();
+    }
+};
+
 // Visualization Helper
 struct SiBCSHelper {
+    // ... (existing methods) ...
+
+    static bool matches(const SiBCSClassification& soil, const SiBCSFilter& filter) {
+        if (!filter.allowedOrders.empty()) {
+            bool found = false;
+            for (auto o : filter.allowedOrders) if (o == soil.order) found = true;
+            if (!found) return false;
+        }
+        if (!filter.allowedSuborders.empty()) {
+            bool found = false;
+            for (auto s : filter.allowedSuborders) if (s == soil.suborder) found = true;
+            if (!found) return false;
+        }
+        if (!filter.allowedGreatGroups.empty()) {
+            bool found = false;
+            for (auto g : filter.allowedGreatGroups) if (g == soil.greatGroup) found = true;
+             if (!found) return false;
+        }
+        return true;
+    }
+
+    // ... (existing methods like getCommonVectors) ...
+
     // Basic Name Lookups
     static std::string getBaseName(SiBCSOrder type) {
         switch(type) {
@@ -194,6 +230,32 @@ struct SiBCSHelper {
         }
         
         return c;
+    }
+
+    // List Helpers for UI
+    static std::vector<SiBCSOrder> getAllOrders() {
+        return { 
+            SiBCSOrder::Latossolo, SiBCSOrder::Argissolo, SiBCSOrder::Neossolo, 
+            SiBCSOrder::Cambissolo, SiBCSOrder::Gleissolo, SiBCSOrder::Planossolo,
+            SiBCSOrder::Espodossolo, SiBCSOrder::Vertissolo, SiBCSOrder::Nitossolo,
+            SiBCSOrder::Chernossolo, SiBCSOrder::Luvissolo, SiBCSOrder::Plintossolo,
+            SiBCSOrder::Organossolo 
+        };
+    }
+
+    static std::vector<SiBCSSuborder> getAllSuborders() {
+        return { 
+            SiBCSSuborder::Vermelho, SiBCSSuborder::Amarelo, SiBCSSuborder::VermelhoAmarelo,
+            SiBCSSuborder::Bruno, SiBCSSuborder::Haplic, SiBCSSuborder::Litoc, 
+            SiBCSSuborder::Gleico 
+        };
+    }
+
+    static std::vector<SiBCSGreatGroup> getAllGreatGroups() {
+        return { 
+            SiBCSGreatGroup::Distrofico, SiBCSGreatGroup::Eutrofico, 
+            SiBCSGreatGroup::Alico, SiBCSGreatGroup::Humico 
+        };
     }
 
     // Get List of Common Valid Vectors for Legend

@@ -5,7 +5,7 @@
 
 namespace Core::Domain::Soils {
 
-void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, const ScorpanParams& params, int visualizationLevel) {
+void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, const ScorpanParams& params, int visualizationLevel, const SiBCSFilter& filter) {
     if (vertices.empty()) return;
 
     std::cout << "[SoilSystem] Running SCORPAN Soil Prediction (Level " << visualizationLevel << ")..." << std::endl;
@@ -27,6 +27,13 @@ void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, cons
 
         auto classification = predict(params, slopeDeg, v.pos.z, relElev);
         
+        // Filter Check
+        if (!SiBCSHelper::matches(classification, filter)) {
+            // Mask out: make it neutral grey to indicate "not selected"
+            v.color = glm::vec3(0.3f, 0.3f, 0.3f); 
+            continue;
+        }
+
         // Visualize
         v.color = SiBCSHelper::getColor(classification, visualizationLevel);
     }
