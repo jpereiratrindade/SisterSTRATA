@@ -5,13 +5,13 @@
 
 namespace UI::Panels {
 
-void SoilSimPanel::draw(bool* open) {
+void SoilSimPanel::drawScorpan(bool* open) {
     if (!open || !(*open)) return;
 
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
 
-    if (ImGui::Begin("Soil Simulation (SCORPAN)", open)) {
-        ImGui::TextWrapped("Configure environmental factors to predict SiBCS soil classes.");
+    if (ImGui::Begin("SCORPAN Inputs", open)) {
+        ImGui::TextWrapped("Configure environmental factors (Inputs).");
         ImGui::Separator();
 
         // C - Climate
@@ -40,10 +40,27 @@ void SoilSimPanel::draw(bool* open) {
         if (ImGui::Combo("Material", &currentItem, items, IM_ARRAYSIZE(items))) {
             params_.parentMaterial = static_cast<Core::Domain::Soils::ParentMaterialType>(currentItem);
         }
+    }
+    ImGui::End();
+}
 
+void SoilSimPanel::drawSiBCS(bool* open) {
+    if (!open || !(*open)) return;
+
+    ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
+
+    if (ImGui::Begin("SiBCS Output (Simulation)", open)) {
+        ImGui::TextWrapped("Visualization and Classification (Outputs).");
         ImGui::Separator();
         
-        ImGui::Text("Visualization Level (SiBCS)");
+        // Execution Button IS HERE
+        if (ImGui::Button("Update Simulation", ImVec2(-1, 40))) {
+            World3D::applySoilSimulation(params_, visualizationLevel_);
+        }
+        
+        ImGui::Separator();
+        
+        ImGui::Text("Visualization Level");
         const char* levels[] = { 
             "1. Order (Ordem)", 
             "2. Suborder (Subordem)", 
@@ -60,28 +77,23 @@ void SoilSimPanel::draw(bool* open) {
 
         ImGui::Spacing();
         ImGui::Separator();
-        ImGui::Spacing();
-
-        if (ImGui::Button("Run Simulation", ImVec2(-1, 40))) {
-            World3D::applySoilSimulation(params_, visualizationLevel_);
-        }
-
-        ImGui::Separator();
+        
         ImGui::Text("Legend (Colors)");
         ImGui::Spacing();
 
-        // Universal Legend Logic using Vector Vectors (getCommonVectors)
-        // This handles all levels (1, 2, 3...) elegantly
+        // Universal Legend Logic 
         auto commonSoils = Core::Domain::Soils::SiBCSHelper::getCommonVectors(visualizationLevel_);
         
+        ImGui::BeginChild("LegendScroll", ImVec2(0, 0), false, 0); // Scrollable area for legend
         for (const auto& soil : commonSoils) {
             glm::vec3 c = Core::Domain::Soils::SiBCSHelper::getColor(soil, visualizationLevel_);
             std::string name = Core::Domain::Soils::SiBCSHelper::getName(soil, visualizationLevel_);
             
             ImGui::ColorButton("##c", ImVec4(c.r, c.g, c.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20));
             ImGui::SameLine();
-            ImGui::Text("%s", name.c_str());
+            ImGui::TextWrapped("%s", name.c_str());
         }
+        ImGui::EndChild();
         
     }
     ImGui::End();

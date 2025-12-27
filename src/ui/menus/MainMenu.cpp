@@ -55,8 +55,14 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("Generate Pattern")) {
                 showTerrainGen = true;
             }
-            if (ImGui::MenuItem("Soil Simulation (SiBCS)")) {
-                showSoilSim = true;
+            if (ImGui::BeginMenu("Soil Simulation")) {
+                if (ImGui::MenuItem("SCORPAN Parameters (Input)")) {
+                    showScorpanWindow = true;
+                }
+                if (ImGui::MenuItem("SiBCS Viewer (Output)")) {
+                    showSiBCSWindow = true;
+                }
+                ImGui::EndMenu();
             }
             ImGui::EndMenu();
         }

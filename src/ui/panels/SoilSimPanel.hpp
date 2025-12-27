@@ -6,7 +6,8 @@ namespace UI::Panels {
 
 class SoilSimPanel {
 public:
-    void draw(bool* open);
+    void drawScorpan(bool* open);
+    void drawSiBCS(bool* open);
     
 private:
     Core::Domain::Soils::ScorpanParams params_;
