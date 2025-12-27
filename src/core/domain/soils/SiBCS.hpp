@@ -67,6 +67,7 @@ enum class SiBCSSeries {
 };
 
 // Full Classification Struct
+// Full Classification Struct (Vector DTO)
 struct SiBCSClassification {
     SiBCSOrder order = SiBCSOrder::Unknown;
     SiBCSSuborder suborder = SiBCSSuborder::None;
@@ -74,117 +75,170 @@ struct SiBCSClassification {
     SiBCSSubgroup subgroup = SiBCSSubgroup::None;
     SiBCSFamily family = SiBCSFamily::None;
     SiBCSSeries series = SiBCSSeries::None;
+
+    bool operator==(const SiBCSClassification& other) const {
+        return order == other.order &&
+               suborder == other.suborder &&
+               greatGroup == other.greatGroup &&
+               subgroup == other.subgroup &&
+               family == other.family &&
+               series == other.series;
+    }
 };
 
 // Visualization Helper
 struct SiBCSHelper {
-    static std::string getName(SiBCSOrder type) {
+    // Basic Name Lookups
+    static std::string getBaseName(SiBCSOrder type) {
         switch(type) {
-            case SiBCSOrder::Latossolo: return "Latossolo (L)";
-            case SiBCSOrder::Argissolo: return "Argissolo (P)";
-            case SiBCSOrder::Neossolo: return "Neossolo (R)";
-            case SiBCSOrder::Cambissolo: return "Cambissolo (C)";
-            case SiBCSOrder::Gleissolo: return "Gleissolo (G)";
-            case SiBCSOrder::Planossolo: return "Planossolo (S)";
-            case SiBCSOrder::Espodossolo: return "Espodossolo (E)";
-            case SiBCSOrder::Vertissolo: return "Vertissolo (V)";
-            case SiBCSOrder::Nitossolo: return "Nitossolo (N)";
-            case SiBCSOrder::Organossolo: return "Organossolo (O)";
+            case SiBCSOrder::Latossolo: return "Latossolo";
+            case SiBCSOrder::Argissolo: return "Argissolo";
+            case SiBCSOrder::Neossolo: return "Neossolo";
+            case SiBCSOrder::Cambissolo: return "Cambissolo";
+            case SiBCSOrder::Gleissolo: return "Gleissolo";
+            case SiBCSOrder::Planossolo: return "Planossolo";
+            case SiBCSOrder::Espodossolo: return "Espodossolo";
+            case SiBCSOrder::Vertissolo: return "Vertissolo";
+            case SiBCSOrder::Nitossolo: return "Nitossolo";
+            case SiBCSOrder::Organossolo: return "Organossolo";
             default: return "Outro";
         }
     }
     
-    static std::string getName(SiBCSSuborder type) {
+    static std::string getBaseName(SiBCSSuborder type) {
         switch(type) {
             case SiBCSSuborder::Vermelho: return "Vermelho";
             case SiBCSSuborder::Amarelo: return "Amarelo";
+            case SiBCSSuborder::VermelhoAmarelo: return "Vermelho-Amarelo";
             case SiBCSSuborder::Bruno: return "Bruno";
             case SiBCSSuborder::Litoc: return "Litólico";
-            case SiBCSSuborder::Gleico: return "Gleico";
+            case SiBCSSuborder::Gleico: return "Gleico"; // Usually combined
             case SiBCSSuborder::Haplic: return "Háplico";
             default: return "";
         }
     }
 
-     static std::string getName(SiBCSGreatGroup type) {
+    static std::string getBaseName(SiBCSGreatGroup type) {
         switch(type) {
             case SiBCSGreatGroup::Distrofico: return "Distrófico";
             case SiBCSGreatGroup::Eutrofico: return "Eutrófico";
-             case SiBCSGreatGroup::Alico: return "Álico";
+            case SiBCSGreatGroup::Alico: return "Álico";
+            case SiBCSGreatGroup::Humico: return "Húmico";
             default: return "";
         }
     }
 
-    // Color Lookup based on Visualization Level
+    // Cumulative Name Generation
+    static std::string getName(const SiBCSClassification& soil, int level) {
+        std::string name = getBaseName(soil.order);
+        if (level >= 2 && soil.suborder != SiBCSSuborder::None) {
+            name += " " + getBaseName(soil.suborder);
+        }
+        if (level >= 3 && soil.greatGroup != SiBCSGreatGroup::None) {
+            name += " " + getBaseName(soil.greatGroup);
+        }
+        // ... (extend for levels 4-6)
+        if (level >= 4 && soil.subgroup != SiBCSSubgroup::None) {
+             name += " típico"; // Placeholder for enum string
+        }
+        return name;
+    }
+
+    // Context-Aware Colors
     static glm::vec3 getColor(const SiBCSClassification& soil, int level) {
-        // Level 1: Order Colors
+        // Level 1: Order Base Colors
         if (level == 1) {
             switch(soil.order) {
-                case SiBCSOrder::Latossolo: return glm::vec3(0.75f, 0.15f, 0.15f); // Deep Red (Standard)
-                case SiBCSOrder::Argissolo: return glm::vec3(0.9f, 0.5f, 0.2f); // Orange-Yellow
-                case SiBCSOrder::Neossolo: return glm::vec3(0.9f, 0.9f, 0.7f);  // Pale/Beige (Young) or Grey for Litolic
+                case SiBCSOrder::Latossolo: return glm::vec3(0.75f, 0.15f, 0.15f); // Deep Red
+                case SiBCSOrder::Argissolo: return glm::vec3(0.9f, 0.5f, 0.2f); // Orange
+                case SiBCSOrder::Neossolo: return glm::vec3(0.9f, 0.9f, 0.7f); // Pale
                 case SiBCSOrder::Cambissolo: return glm::vec3(0.6f, 0.4f, 0.2f); // Brown
-                case SiBCSOrder::Gleissolo: return glm::vec3(0.4f, 0.6f, 0.7f); // Blue-Grey (Water)
-                case SiBCSOrder::Planossolo: return glm::vec3(0.8f, 0.8f, 0.9f); // Very Pale/Whiteish
-                case SiBCSOrder::Espodossolo: return glm::vec3(0.4f, 0.4f, 0.4f); // Grey (Podzol)
-                case SiBCSOrder::Chernossolo: return glm::vec3(0.1f, 0.1f, 0.1f); // Black
-                case SiBCSOrder::Nitossolo: return glm::vec3(0.6f, 0.1f, 0.4f); // Purplish Red
-                default: return glm::vec3(1.0f);
-            }
-        }
-        
-        // Level 2: Suborder (e.g. Red vs Yellow)
-        if (level == 2) {
-            switch(soil.suborder) {
-                case SiBCSSuborder::Vermelho: return glm::vec3(0.8f, 0.1f, 0.1f); 
-                case SiBCSSuborder::Amarelo: return glm::vec3(0.9f, 0.9f, 0.2f); 
-                case SiBCSSuborder::VermelhoAmarelo: return glm::vec3(0.9f, 0.5f, 0.1f); // Orange
-                case SiBCSSuborder::Bruno: return glm::vec3(0.4f, 0.3f, 0.1f); 
-                case SiBCSSuborder::Litoc: return glm::vec3(0.7f, 0.7f, 0.7f); 
-                case SiBCSSuborder::Gleico: return glm::vec3(0.3f, 0.5f, 0.7f); 
-                default: return glm::vec3(0.8f);
-            }
-        }
-
-        // Level 3: Great Group (Fertility)
-        if (level == 3) {
-            switch(soil.greatGroup) {
-                case SiBCSGreatGroup::Eutrofico: return glm::vec3(0.2f, 0.7f, 0.2f); // Green (Fertile)
-                case SiBCSGreatGroup::Distrofico: return glm::vec3(0.7f, 0.7f, 0.2f); // Yellowish (Poor)
-                case SiBCSGreatGroup::Alico: return glm::vec3(0.5f, 0.5f, 0.2f); // Toxic/Acid
+                case SiBCSOrder::Gleissolo: return glm::vec3(0.4f, 0.6f, 0.7f); // Blue-Grey
                 default: return glm::vec3(0.5f);
             }
         }
 
-        // Default to Order
-        return getColor(soil, 1);
-    }
-    static const std::vector<SiBCSOrder>& getAllOrders() {
-        static const std::vector<SiBCSOrder> orders = {
-            SiBCSOrder::Latossolo, SiBCSOrder::Argissolo, SiBCSOrder::Neossolo,
-            SiBCSOrder::Cambissolo, SiBCSOrder::Gleissolo, SiBCSOrder::Planossolo,
-            SiBCSOrder::Espodossolo, SiBCSOrder::Vertissolo, SiBCSOrder::Nitossolo,
-            SiBCSOrder::Chernossolo, SiBCSOrder::Luvissolo, SiBCSOrder::Plintossolo,
-            SiBCSOrder::Organossolo
-        };
-        return orders;
+        // Level 2+: Suborder Specifics
+        if (level >= 2) {
+            // Latossolos
+            if (soil.order == SiBCSOrder::Latossolo) {
+                switch(soil.suborder) {
+                    case SiBCSSuborder::Vermelho: return glm::vec3(0.6f, 0.1f, 0.1f); // Darker Red
+                    case SiBCSSuborder::Amarelo: return glm::vec3(0.9f, 0.8f, 0.1f); // Yellow
+                    case SiBCSSuborder::VermelhoAmarelo: return glm::vec3(0.9f, 0.4f, 0.1f); // Orange
+                    default: return glm::vec3(0.75f, 0.15f, 0.15f); // Base
+                }
+            }
+            // Argissolos
+            if (soil.order == SiBCSOrder::Argissolo) {
+                switch(soil.suborder) {
+                    case SiBCSSuborder::Vermelho: return glm::vec3(0.7f, 0.2f, 0.1f); // Reddish
+                    case SiBCSSuborder::Amarelo: return glm::vec3(0.95f, 0.7f, 0.2f); // Yellowish
+                    default: return glm::vec3(0.9f, 0.5f, 0.2f); // Base
+                }
+            }
+             // Gleissolos
+            if (soil.order == SiBCSOrder::Gleissolo) {
+                 return glm::vec3(0.3f, 0.5f, 0.6f); // Bluish
+            }
+            // Neossolos
+            if (soil.order == SiBCSOrder::Neossolo) {
+                 if (soil.suborder == SiBCSSuborder::Litoc) return glm::vec3(0.6f, 0.6f, 0.6f); // Grey
+                 return glm::vec3(0.9f, 0.9f, 0.8f); // Pale
+            }
+        }
+
+        // Level 3+: Fertility Modifiers (Subtle tint)
+        glm::vec3 c = getColor(soil, 2); // Base on Suborder
+        if (level >= 3) {
+            if (soil.greatGroup == SiBCSGreatGroup::Eutrofico) {
+                c *= 1.1f; // Brighter (Fertile)
+            } else if (soil.greatGroup == SiBCSGreatGroup::Distrofico) {
+                c *= 0.9f; // Darker (Leached)
+            }
+        }
+        
+        return c;
     }
 
-    static const std::vector<SiBCSSuborder>& getAllSuborders() {
-        static const std::vector<SiBCSSuborder> suborders = {
-            SiBCSSuborder::Vermelho, SiBCSSuborder::Amarelo, SiBCSSuborder::VermelhoAmarelo,
-            SiBCSSuborder::Bruno, SiBCSSuborder::Litoc, SiBCSSuborder::Gleico, 
-            SiBCSSuborder::Haplic, SiBCSSuborder::Tiptico
+    // Get List of Common Valid Vectors for Legend
+    static std::vector<SiBCSClassification> getCommonVectors(int level) {
+        std::vector<SiBCSClassification> list;
+        
+        // Helper to add
+        auto add = [&](SiBCSOrder o, SiBCSSuborder s = SiBCSSuborder::None, SiBCSGreatGroup g = SiBCSGreatGroup::None) {
+            SiBCSClassification c; c.order = o; c.suborder = s; c.greatGroup = g;
+            list.push_back(c);
         };
-        return suborders;
-    }
 
-    static const std::vector<SiBCSGreatGroup>& getAllGreatGroups() {
-        static const std::vector<SiBCSGreatGroup> groups = {
-            SiBCSGreatGroup::Distrofico, SiBCSGreatGroup::Eutrofico, 
-            SiBCSGreatGroup::Alico, SiBCSGreatGroup::Humico
-        };
-        return groups;
+        if (level == 1) {
+            add(SiBCSOrder::Latossolo); 
+            add(SiBCSOrder::Argissolo); 
+            add(SiBCSOrder::Neossolo);
+            add(SiBCSOrder::Cambissolo);
+            add(SiBCSOrder::Gleissolo);
+        }
+        else if (level == 2) {
+            add(SiBCSOrder::Latossolo, SiBCSSuborder::Vermelho);
+            add(SiBCSOrder::Latossolo, SiBCSSuborder::Amarelo);
+            add(SiBCSOrder::Latossolo, SiBCSSuborder::VermelhoAmarelo);
+            add(SiBCSOrder::Argissolo, SiBCSSuborder::Vermelho);
+            add(SiBCSOrder::Argissolo, SiBCSSuborder::Amarelo);
+            add(SiBCSOrder::Neossolo, SiBCSSuborder::Litoc);
+            add(SiBCSOrder::Gleissolo, SiBCSSuborder::Haplic);
+        }
+        else if (level == 3) {
+             // Expands combinatorialy, so list common ones
+            add(SiBCSOrder::Latossolo, SiBCSSuborder::Vermelho, SiBCSGreatGroup::Distrofico);
+            add(SiBCSOrder::Latossolo, SiBCSSuborder::Vermelho, SiBCSGreatGroup::Eutrofico);
+            add(SiBCSOrder::Latossolo, SiBCSSuborder::Amarelo, SiBCSGreatGroup::Distrofico);
+            add(SiBCSOrder::Argissolo, SiBCSSuborder::Vermelho, SiBCSGreatGroup::Distrofico);
+            add(SiBCSOrder::Argissolo, SiBCSSuborder::Vermelho, SiBCSGreatGroup::Eutrofico);
+            add(SiBCSOrder::Neossolo, SiBCSSuborder::Litoc, SiBCSGreatGroup::Distrofico); // Usually Eutrofico actually?
+             add(SiBCSOrder::Neossolo, SiBCSSuborder::Litoc, SiBCSGreatGroup::Eutrofico);
+        }
+
+        return list;
     }
 };
 

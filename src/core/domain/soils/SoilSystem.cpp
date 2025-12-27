@@ -37,8 +37,8 @@ void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, cons
 SiBCSClassification SoilSystem::predict(const ScorpanParams& global, float slopeDeg, float elevation, float relElevation) {
     SiBCSClassification result;
 
-    // --- LEVEL 1: ORDER ---
-    // (Logic simplified for demo)
+    // --- LEVEL 1: ORDER (Base) ---
+    // Determined primarily by Relief (Slope) and Age
     if (slopeDeg > 35.0f) {
         result.order = SiBCSOrder::Neossolo;
     } else if (relElevation < 0.05f && global.rainfall > 1200.0f) {
@@ -53,11 +53,12 @@ SiBCSClassification SoilSystem::predict(const ScorpanParams& global, float slope
         result.order = SiBCSOrder::Cambissolo;
     }
 
-    // --- LEVEL 2: SUBORDER ---
-    // Derived from Parent Material and Color/Process
+    // --- LEVEL 2: SUBORDER (Cumulative) ---
+    // Depends on Order + Parent Material/Color
     switch (result.order) {
         case SiBCSOrder::Latossolo:
         case SiBCSOrder::Argissolo:
+            // Color is dominant for these orders
             if (global.parentMaterial == ParentMaterialType::Igneous) {
                  result.suborder = SiBCSSuborder::Vermelho; // Iron rich
             } else if (global.parentMaterial == ParentMaterialType::Sedimentary) {
@@ -66,30 +67,38 @@ SiBCSClassification SoilSystem::predict(const ScorpanParams& global, float slope
                  result.suborder = SiBCSSuborder::VermelhoAmarelo; 
             }
             break;
+            
         case SiBCSOrder::Neossolo:
-             result.suborder = SiBCSSuborder::Litoc; // Litólico (Stony)
+             // Lithic contact is dominant
+             result.suborder = SiBCSSuborder::Litoc; 
              break;
+             
         case SiBCSOrder::Gleissolo:
-             result.suborder = SiBCSSuborder::Gleico; // Redundant but correct context for suborder name
-             // Actually Gleissolo suborders are Tiomorfico, Salico, Melânico, Haplico...
+             // Morphological features
              result.suborder = SiBCSSuborder::Haplic;
              break;
-        case SiBCSOrder::Cambissolo:
-             result.suborder = SiBCSSuborder::Haplic;
-             break;
+             
         default:
              result.suborder = SiBCSSuborder::Haplic;
     }
 
-    // --- LEVEL 3: GREAT GROUP ---
-    // Derived from Rainfall/Fertility (Saturation)
-    // High Rain -> Leaching -> Dystrophic/Alic
-    if (global.rainfall > 2000.0f) {
-        result.greatGroup = SiBCSGreatGroup::Alico; // Very leached
-    } else if (global.rainfall > 1200.0f) {
-        result.greatGroup = SiBCSGreatGroup::Distrofico; // Leached
+    // --- LEVEL 3: GREAT GROUP (Cumulative) ---
+    // Depends on Suborder + Climate (Rainfall)
+    // High Rain -> Leaching -> Dystrophic
+    bool isLeached = global.rainfall > 1200.0f;
+    bool isVeryLeached = global.rainfall > 2000.0f;
+
+    if (result.order == SiBCSOrder::Neossolo) {
+        // Neossolos Litólicos are usually Eutrophic (fresh rock) unless very specifically leached
+        result.greatGroup = isLeached ? SiBCSGreatGroup::Distrofico : SiBCSGreatGroup::Eutrofico;
     } else {
-        result.greatGroup = SiBCSGreatGroup::Eutrofico; // Dry/Fertile
+        if (isVeryLeached) {
+            result.greatGroup = SiBCSGreatGroup::Alico; 
+        } else if (isLeached) {
+            result.greatGroup = SiBCSGreatGroup::Distrofico;
+        } else {
+            result.greatGroup = SiBCSGreatGroup::Eutrofico;
+        }
     }
 
     // --- LEVEL 4, 5, 6 ---

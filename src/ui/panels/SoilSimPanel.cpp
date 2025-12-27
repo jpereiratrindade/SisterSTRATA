@@ -63,33 +63,17 @@ void SoilSimPanel::draw(bool* open) {
         ImGui::Text("Legend (Colors)");
         ImGui::Spacing();
 
-        if (visualizationLevel_ == 1) { // Order
-            for (auto order : Core::Domain::Soils::SiBCSHelper::getAllOrders()) {
-                Core::Domain::Soils::SiBCSClassification dummy;
-                dummy.order = order;
-                glm::vec3 c = Core::Domain::Soils::SiBCSHelper::getColor(dummy, 1);
-                ImGui::ColorButton("##c", ImVec4(c.r, c.g, c.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20));
-                ImGui::SameLine();
-                ImGui::Text("%s", Core::Domain::Soils::SiBCSHelper::getName(order).c_str());
-            }
-        } else if (visualizationLevel_ == 2) { // Suborder
-            for (auto sub : Core::Domain::Soils::SiBCSHelper::getAllSuborders()) {
-                Core::Domain::Soils::SiBCSClassification dummy;
-                dummy.suborder = sub;
-                glm::vec3 c = Core::Domain::Soils::SiBCSHelper::getColor(dummy, 2);
-                ImGui::ColorButton("##c", ImVec4(c.r, c.g, c.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20));
-                ImGui::SameLine();
-                ImGui::Text("%s", Core::Domain::Soils::SiBCSHelper::getName(sub).c_str());
-            }
-        } else if (visualizationLevel_ == 3) { // Great Group
-            for (auto group : Core::Domain::Soils::SiBCSHelper::getAllGreatGroups()) {
-                Core::Domain::Soils::SiBCSClassification dummy;
-                dummy.greatGroup = group;
-                glm::vec3 c = Core::Domain::Soils::SiBCSHelper::getColor(dummy, 3);
-                ImGui::ColorButton("##c", ImVec4(c.r, c.g, c.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20));
-                ImGui::SameLine();
-                ImGui::Text("%s", Core::Domain::Soils::SiBCSHelper::getName(group).c_str());
-            }
+        // Universal Legend Logic using Vector Vectors (getCommonVectors)
+        // This handles all levels (1, 2, 3...) elegantly
+        auto commonSoils = Core::Domain::Soils::SiBCSHelper::getCommonVectors(visualizationLevel_);
+        
+        for (const auto& soil : commonSoils) {
+            glm::vec3 c = Core::Domain::Soils::SiBCSHelper::getColor(soil, visualizationLevel_);
+            std::string name = Core::Domain::Soils::SiBCSHelper::getName(soil, visualizationLevel_);
+            
+            ImGui::ColorButton("##c", ImVec4(c.r, c.g, c.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20));
+            ImGui::SameLine();
+            ImGui::Text("%s", name.c_str());
         }
         
     }
