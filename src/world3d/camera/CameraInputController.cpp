@@ -1,4 +1,5 @@
 #include "world3d/camera/CameraInputController.hpp"
+#include <iostream>
 
 namespace World3D {
 
@@ -17,7 +18,8 @@ void CameraInputController::update(float deltaTime) {
 
     if (glm::length(moveDir) > 0.0f) {
         moveDir = glm::normalize(moveDir);
-        camera_.move(moveDir * moveSpeed_ * deltaTime);
+        float currentSpeed = baseSpeed_ * (isSprinting_ ? sprintMultiplier_ : 1.0f);
+        camera_.move(moveDir * currentSpeed * deltaTime);
     }
 }
 
@@ -30,7 +32,7 @@ void CameraInputController::processEvent(const SDL_Event& event) {
             case SDLK_d: moveRight_ = true; break;
             case SDLK_e: moveUp_ = true; break;
             case SDLK_q: moveDown_ = true; break;
-            case SDLK_LSHIFT: moveSpeed_ = 20.0f; break; // Sprint
+            case SDLK_LSHIFT: isSprinting_ = true; break;
         }
     } else if (event.type == SDL_KEYUP) {
         switch (event.key.keysym.sym) {
@@ -40,7 +42,7 @@ void CameraInputController::processEvent(const SDL_Event& event) {
             case SDLK_d: moveRight_ = false; break;
             case SDLK_e: moveUp_ = false; break;
             case SDLK_q: moveDown_ = false; break;
-            case SDLK_LSHIFT: moveSpeed_ = 5.0f; break;
+            case SDLK_LSHIFT: isSprinting_ = false; break;
         }
     } else if (event.type == SDL_MOUSEBUTTONDOWN) {
         if (event.button.button == SDL_BUTTON_RIGHT) {

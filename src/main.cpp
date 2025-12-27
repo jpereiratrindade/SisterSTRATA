@@ -15,7 +15,7 @@ int main() {
 
         // 2. Initialize Vulkan (Team 3D) - MUST be before UI now
         World3D::init(window.getNativeWindow());
-        World3D::loadDemoCloud();
+        // World3D::loadDemoCloud(); // Manual load only
 
         // 3. Initialize and bind UI (Team UI)
         UI::VulkanInitInfo info;
@@ -33,6 +33,8 @@ int main() {
         
         bool running = true;
         ui.onLoadDemo = []() { World3D::loadDemoCloud(); };
+        ui.onOpenFile = [](std::string path) { World3D::loadFile(path); };
+        ui.onCloseFile = []() { World3D::clear(); }; 
         ui.onExit = [&running]() { running = false; };
 
         ui.init(window.getNativeWindow(), info);
@@ -75,7 +77,12 @@ int main() {
                 bool isKeyboardEvent = (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP);
 
                 if (isMouseEvent && uiMouse) return;
-                if (isKeyboardEvent && uiKeyboard) return;
+                
+                // Only block keyboard if user is typing text. 
+                // Otherwise allow hotkeys (WASD) even if a window is focused.
+                if (isKeyboardEvent && ui.wantsTextInput()) {
+                     return;
+                }
 
                 World3D::processEvent(event);
             });

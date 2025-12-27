@@ -11,6 +11,8 @@ public:
 
     void update(float deltaTime);
     void processEvent(const SDL_Event& event);
+    
+    void setMoveSpeed(float speed) { baseSpeed_ = speed; }
 
 private:
     Camera& camera_;
@@ -25,7 +27,10 @@ private:
     bool rightMouseButtonDown_ = false;
     bool leftMouseButtonDown_ = false;
 
-    float moveSpeed_ = 5.0f; // m/s
+    bool isSprinting_ = false;
+
+    float baseSpeed_ = 2.5f; // m/s
+    float sprintMultiplier_ = 4.0f; // 4x speed when sprinting
     float mouseSensitivity_ = 0.1f;
 };
 

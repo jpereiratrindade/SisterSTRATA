@@ -26,6 +26,8 @@ public:
 
     // Callbacks
     std::function<void()> onLoadDemo;
+    std::function<void(std::string)> onOpenFile; // New
+    std::function<void()> onCloseFile; 
     std::function<void()> onExit;
     
     void beginFrame();
@@ -37,6 +39,7 @@ public:
 
     bool wantsToCaptureMouse() const;
     bool wantsToCaptureKeyboard() const;
+    bool wantsTextInput() const; // New: More specific than CaptureKeyboard
 
 private:
     SDL_Window* window_ = nullptr;

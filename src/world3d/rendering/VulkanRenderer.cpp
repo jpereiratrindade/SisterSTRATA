@@ -17,6 +17,7 @@ VulkanRenderer::VulkanRenderer(std::shared_ptr<VulkanContext> context, uint32_t 
 
     pointPipeline_ = std::make_unique<Pipeline>(*context_, renderPass_, vk::PrimitiveTopology::ePointList);
     linePipeline_ = std::make_unique<Pipeline>(*context_, renderPass_, vk::PrimitiveTopology::eLineList);
+    trianglePipeline_ = std::make_unique<Pipeline>(*context_, renderPass_, vk::PrimitiveTopology::eTriangleList);
 
     createDescriptorSets(); 
 }
@@ -179,6 +180,7 @@ void VulkanRenderer::render(const Scene& scene) {
         Pipeline* pipeline = nullptr;
         if (obj.topology == vk::PrimitiveTopology::ePointList) pipeline = pointPipeline_.get();
         if (obj.topology == vk::PrimitiveTopology::eLineList) pipeline = linePipeline_.get();
+        if (obj.topology == vk::PrimitiveTopology::eTriangleList) pipeline = trianglePipeline_.get();
 
         if (pipeline) {
             pipeline->bind(cmd);
@@ -320,6 +322,11 @@ void VulkanRenderer::updateUniformBuffer(uint32_t currentImage, const Camera& ca
     ubo.model = glm::mat4(1.0f);
     ubo.view = camera.getViewMatrix();
     ubo.proj = camera.getProjectionMatrix();
+    
+    // Lighting
+    ubo.lightDir = glm::vec4(lightDir_, 0.0f);
+    ubo.lightColor = glm::vec4(lightColor_, 1.0f);
+    ubo.ambientStrength = ambientStrength_;
 
     memcpy(uniformBuffersMapped_[currentImage], &ubo, sizeof(ubo));
 }

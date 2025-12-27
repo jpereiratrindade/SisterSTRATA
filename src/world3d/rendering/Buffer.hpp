@@ -9,6 +9,14 @@ public:
     Buffer(VulkanContext& context, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties);
     ~Buffer();
 
+    // No Copy
+    Buffer(const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
+
+    // Move
+    Buffer(Buffer&& other) noexcept;
+    Buffer& operator=(Buffer&& other) noexcept;
+
     void map(void** data);
     void unmap();
     void copyTo(const void* data, vk::DeviceSize size);

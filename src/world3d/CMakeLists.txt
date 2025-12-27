@@ -12,6 +12,7 @@ add_library(world3d
     ScientificAdapter.cpp
     camera/Camera.cpp
     camera/CameraInputController.cpp
+    generators/TerrainGenerator.cpp
 )
 
 # Shader Compilation

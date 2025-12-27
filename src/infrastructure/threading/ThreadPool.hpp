@@ -49,8 +49,8 @@ auto ThreadPool::submit(F&& f, Args&&... args)
             throw std::runtime_error("enqueue on stopped ThreadPool");
 
         tasks_.emplace([task](){ (*task)(); });
+        condition_.notify_one();
     }
-    condition_.notify_one();
     return res;
 }
 

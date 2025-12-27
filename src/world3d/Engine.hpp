@@ -10,9 +10,10 @@
 #include <SDL2/SDL.h>
 #include <memory>
 #include <functional>
-
-
+#include <string> // Added this include as it's implied by the instruction snippet but not in original
 #include <vector>
+#include <atomic>
+#include <glm/glm.hpp> // Added this include as it's implied by the instruction snippet but not in original
 
 namespace World3D {
 
@@ -23,6 +24,7 @@ public:
 
     void init(SDL_Window* window);
     void shutdown();
+    void clear(); // Clear scene
     
     void processEvent(const SDL_Event& event);
     void update(float deltaTime);
@@ -35,9 +37,50 @@ public:
     vk::DescriptorPool getDescriptorPool() { return descriptorPool_; }
 
     void uploadDemoData(); 
-    void uploadDemoDataAsync(); // New
+    void uploadDemoDataAsync(); 
+
+    void loadFile(const std::string& path); // Generic loader
+    
+    // Callbacks for UI reporting
+    std::function<void(const std::string&)> onStatusMessage;
+
+    // Lighting Control
+    void setLightDirection(float x, float y, float z);
+    void setLightColor(float r, float g, float b);
+    void setAmbientStrength(float strength);
+    
+    const glm::vec3& getLightDirection() const { return lightDir_; }
+    const glm::vec3& getLightColor() const { return lightColor_; }
+    float getAmbientStrength() const { return ambientStrength_; }
+
+    // Analysis
+    void applySlopeVisualization();
+
+    struct SlopeStats {
+        int countFlat = 0;
+        int countGentle = 0;
+        int countModerate = 0;
+        int countSteep = 0;
+        int total = 0;
+    };
+    
+    SlopeStats getLastSlopeStats() const { return lastStats_; }
+    bool saveSlopeStats(const std::string& filepath);
+    
+    // Tools
+    bool generateSampleTerrain(const std::string& filename, int width, int height, float spacing, int type, bool autoLoad);
+    bool isGenerating() const { return isGenerating_; }
+    
+    // Settings
+    void setCameraSpeed(float speed);
 
 private:
+    void notifyStatus(const std::string& msg);
+    void uploadReferenceGrid(); // Persistent visual reference
+    
+    SlopeStats lastStats_;
+    std::atomic<bool> isGenerating_{false};
+
     std::shared_ptr<Rendering::VulkanContext> context_;
     std::unique_ptr<Rendering::VulkanRenderer> renderer_;
     std::unique_ptr<Camera> camera_;
@@ -49,9 +92,18 @@ private:
 
     
     Scene scene_; // New Scene member
+    
+    // Keep reference to active mesh for analysis
+    std::shared_ptr<std::vector<Rendering::Vertex>> activeVertices_;
+    std::shared_ptr<Rendering::Buffer> activeVertexBuffer_; // To update GPU data
 
     vk::DescriptorPool descriptorPool_;
     bool framebufferResized_ = false;
+
+    // Lighting Data
+    glm::vec3 lightDir_ = glm::vec3(0.5f, 1.0f, 2.0f);
+    glm::vec3 lightColor_ = glm::vec3(1.0f);
+    float ambientStrength_ = 0.3f;
 };
 
 

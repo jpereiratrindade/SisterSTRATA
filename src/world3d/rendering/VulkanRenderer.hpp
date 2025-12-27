@@ -20,6 +20,11 @@ struct UniformBufferObject {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
+    
+    // Lighting Params
+    alignas(16) glm::vec4 lightDir;   // Direction TO light? Or FROM light. Usually to source.
+    alignas(16) glm::vec4 lightColor;
+    alignas(4)  float ambientStrength;
 };
 
 class VulkanRenderer {
@@ -40,6 +45,15 @@ public:
     [[nodiscard]] uint32_t getImageIndex() const { return imageIndex_; }
     [[nodiscard]] Swapchain& getSwapchain() { return *swapchain_; }
 
+    void updateUniformBuffer(uint32_t currentImage, const Camera& camera); // Reverted
+    
+    // Lighting Control
+    void setLightParams(const glm::vec3& dir, const glm::vec3& color, float ambient) {
+        lightDir_ = dir;
+        lightColor_ = color;
+        ambientStrength_ = ambient;
+    }
+
 private:
     void createRenderPass();
     void createFramebuffers();
@@ -49,12 +63,18 @@ private:
     void createUniformBuffers(); // New
     void createDescriptorPool(); // New
     void createDescriptorSets(); // New
-    void updateUniformBuffer(uint32_t currentImage, const Camera& camera); // New
+
 
     std::shared_ptr<VulkanContext> context_;
     std::unique_ptr<Swapchain> swapchain_;
     std::unique_ptr<Pipeline> pointPipeline_;
     std::unique_ptr<Pipeline> linePipeline_;
+    std::unique_ptr<Pipeline> trianglePipeline_;
+    
+    // Lighting State
+    glm::vec3 lightDir_ = glm::vec3(0.5f, 1.0f, 2.0f);
+    glm::vec3 lightColor_ = glm::vec3(1.0f);
+    float ambientStrength_ = 0.3f;
     
     // Buffers removed - now in Scene objects
 

@@ -38,7 +38,9 @@ Pipeline::Pipeline(VulkanContext& context, vk::RenderPass renderPass, vk::Primit
 
     // Descriptor Set Layout
     vk::DescriptorSetLayoutBinding uboLayoutBinding(
-        0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr
+        0, vk::DescriptorType::eUniformBuffer, 1, 
+        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, // NOW SHARED
+        nullptr
     );
 
     vk::DescriptorSetLayoutCreateInfo layoutInfo(
