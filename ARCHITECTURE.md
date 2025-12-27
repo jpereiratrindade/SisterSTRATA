@@ -11,15 +11,21 @@ This engine is considered **Robust** and **Professional** for the following reas
 *   **Resize Handling**: The engine listens to OS events (`SDL_WINDOWEVENT`) and performs a full **Swapchain Recreation** on resize. This ensures the 3D viewport adapts without stretching (aspect ratio correction) and the UI remains crisp (pixel-perfect native rendering).
 *   **Thread Safety**: Heavy operations (like Point Cloud generation) are offloaded to a **Thread Pool**, keeping the main UI thread responsive (60fps+) even while processing millions of data points.
 *   **Input Handling**: A dedicated `InputController` separates raw SDL events from game logic, allowing for complex camera behaviors (Orbit/FreeFlight) that don't conflict with UI clicks.
+*   **Security & Stability**:
+    *   **Input Validation**: Strict validation on external data loading (Path Traversal protection) and Generation parameters.
+    *   **Exception Safety**: Critical subsystems (Engine callbacks) are wrapped in try-catch blocks to prevent crashes from user-defined logic.
 
 ### 2. Professional Architecture (Separation of Concerns)
 *   **DDD Data Transfer (DTO Policy)**:
     *   The **UI Layer** (`src/ui`) is strictly decoupled from the **World Layer** (`src/world3d`).
     *   They communicate *only* via **Data Transfer Objects** (`Application::DTO::UIData`).
     *   *Benefit*: The UI doesn't know about Vulkan or 3D Math. It just displays data. You can rewrite the entire rendering engine without breaking the UI.
-*   **Engine vs. Game Loop**:
-    *   `World3D::Engine` encapsulates the complexity of the graphics API.
-    *   `main.cpp` controls the high-level application lifecycle (Init -> Loop -> Shutdown), acting as the "Director".
+*   **Application Orchestration (The Director)**:
+    *   `Application` class (`src/application/Application.cpp`) encapsulates the high-level lifecycle (Init -> Loop -> Shutdown).
+    *   It manages subsystem dependencies (`Window`, `UI`, `World3D`, `Session`) ensuring correct initialization order.
+    *   It owns the **Main Loop** and **Event Dispatching** logic, routing inputs to UI or World3D based on context.
+    *   *Benefit*: `main.cpp` becomes a trivial entry point, and the application lifecycle is testable.
+    *   `World3D::Engine` remains focused purely on the complexity of the graphics API (Vulkan).
 
 ### 3. UI Ux (User Experience)
 *   **Floating Panel Layout**: Mirrors professional tools (like Blender/Maya/SisterAppPEC) by using persistent floating panels rather than complex docking systems that confuse users.

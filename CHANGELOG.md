@@ -2,6 +2,25 @@
 
 All notable changes to the SisterPEC project will be documented in this file.
 
+## [1.1.0] - 2025-12-27
+
+### Added
+- **Application Class (`src/application`)**: New orchestration layer acting as the "Director", encapsulating the main loop and system lifecycle.
+- **Security**: Added Path Traversal protection in `Engine::loadFile`.
+- **Validation**: Added strict input validation for Terrain Generation.
+
+### Fixed
+- **Critical**: Fixed Race Condition in `ThreadPool` (lost wakeups).
+- **Critical**: Fixed memory alignment for Shader Uniforms (`std140` compliance).
+- **Stability**: Added exception safety to Engine callbacks.
+
+### Changed
+- **Refactoring**: Decoupled `main.cpp` from engine logic. Entry point is now minimal.
+- **Code Quality**: Cleaned up `Buffer` class (removed unnecessary virtual destructor).
+
+### Documentation
+- Added comprehensive Code Review report (`docs/reviews/`).
+
 ## [1.0.0] - 2025-12-26
 
 ### Added
