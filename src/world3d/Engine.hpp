@@ -13,7 +13,8 @@
 #include <string> // Added this include as it's implied by the instruction snippet but not in original
 #include <vector>
 #include <atomic>
-#include <glm/glm.hpp> // Added this include as it's implied by the instruction snippet but not in original
+#include <glm/glm.hpp> 
+#include "core/domain/soils/Scorpan.hpp"
 
 namespace World3D {
 
@@ -53,8 +54,11 @@ public:
     const glm::vec3& getLightColor() const { return lightColor_; }
     float getAmbientStrength() const { return ambientStrength_; }
 
+
+
     // Analysis
     void applySlopeVisualization();
+    void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params); // New
 
     struct SlopeStats {
         int countFlat = 0;

@@ -20,6 +20,7 @@ public:
     bool showAnalysisReport = false;
     bool showTerrainGen = false;
     bool showWelcome = true; // Default true as per original
+    bool showSoilSim = false; // New
 
 private:
     bool showOpenDialog = false;

@@ -55,6 +55,9 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("Generate Pattern")) {
                 showTerrainGen = true;
             }
+            if (ImGui::MenuItem("Soil Simulation (SiBCS)")) {
+                showSoilSim = true;
+            }
             ImGui::EndMenu();
         }
         

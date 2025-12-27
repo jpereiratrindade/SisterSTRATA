@@ -226,6 +226,7 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     terrainGenPanel_.draw(&mainMenu_.showTerrainGen);
     settingsPanel_.draw(&mainMenu_.showSettings);
     welcomePanel_.draw(&mainMenu_.showWelcome, data);
+    soilSimPanel_.draw(&mainMenu_.showSoilSim);
 }
 
 

@@ -10,6 +10,7 @@
 #include "ui/panels/SettingsPanel.hpp"
 #include "ui/panels/TerrainGenPanel.hpp"
 #include "ui/panels/WelcomePanel.hpp"
+#include "ui/panels/SoilSimPanel.hpp"
 
 namespace UI {
 
@@ -58,6 +59,7 @@ private:
     Panels::SettingsPanel settingsPanel_;
     Panels::TerrainGenPanel terrainGenPanel_;
     Panels::WelcomePanel welcomePanel_;
+    Panels::SoilSimPanel soilSimPanel_;
 };
 
 } // namespace UI

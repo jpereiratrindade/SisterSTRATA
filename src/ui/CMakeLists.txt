@@ -13,6 +13,7 @@ add_library(ui
     panels/SettingsPanel.cpp
     panels/TerrainGenPanel.cpp
     panels/WelcomePanel.cpp
+    panels/SoilSimPanel.cpp
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
     ${imgui_SOURCE_DIR}/imgui_tables.cpp

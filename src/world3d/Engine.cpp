@@ -12,6 +12,7 @@
 #include "world3d/generators/TerrainGenerator.hpp"
 #include "world3d/exporter/ObjExporter.hpp"
 #include "world3d/exporter/CsvExporter.hpp"
+#include "core/domain/soils/SoilPredictor.hpp"
 
 namespace World3D {
 
@@ -589,6 +590,53 @@ bool Engine::generateSampleTerrain(const std::string& filename, int width, int h
     }).detach();
 
     return true;
+}
+
+
+
+void Engine::applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params) {
+    if (!activeVertices_ || !activeVertexBuffer_) {
+        std::cerr << "[Engine] No active mesh to simulate soils." << std::endl;
+        return;
+    }
+
+    std::cout << "[Engine] Running SCORPAN Soil Prediction..." << std::endl;
+
+    // 1. Pre-calc stats for Relative Elevation (Normalization)
+    float minZ = 1e9f;
+    float maxZ = -1e9f;
+    for (const auto& v : *activeVertices_) {
+        minZ = std::min(minZ, v.pos.z);
+        maxZ = std::max(maxZ, v.pos.z);
+    }
+    if (maxZ == minZ) maxZ = minZ + 1.0f;
+
+    // 2. Iterate and Predict
+    int counts[8] = {0}; // Track basic stats locally
+
+    for (auto& v : *activeVertices_) {
+        // Relief Factors
+        float slopeDeg = glm::degrees(std::acos(std::clamp(v.normal.z, -1.0f, 1.0f)));
+        float relElev = (v.pos.z - minZ) / (maxZ - minZ);
+
+        // Predict
+        auto type = Core::Domain::Soils::SoilPredictor::predict(params, slopeDeg, v.pos.z, relElev);
+        
+        // Visualize
+        v.color = Core::Domain::Soils::SiBCSHelper::getColor(type);
+        
+        // Debug/Stats (Optional)
+        // counts[(int)type]++;
+    }
+
+    // 3. Re-upload
+    vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
+    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+    staging.copyTo(activeVertices_->data(), size);
+    
+    renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
+
+    std::cout << "[Engine] Soil Map Generated." << std::endl;
 }
 
 void Engine::setCameraSpeed(float speed) {

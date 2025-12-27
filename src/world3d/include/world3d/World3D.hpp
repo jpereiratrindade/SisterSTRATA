@@ -5,6 +5,7 @@
 #include <vulkan/vulkan.hpp>
 #include <SDL2/SDL_events.h>
 #include <glm/glm.hpp>
+#include "core/domain/soils/Scorpan.hpp" // New
 
 
 struct SDL_Window;
@@ -56,6 +57,7 @@ struct SlopeStats {
     int total;
 };
 void applySlopeAnalysis();
+void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params); // New
 SlopeStats getSlopeAnalysisStats();
 bool saveReport(const std::string& path);
 // Tools
