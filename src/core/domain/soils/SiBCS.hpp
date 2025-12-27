@@ -146,55 +146,50 @@ struct SiBCSHelper {
 
     // Context-Aware Colors
     static glm::vec3 getColor(const SiBCSClassification& soil, int level) {
-        // Level 1: Order Base Colors
-        if (level == 1) {
-            switch(soil.order) {
-                case SiBCSOrder::Latossolo: return glm::vec3(0.75f, 0.15f, 0.15f); // Deep Red
-                case SiBCSOrder::Argissolo: return glm::vec3(0.9f, 0.5f, 0.2f); // Orange
-                case SiBCSOrder::Neossolo: return glm::vec3(0.9f, 0.9f, 0.7f); // Pale
-                case SiBCSOrder::Cambissolo: return glm::vec3(0.6f, 0.4f, 0.2f); // Brown
-                case SiBCSOrder::Gleissolo: return glm::vec3(0.4f, 0.6f, 0.7f); // Blue-Grey
-                default: return glm::vec3(0.5f);
-            }
+        // 1. Start with Base Order Color
+        glm::vec3 c(0.5f);
+        switch(soil.order) {
+            case SiBCSOrder::Latossolo: c = glm::vec3(0.75f, 0.15f, 0.15f); break; // Deep Red
+            case SiBCSOrder::Argissolo: c = glm::vec3(0.9f, 0.5f, 0.2f); break; // Orange
+            case SiBCSOrder::Neossolo: c = glm::vec3(0.9f, 0.9f, 0.7f); break; // Pale
+            case SiBCSOrder::Cambissolo: c = glm::vec3(0.6f, 0.4f, 0.2f); break; // Brown
+            case SiBCSOrder::Gleissolo: c = glm::vec3(0.4f, 0.6f, 0.7f); break; // Blue-Grey
+            default: c = glm::vec3(0.5f); break;
         }
 
-        // Level 2+: Suborder Specifics
+        if (level == 1) return c;
+
+        // 2. Refine for Suborder (if applicable)
         if (level >= 2) {
-            // Latossolos
             if (soil.order == SiBCSOrder::Latossolo) {
                 switch(soil.suborder) {
-                    case SiBCSSuborder::Vermelho: return glm::vec3(0.6f, 0.1f, 0.1f); // Darker Red
-                    case SiBCSSuborder::Amarelo: return glm::vec3(0.9f, 0.8f, 0.1f); // Yellow
-                    case SiBCSSuborder::VermelhoAmarelo: return glm::vec3(0.9f, 0.4f, 0.1f); // Orange
-                    default: return glm::vec3(0.75f, 0.15f, 0.15f); // Base
+                    case SiBCSSuborder::Vermelho: c = glm::vec3(0.6f, 0.1f, 0.1f); break;
+                    case SiBCSSuborder::Amarelo: c = glm::vec3(0.9f, 0.8f, 0.1f); break;
+                    case SiBCSSuborder::VermelhoAmarelo: c = glm::vec3(0.9f, 0.4f, 0.1f); break;
+                    default: break; // Keep base
                 }
             }
-            // Argissolos
-            if (soil.order == SiBCSOrder::Argissolo) {
+            else if (soil.order == SiBCSOrder::Argissolo) {
                 switch(soil.suborder) {
-                    case SiBCSSuborder::Vermelho: return glm::vec3(0.7f, 0.2f, 0.1f); // Reddish
-                    case SiBCSSuborder::Amarelo: return glm::vec3(0.95f, 0.7f, 0.2f); // Yellowish
-                    default: return glm::vec3(0.9f, 0.5f, 0.2f); // Base
+                    case SiBCSSuborder::Vermelho: c = glm::vec3(0.7f, 0.2f, 0.1f); break;
+                    case SiBCSSuborder::Amarelo: c = glm::vec3(0.95f, 0.7f, 0.2f); break;
+                    default: break;
                 }
             }
-             // Gleissolos
-            if (soil.order == SiBCSOrder::Gleissolo) {
-                 return glm::vec3(0.3f, 0.5f, 0.6f); // Bluish
+            else if (soil.order == SiBCSOrder::Gleissolo) {
+                 c = glm::vec3(0.3f, 0.5f, 0.6f); 
             }
-            // Neossolos
-            if (soil.order == SiBCSOrder::Neossolo) {
-                 if (soil.suborder == SiBCSSuborder::Litoc) return glm::vec3(0.6f, 0.6f, 0.6f); // Grey
-                 return glm::vec3(0.9f, 0.9f, 0.8f); // Pale
+            else if (soil.order == SiBCSOrder::Neossolo) {
+                 if (soil.suborder == SiBCSSuborder::Litoc) c = glm::vec3(0.6f, 0.6f, 0.6f); 
             }
         }
 
-        // Level 3+: Fertility Modifiers (Subtle tint)
-        glm::vec3 c = getColor(soil, 2); // Base on Suborder
+        // 3. Refine for Great Group (Fertility)
         if (level >= 3) {
             if (soil.greatGroup == SiBCSGreatGroup::Eutrofico) {
-                c *= 1.1f; // Brighter (Fertile)
+                c = glm::clamp(c * 1.2f, 0.0f, 1.0f); // Brighter
             } else if (soil.greatGroup == SiBCSGreatGroup::Distrofico) {
-                c *= 0.9f; // Darker (Leached)
+                c *= 0.8f; // Darker
             }
         }
         
@@ -236,6 +231,14 @@ struct SiBCSHelper {
             add(SiBCSOrder::Argissolo, SiBCSSuborder::Vermelho, SiBCSGreatGroup::Eutrofico);
             add(SiBCSOrder::Neossolo, SiBCSSuborder::Litoc, SiBCSGreatGroup::Distrofico); // Usually Eutrofico actually?
              add(SiBCSOrder::Neossolo, SiBCSSuborder::Litoc, SiBCSGreatGroup::Eutrofico);
+        }
+
+        else if (level >= 4) { // Levels 4, 5, 6 (show typical simplified examples)
+            // Just show key examples to avoid crowding
+            add(SiBCSOrder::Latossolo, SiBCSSuborder::Vermelho, SiBCSGreatGroup::Distrofico); 
+            add(SiBCSOrder::Latossolo, SiBCSSuborder::Amarelo, SiBCSGreatGroup::Distrofico);
+            add(SiBCSOrder::Argissolo, SiBCSSuborder::Vermelho, SiBCSGreatGroup::Eutrofico);
+            add(SiBCSOrder::Neossolo, SiBCSSuborder::Litoc, SiBCSGreatGroup::Eutrofico);
         }
 
         return list;

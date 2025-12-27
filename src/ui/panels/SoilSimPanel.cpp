@@ -44,7 +44,14 @@ void SoilSimPanel::draw(bool* open) {
         ImGui::Separator();
         
         ImGui::Text("Visualization Level (SiBCS)");
-        const char* levels[] = { "1. Order (Ordem)", "2. Suborder (Subordem)", "3. Great Group (Grande Grupo)" };
+        const char* levels[] = { 
+            "1. Order (Ordem)", 
+            "2. Suborder (Subordem)", 
+            "3. Great Group (Grande Grupo)",
+            "4. Subgroup (Subgrupo)",
+            "5. Family (Família)",
+            "6. Series (Série)"
+        };
         // We use 0-based index for ImGui, but 1-based for logic
         int currentLevelIndex = visualizationLevel_ - 1;
         if (ImGui::Combo("Level", &currentLevelIndex, levels, IM_ARRAYSIZE(levels))) {
