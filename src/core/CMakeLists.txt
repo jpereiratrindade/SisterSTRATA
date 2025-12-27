@@ -1,5 +1,6 @@
 add_library(core
     domain/Workspace.cpp
+    domain/soils/SoilSystem.cpp
 )
 
 target_include_directories(core PUBLIC
