@@ -1,5 +1,6 @@
 add_library(application
     Session.cpp
+    Application.cpp
 )
 
 # Since we don't have source files in the add_library call yet (if they are all headers),
@@ -12,6 +13,11 @@ target_include_directories(application PUBLIC
     ${CMAKE_SOURCE_DIR}/src
 )
 
-target_link_libraries(application PUBLIC core)
+target_link_libraries(application PUBLIC 
+    core
+    world3d
+    ui
+    infrastructure
+)
 
 target_compile_features(application PUBLIC cxx_std_20)
