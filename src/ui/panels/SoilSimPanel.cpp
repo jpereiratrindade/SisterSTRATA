@@ -130,11 +130,68 @@ void SoilSimPanel::drawSiBCS(bool* open) {
             }
             ImGui::EndCombo();
         }
+
+        // Filter 4: Subgroups
+        if (ImGui::BeginCombo("Subgroups", "Select Allowed...")) {
+            for (auto sub : Core::Domain::Soils::SiBCSHelper::getAllSubgroups()) {
+                bool isSelected = false;
+                for (auto allowed : filter_.allowedSubgroups) if (allowed == sub) isSelected = true;
+                
+                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(sub).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    if (isSelected) {
+                        auto it = std::remove(filter_.allowedSubgroups.begin(), filter_.allowedSubgroups.end(), sub);
+                        filter_.allowedSubgroups.erase(it, filter_.allowedSubgroups.end());
+                    } else {
+                        filter_.allowedSubgroups.push_back(sub);
+                    }
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        // Filter 5: Families
+        if (ImGui::BeginCombo("Families", "Select Allowed...")) {
+            for (auto fam : Core::Domain::Soils::SiBCSHelper::getAllFamilies()) {
+                bool isSelected = false;
+                for (auto allowed : filter_.allowedFamilies) if (allowed == fam) isSelected = true;
+                
+                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(fam).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    if (isSelected) {
+                        auto it = std::remove(filter_.allowedFamilies.begin(), filter_.allowedFamilies.end(), fam);
+                        filter_.allowedFamilies.erase(it, filter_.allowedFamilies.end());
+                    } else {
+                        filter_.allowedFamilies.push_back(fam);
+                    }
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        // Filter 6: Series
+        if (ImGui::BeginCombo("Series", "Select Allowed...")) {
+            for (auto ser : Core::Domain::Soils::SiBCSHelper::getAllSeries()) {
+                bool isSelected = false;
+                for (auto allowed : filter_.allowedSeries) if (allowed == ser) isSelected = true;
+                
+                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(ser).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    if (isSelected) {
+                        auto it = std::remove(filter_.allowedSeries.begin(), filter_.allowedSeries.end(), ser);
+                        filter_.allowedSeries.erase(it, filter_.allowedSeries.end());
+                    } else {
+                        filter_.allowedSeries.push_back(ser);
+                    }
+                }
+            }
+            ImGui::EndCombo();
+        }
         
         if (ImGui::Button("Clear Filters")) {
             filter_.allowedOrders.clear();
             filter_.allowedSuborders.clear();
             filter_.allowedGreatGroups.clear();
+            filter_.allowedSubgroups.clear();
+            filter_.allowedFamilies.clear();
+            filter_.allowedSeries.clear();
         }
 
         ImGui::Spacing();

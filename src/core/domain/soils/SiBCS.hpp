@@ -92,10 +92,17 @@ struct SiBCSFilter {
     std::vector<SiBCSOrder> allowedOrders;
     std::vector<SiBCSSuborder> allowedSuborders;
     std::vector<SiBCSGreatGroup> allowedGreatGroups;
-    // ... extend if needed for lower levels, keeping it simple for now
+    std::vector<SiBCSSubgroup> allowedSubgroups; // Level 4
+    std::vector<SiBCSFamily> allowedFamilies;    // Level 5
+    std::vector<SiBCSSeries> allowedSeries;      // Level 6
     
     bool isEmpty() const {
-        return allowedOrders.empty() && allowedSuborders.empty() && allowedGreatGroups.empty();
+        return allowedOrders.empty() && 
+               allowedSuborders.empty() && 
+               allowedGreatGroups.empty() &&
+               allowedSubgroups.empty() &&
+               allowedFamilies.empty() &&
+               allowedSeries.empty();
     }
 };
 
@@ -119,47 +126,54 @@ struct SiBCSHelper {
             for (auto g : filter.allowedGreatGroups) if (g == soil.greatGroup) found = true;
              if (!found) return false;
         }
+        if (!filter.allowedSubgroups.empty()) {
+            bool found = false;
+            for (auto s : filter.allowedSubgroups) if (s == soil.subgroup) found = true;
+            if (!found) return false;
+        }
+        if (!filter.allowedFamilies.empty()) {
+            bool found = false;
+            for (auto f : filter.allowedFamilies) if (f == soil.family) found = true;
+            if (!found) return false;
+        }
+        if (!filter.allowedSeries.empty()) {
+            bool found = false;
+            for (auto s : filter.allowedSeries) if (s == soil.series) found = true;
+            if (!found) return false;
+        }
         return true;
     }
 
-    // ... (existing methods like getCommonVectors) ...
+    // ... (getName, getColor) ...
 
     // Basic Name Lookups
-    static std::string getBaseName(SiBCSOrder type) {
-        switch(type) {
-            case SiBCSOrder::Latossolo: return "Latossolo";
-            case SiBCSOrder::Argissolo: return "Argissolo";
-            case SiBCSOrder::Neossolo: return "Neossolo";
-            case SiBCSOrder::Cambissolo: return "Cambissolo";
-            case SiBCSOrder::Gleissolo: return "Gleissolo";
-            case SiBCSOrder::Planossolo: return "Planossolo";
-            case SiBCSOrder::Espodossolo: return "Espodossolo";
-            case SiBCSOrder::Vertissolo: return "Vertissolo";
-            case SiBCSOrder::Nitossolo: return "Nitossolo";
-            case SiBCSOrder::Organossolo: return "Organossolo";
-            default: return "Outro";
-        }
-    }
+    static std::string getBaseName(SiBCSOrder type) { /* ... */ switch(type) { case SiBCSOrder::Latossolo: return "Latossolo"; case SiBCSOrder::Argissolo: return "Argissolo"; case SiBCSOrder::Neossolo: return "Neossolo"; case SiBCSOrder::Cambissolo: return "Cambissolo"; case SiBCSOrder::Gleissolo: return "Gleissolo"; case SiBCSOrder::Planossolo: return "Planossolo"; case SiBCSOrder::Espodossolo: return "Espodossolo"; case SiBCSOrder::Vertissolo: return "Vertissolo"; case SiBCSOrder::Nitossolo: return "Nitossolo"; case SiBCSOrder::Organossolo: return "Organossolo"; default: return "Outro"; } }
     
-    static std::string getBaseName(SiBCSSuborder type) {
+    static std::string getBaseName(SiBCSSuborder type) { /* ... */ switch(type) { case SiBCSSuborder::Vermelho: return "Vermelho"; case SiBCSSuborder::Amarelo: return "Amarelo"; case SiBCSSuborder::VermelhoAmarelo: return "Vermelho-Amarelo"; case SiBCSSuborder::Bruno: return "Bruno"; case SiBCSSuborder::Litoc: return "Litólico"; case SiBCSSuborder::Gleico: return "Gleico"; case SiBCSSuborder::Haplic: return "Háplico"; default: return ""; } }
+
+    static std::string getBaseName(SiBCSGreatGroup type) { /* ... */ switch(type) { case SiBCSGreatGroup::Distrofico: return "Distrófico"; case SiBCSGreatGroup::Eutrofico: return "Eutrófico"; case SiBCSGreatGroup::Alico: return "Álico"; case SiBCSGreatGroup::Humico: return "Húmico"; default: return ""; } }
+    
+    static std::string getBaseName(SiBCSSubgroup type) {
         switch(type) {
-            case SiBCSSuborder::Vermelho: return "Vermelho";
-            case SiBCSSuborder::Amarelo: return "Amarelo";
-            case SiBCSSuborder::VermelhoAmarelo: return "Vermelho-Amarelo";
-            case SiBCSSuborder::Bruno: return "Bruno";
-            case SiBCSSuborder::Litoc: return "Litólico";
-            case SiBCSSuborder::Gleico: return "Gleico"; // Usually combined
-            case SiBCSSuborder::Haplic: return "Háplico";
+            case SiBCSSubgroup::Tipico: return "Típico";
+            case SiBCSSubgroup::Latossolico: return "Latossólico";
+            case SiBCSSubgroup::Argissolico: return "Argissólico";
             default: return "";
         }
     }
 
-    static std::string getBaseName(SiBCSGreatGroup type) {
+    static std::string getBaseName(SiBCSFamily type) {
         switch(type) {
-            case SiBCSGreatGroup::Distrofico: return "Distrófico";
-            case SiBCSGreatGroup::Eutrofico: return "Eutrófico";
-            case SiBCSGreatGroup::Alico: return "Álico";
-            case SiBCSGreatGroup::Humico: return "Húmico";
+            case SiBCSFamily::TexturaArgilosa: return "Argilosa";
+            case SiBCSFamily::TexturaMedia: return "Média";
+            case SiBCSFamily::TexturaArenosa: return "Arenosa";
+            default: return "";
+        }
+    }
+
+    static std::string getBaseName(SiBCSSeries type) {
+        switch(type) {
+            case SiBCSSeries::Generica: return "Genérica";
             default: return "";
         }
     }
@@ -173,9 +187,14 @@ struct SiBCSHelper {
         if (level >= 3 && soil.greatGroup != SiBCSGreatGroup::None) {
             name += " " + getBaseName(soil.greatGroup);
         }
-        // ... (extend for levels 4-6)
         if (level >= 4 && soil.subgroup != SiBCSSubgroup::None) {
-             name += " típico"; // Placeholder for enum string
+             name += " " + getBaseName(soil.subgroup); 
+        }
+        if (level >= 5 && soil.family != SiBCSFamily::None) {
+             name += ", " + getBaseName(soil.family);
+        }
+        if (level >= 6 && soil.series != SiBCSSeries::None) {
+             name += " (" + getBaseName(soil.series) + ")";
         }
         return name;
     }
@@ -256,6 +275,18 @@ struct SiBCSHelper {
             SiBCSGreatGroup::Distrofico, SiBCSGreatGroup::Eutrofico, 
             SiBCSGreatGroup::Alico, SiBCSGreatGroup::Humico 
         };
+    }
+
+    static std::vector<SiBCSSubgroup> getAllSubgroups() {
+        return { SiBCSSubgroup::Tipico, SiBCSSubgroup::Latossolico, SiBCSSubgroup::Argissolico };
+    }
+
+    static std::vector<SiBCSFamily> getAllFamilies() {
+        return { SiBCSFamily::TexturaArgilosa, SiBCSFamily::TexturaMedia, SiBCSFamily::TexturaArenosa };
+    }
+
+    static std::vector<SiBCSSeries> getAllSeries() {
+        return { SiBCSSeries::Generica };
     }
 
     // Get List of Common Valid Vectors for Legend
