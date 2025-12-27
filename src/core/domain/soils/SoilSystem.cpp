@@ -20,6 +20,10 @@ void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, cons
     if (maxZ == minZ) maxZ = minZ + 1.0f;
 
     // 2. Iterate and Predict
+    std::vector<SiBCSClassification> uniqueClasses; 
+    // Simple helper to check uniqueness without full set overhead if count is low, 
+    // or just use vector and unique at end. Given mesh size, let's just collect and sort/unique.
+
     for (auto& v : vertices) {
         float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
         float slopeDeg = glm::degrees(std::acos(dot));
@@ -27,6 +31,14 @@ void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, cons
 
         auto classification = predict(params, slopeDeg, v.pos.z, relElev);
         
+        // Debug: Collect for reporting (dumb but effective for now)
+        // Optimization: Check if last added allows reducing duplicates effectively
+        if (uniqueClasses.empty() || !(uniqueClasses.back() == classification)) {
+            bool exists = false;
+             for(const auto& c : uniqueClasses) if(c == classification) exists = true;
+             if (!exists) uniqueClasses.push_back(classification);
+        }
+
         // Filter Check
         if (!SiBCSHelper::matches(classification, filter)) {
             // Mask out: make it neutral grey to indicate "not selected"
@@ -39,6 +51,11 @@ void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, cons
     }
 
     std::cout << "[SoilSystem] Soil Map Generated." << std::endl;
+    std::cout << "[SoilSystem] === Detected Classes in Simulation ===" << std::endl;
+    for (const auto& c : uniqueClasses) {
+        std::cout << "  - " << SiBCSHelper::getName(c, 6) << std::endl;
+    }
+    std::cout << "============================================" << std::endl;
 }
 
 SiBCSClassification SoilSystem::predict(const ScorpanParams& global, float slopeDeg, float elevation, float relElevation) {
