@@ -10,6 +10,7 @@ public:
     
 private:
     Core::Domain::Soils::ScorpanParams params_;
+    int visualizationLevel_ = 1; // 1=Order, 2=Suborder, 3=GreatGroup
 };
 
 } // namespace UI::Panels

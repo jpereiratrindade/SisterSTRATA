@@ -58,7 +58,7 @@ public:
 
     // Analysis
     void applySlopeVisualization();
-    void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params); // New
+    void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params, int visualizationLevel = 1); // Updated
 
     struct SlopeStats {
         int countFlat = 0;

@@ -107,8 +107,8 @@ void setAmbientStrength(float strength) { if (g_Engine) g_Engine->setAmbientStre
 
 void applySlopeAnalysis() { if (g_Engine) g_Engine->applySlopeVisualization(); }
 
-void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params) { 
-    if (g_Engine) g_Engine->applySoilSimulation(params); 
+void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params, int visualizationLevel) { 
+    if (g_Engine) g_Engine->applySoilSimulation(params, visualizationLevel); 
 }
 
 SlopeStats getSlopeAnalysisStats() {

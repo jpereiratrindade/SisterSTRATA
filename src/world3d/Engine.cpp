@@ -596,14 +596,14 @@ bool Engine::generateSampleTerrain(const std::string& filename, int width, int h
 
 // ... (Headers adjusted)
 
-void Engine::applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params) {
+void Engine::applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params, int visualizationLevel) {
     if (!activeVertices_ || !activeVertexBuffer_) {
         std::cerr << "[Engine] No active mesh to simulate soils." << std::endl;
         return;
     }
 
     // Delegate to Domain System
-    Core::Domain::Soils::SoilSystem::process(*activeVertices_, params);
+    Core::Domain::Soils::SoilSystem::process(*activeVertices_, params, visualizationLevel);
 
     // Re-upload to GPU
     vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();

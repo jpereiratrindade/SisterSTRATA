@@ -1,5 +1,6 @@
 #include "SoilSimPanel.hpp"
 #include "world3d/World3D.hpp"
+#include "core/domain/soils/SiBCS.hpp" // Added
 #include <string>
 
 namespace UI::Panels {
@@ -40,12 +41,55 @@ void SoilSimPanel::draw(bool* open) {
             params_.parentMaterial = static_cast<Core::Domain::Soils::ParentMaterialType>(currentItem);
         }
 
+        ImGui::Separator();
+        
+        ImGui::Text("Visualization Level (SiBCS)");
+        const char* levels[] = { "1. Order (Ordem)", "2. Suborder (Subordem)", "3. Great Group (Grande Grupo)" };
+        // We use 0-based index for ImGui, but 1-based for logic
+        int currentLevelIndex = visualizationLevel_ - 1;
+        if (ImGui::Combo("Level", &currentLevelIndex, levels, IM_ARRAYSIZE(levels))) {
+            visualizationLevel_ = currentLevelIndex + 1;
+        }
+
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
 
         if (ImGui::Button("Run Simulation", ImVec2(-1, 40))) {
-            World3D::applySoilSimulation(params_);
+            World3D::applySoilSimulation(params_, visualizationLevel_);
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Legend (Colors)");
+        ImGui::Spacing();
+
+        if (visualizationLevel_ == 1) { // Order
+            for (auto order : Core::Domain::Soils::SiBCSHelper::getAllOrders()) {
+                Core::Domain::Soils::SiBCSClassification dummy;
+                dummy.order = order;
+                glm::vec3 c = Core::Domain::Soils::SiBCSHelper::getColor(dummy, 1);
+                ImGui::ColorButton("##c", ImVec4(c.r, c.g, c.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20));
+                ImGui::SameLine();
+                ImGui::Text("%s", Core::Domain::Soils::SiBCSHelper::getName(order).c_str());
+            }
+        } else if (visualizationLevel_ == 2) { // Suborder
+            for (auto sub : Core::Domain::Soils::SiBCSHelper::getAllSuborders()) {
+                Core::Domain::Soils::SiBCSClassification dummy;
+                dummy.suborder = sub;
+                glm::vec3 c = Core::Domain::Soils::SiBCSHelper::getColor(dummy, 2);
+                ImGui::ColorButton("##c", ImVec4(c.r, c.g, c.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20));
+                ImGui::SameLine();
+                ImGui::Text("%s", Core::Domain::Soils::SiBCSHelper::getName(sub).c_str());
+            }
+        } else if (visualizationLevel_ == 3) { // Great Group
+            for (auto group : Core::Domain::Soils::SiBCSHelper::getAllGreatGroups()) {
+                Core::Domain::Soils::SiBCSClassification dummy;
+                dummy.greatGroup = group;
+                glm::vec3 c = Core::Domain::Soils::SiBCSHelper::getColor(dummy, 3);
+                ImGui::ColorButton("##c", ImVec4(c.r, c.g, c.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20));
+                ImGui::SameLine();
+                ImGui::Text("%s", Core::Domain::Soils::SiBCSHelper::getName(group).c_str());
+            }
         }
         
     }

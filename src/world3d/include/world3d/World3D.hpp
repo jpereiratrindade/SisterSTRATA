@@ -57,7 +57,7 @@ struct SlopeStats {
     int total;
 };
 void applySlopeAnalysis();
-void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params); // New
+void applySoilSimulation(const Core::Domain::Soils::ScorpanParams& params, int visualizationLevel = 1); // Updated
 SlopeStats getSlopeAnalysisStats();
 bool saveReport(const std::string& path);
 // Tools
