@@ -8,6 +8,11 @@ FetchContent_MakeAvailable(imgui)
 
 add_library(ui
     UI.cpp
+    menus/MainMenu.cpp
+    panels/AnalysisPanel.cpp
+    panels/SettingsPanel.cpp
+    panels/TerrainGenPanel.cpp
+    panels/WelcomePanel.cpp
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
     ${imgui_SOURCE_DIR}/imgui_tables.cpp

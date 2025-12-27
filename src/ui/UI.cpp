@@ -207,242 +207,26 @@ void UserInterface::beginFrame() {
     ImGui::NewFrame();
 }
 
+
 void UserInterface::draw(const Application::DTO::UIData& data) {
-    static bool showWelcome = true;
-    static bool showSettings = false;
-    static bool showAnalysisReport = false;
-    static bool showTerrainGen = false;
-    static bool showOpenDialog = false;
-    static char filePathBuf[256] = "assets/data/sample.csv";
+    // 1. Update Callback Links (every frame or strictly on change? frame is safer for lambda captures if any)
+    // Actually, MainMenu stores std::functions. Copying them every frame is cheap but slightly wasteful.
+    // Better to linking them once in init? Or just copy here.
+    mainMenu_.onLoadDemo = onLoadDemo;
+    mainMenu_.onOpenFile = onOpenFile;
+    mainMenu_.onCloseFile = onCloseFile;
+    mainMenu_.onExit = onExit;
 
-    // Main Menu
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open File...", "Ctrl+O")) {
-                showOpenDialog = true;
-            }
-            if (ImGui::MenuItem("Load Demo Cloud")) {
-                if (onLoadDemo) onLoadDemo();
-            }
-            if (ImGui::MenuItem("Close File")) {
-                if (onCloseFile) onCloseFile();
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Exit")) {
-                if (onExit) onExit();
-            }
-            ImGui::EndMenu();
-        }
-        
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Welcome Panel", nullptr, &showWelcome);
-            // ImGui::MenuItem("ImGui Demo", nullptr, &showDemo);
-            ImGui::EndMenu();
-        }
-        
-        if (ImGui::BeginMenu("Tools")) {
-            if (ImGui::MenuItem("Settings")) {
-                showSettings = true;
-            }
-            if (ImGui::MenuItem("Analyze Slope")) {
-                World3D::applySlopeAnalysis();
-                showAnalysisReport = true;
-            }
-            if (ImGui::MenuItem("Generate Pattern")) {
-                showTerrainGen = true;
-            }
-            ImGui::EndMenu();
-        }
-        
-        ImGui::EndMainMenuBar();
-    }
+    // 2. Draw Main Menu
+    mainMenu_.draw();
 
-    if (showAnalysisReport) {
-        if (ImGui::Begin("Analysis Report", &showAnalysisReport)) {
-            auto stats = World3D::getSlopeAnalysisStats();
-            
-            if (stats.total > 0) {
-                ImGui::Text("Total Vertices: %d", stats.total);
-                ImGui::Separator();
-                
-                auto drawRow = [&](const char* label, int count, ImVec4 color) {
-                    float pct = (float)count / (float)stats.total * 100.0f;
-                    ImGui::TextColored(color, "%s: %d (%.1f%%)", label, count, pct);
-                };
-
-                drawRow("Flat (0-5 deg)", stats.countFlat, ImVec4(0.2f, 0.8f, 0.2f, 1.0f));
-                drawRow("Gentle (5-20 deg)", stats.countGentle, ImVec4(0.8f, 0.8f, 0.2f, 1.0f));
-                drawRow("Moderate (20-45 deg)", stats.countModerate, ImVec4(0.9f, 0.5f, 0.0f, 1.0f));
-                drawRow("Steep (>45 deg)", stats.countSteep, ImVec4(0.9f, 0.1f, 0.1f, 1.0f));
-                
-                ImGui::Separator();
-                
-                static char reportFilename[128] = "slope_report.txt";
-                ImGui::InputText("Filename", reportFilename, IM_ARRAYSIZE(reportFilename));
-                
-                if (ImGui::Button("Save Report")) {
-                    if (World3D::saveReport(reportFilename)) {
-                        ImGui::OpenPopup("Saved");
-                    }
-                }
-                
-                if (ImGui::BeginPopupModal("Saved", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-                    ImGui::Text("Report saved successfully!");
-                    if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-                    ImGui::EndPopup();
-                }
-
-                ImGui::SameLine();
-                if (ImGui::Button("Close")) {
-                    showAnalysisReport = false;
-                }
-            } else {
-                ImGui::Text("No data analyzed.");
-            }
-        }
-        ImGui::End();
-    }
-    
-    // Terrain Generator Dialog
-    if (showTerrainGen) {
-        if (ImGui::Begin("Generate Terrain", &showTerrainGen)) {
-            static char genFilename[256] = "assets/data/generated_terrain.obj";
-            static int genWidth = 100;
-            static int genHeight = 100;
-            static float genSpacing = 1.0f;
-            static int genType = 0;
-            const char* typeItems[] = { "Hills", "Mountains", "Flat", "Canyon" };
-
-            ImGui::InputText("Output Filename", genFilename, IM_ARRAYSIZE(genFilename));
-            ImGui::InputInt("Width", &genWidth);
-            ImGui::InputInt("Height", &genHeight);
-            ImGui::InputFloat("Spacing (m)", &genSpacing);
-            ImGui::Combo("Pattern", &genType, typeItems, IM_ARRAYSIZE(typeItems));
-            
-            // Validate inputs
-            if (genWidth < 10) genWidth = 10;
-            if (genHeight < 10) genHeight = 10;
-            if (genSpacing < 0.1f) genSpacing = 0.1f;
-            
-            ImGui::Separator();
-
-            bool isGen = World3D::isTerrainGenerating();
-            if (isGen) {
-                ImGui::Text("Generating... Please wait.");
-            } else {
-                if (ImGui::Button("Generate & Load")) {
-                    if (World3D::generateTerrain(genFilename, genWidth, genHeight, genSpacing, genType, true)) {
-                        // Load handled automatically by Engine on success
-                    }
-                }
-                
-                ImGui::SameLine();
-                 
-                 if (ImGui::Button("Generate Only")) {
-                    if (World3D::generateTerrain(genFilename, genWidth, genHeight, genSpacing, genType, false)) {
-                         ImGui::OpenPopup("GenSuccess");
-                    }
-                 }
-            }
-
-             if (ImGui::BeginPopupModal("GenSuccess", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-                 ImGui::Text("Terrain Generation Started!");
-                 if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); showTerrainGen = false; }
-                 ImGui::EndPopup();
-             }
-        }
-        ImGui::End();
-    }
-    
-    if (showSettings) {
-        if (ImGui::Begin("Settings", &showSettings)) {
-            if (ImGui::CollapsingHeader("Lighting", ImGuiTreeNodeFlags_DefaultOpen)) {
-                 glm::vec3 lightDir = World3D::getLightDirection();
-                 if (ImGui::SliderFloat3("Light Direction", &lightDir.x, -5.0f, 5.0f)) {
-                     World3D::setLightDirection(lightDir.x, lightDir.y, lightDir.z);
-                 }
-    
-                 glm::vec3 lightColor = World3D::getLightColor();
-                 if (ImGui::ColorEdit3("Light Color", &lightColor.r)) {
-                     World3D::setLightColor(lightColor.r, lightColor.g, lightColor.b);
-                 }
-    
-                 float ambient = World3D::getAmbientStrength();
-                 if (ImGui::SliderFloat("Ambient Strength", &ambient, 0.0f, 1.0f)) {
-                     World3D::setAmbientStrength(ambient);
-                 }
-            
-                static float moveSpeed = 2.5f;
-                if (ImGui::SliderFloat("Camera Speed", &moveSpeed, 0.1f, 100.0f)) {
-                    World3D::setCameraSpeed(moveSpeed);
-                }
-            }
-        }
-        ImGui::End();
-    }
-
-    if (showWelcome) {
-        ImGuiIO& io = ImGui::GetIO();
-        // Position on top-right, similar to Inspector in reference
-        const float panelMargin = 10.0f;
-        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 320.0f - panelMargin, panelMargin + 18.0f), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(320.0f, 200.0f), ImGuiCond_FirstUseEver); // Allow resize
-        
-        if (ImGui::Begin("Welcome to SisterPEC", &showWelcome)) {
-            ImGui::Text("Scientific Data Platform - VULKAN BACKEND");
-            ImGui::Separator();
-            
-            // Use DTO Data
-            ImGui::Text("FPS: %.1f", data.framerate);
-            ImGui::Text("Frame Time: %.3f ms", data.frameTimeMs);
-            
-            if (!data.startMessage.empty()) {
-                ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "%s", data.startMessage.c_str());
-            }
-
-            if (ImGui::Button("Reset Camera")) {
-                 // TODO: Reset Camera logic
-            }
-
-            ImGui::Separator();
-        
-            ImGui::Separator();
-            // Lighting controls moved to Settings
-            ImGui::TextDisabled("Lighting controls moved to Tools > Settings");
-
-        }
-        ImGui::End();
-    }
-    
-    // if (showDemo) {
-    //     ImGui::ShowDemoWindow(&showDemo);
-    // }
-
-    // File Open Modal
-    if (showOpenDialog) {
-        ImGui::OpenPopup("Open File");
-    }
-
-    if (ImGui::BeginPopupModal("Open File", &showOpenDialog, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Enter file path:");
-        ImGui::InputText("Path", filePathBuf, IM_ARRAYSIZE(filePathBuf));
-        
-        ImGui::Separator();
-        
-        if (ImGui::Button("Load", ImVec2(120, 0))) {
-            if (onOpenFile) onOpenFile(std::string(filePathBuf));
-            showOpenDialog = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            showOpenDialog = false;
-            ImGui::CloseCurrentPopup();
-        }
-        
-        ImGui::EndPopup();
-    }
+    // 3. Draw Panels (Logic controlled by MainMenu state)
+    analysisPanel_.draw(&mainMenu_.showAnalysisReport);
+    terrainGenPanel_.draw(&mainMenu_.showTerrainGen);
+    settingsPanel_.draw(&mainMenu_.showSettings);
+    welcomePanel_.draw(&mainMenu_.showWelcome, data);
 }
+
 
 void UserInterface::render(vk::CommandBuffer cmd) {
     ImGui::Render();

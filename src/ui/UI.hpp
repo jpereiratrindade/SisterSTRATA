@@ -5,6 +5,12 @@
 #include <functional>
 #include "application/dtos/UIData.hpp"
 
+#include "ui/menus/MainMenu.hpp"
+#include "ui/panels/AnalysisPanel.hpp"
+#include "ui/panels/SettingsPanel.hpp"
+#include "ui/panels/TerrainGenPanel.hpp"
+#include "ui/panels/WelcomePanel.hpp"
+
 namespace UI {
 
 struct VulkanInitInfo {
@@ -26,7 +32,7 @@ public:
 
     // Callbacks
     std::function<void()> onLoadDemo;
-    std::function<void(std::string)> onOpenFile; // New
+    std::function<void(std::string)> onOpenFile; 
     std::function<void()> onCloseFile; 
     std::function<void()> onExit;
     
@@ -39,11 +45,18 @@ public:
 
     bool wantsToCaptureMouse() const;
     bool wantsToCaptureKeyboard() const;
-    bool wantsTextInput() const; // New: More specific than CaptureKeyboard
+    bool wantsTextInput() const; 
 
 private:
     SDL_Window* window_ = nullptr;
     float dpiScale_ = 1.0f;
+
+    // Components
+    Menus::MainMenu mainMenu_;
+    Panels::AnalysisPanel analysisPanel_;
+    Panels::SettingsPanel settingsPanel_;
+    Panels::TerrainGenPanel terrainGenPanel_;
+    Panels::WelcomePanel welcomePanel_;
 };
 
 } // namespace UI
