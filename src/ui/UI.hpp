@@ -33,6 +33,7 @@ public:
     // Callbacks
     std::function<void()> onLoadDemo;
     std::function<void(std::string)> onOpenFile; 
+    std::function<void(std::string)> onSaveFile; // New
     std::function<void()> onCloseFile; 
     std::function<void()> onExit;
     

@@ -11,6 +11,21 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("Open File...", "Ctrl+O")) {
                 showOpenDialog = true;
             }
+            if (ImGui::MenuItem("Save", "Ctrl+S")) {
+                 if (World3D::getCurrentFilePath().empty()) {
+                     showSaveAsDialog = true;
+                 } else {
+                     if (onSaveFile) onSaveFile(World3D::getCurrentFilePath());
+                 }
+            }
+            if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) {
+                // Pre-fill buffer with current path if exists
+                std::string current = World3D::getCurrentFilePath();
+                if (!current.empty()) {
+                    strncpy(saveFilePathBuf, current.c_str(), sizeof(saveFilePathBuf) - 1);
+                }
+                showSaveAsDialog = true;
+            }
             if (ImGui::MenuItem("Load Demo Cloud")) {
                 if (onLoadDemo) onLoadDemo();
             }
@@ -47,6 +62,7 @@ void MainMenu::draw() {
     }
 
     drawOpenFileDialog();
+    drawSaveFileDialog();
 }
 
 void MainMenu::drawOpenFileDialog() {
@@ -69,6 +85,32 @@ void MainMenu::drawOpenFileDialog() {
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0))) {
             showOpenDialog = false;
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::EndPopup();
+    }
+}
+
+void MainMenu::drawSaveFileDialog() {
+    if (showSaveAsDialog) {
+        ImGui::OpenPopup("Save As");
+    }
+
+    if (ImGui::BeginPopupModal("Save As", &showSaveAsDialog, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Enter output file path (e.g. assets/data/new.obj):");
+        ImGui::InputText("Path", saveFilePathBuf, IM_ARRAYSIZE(saveFilePathBuf));
+        
+        ImGui::Separator();
+        
+        if (ImGui::Button("Save", ImVec2(120, 0))) {
+            if (onSaveFile) onSaveFile(std::string(saveFilePathBuf));
+            showSaveAsDialog = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            showSaveAsDialog = false;
             ImGui::CloseCurrentPopup();
         }
         

@@ -30,6 +30,8 @@ uint32_t getImageCount();
 
 void loadDemoCloud(); // New test function
 void loadFile(const std::string& path); // Generic loader
+bool saveFile(const std::string& path); // Generic saver
+std::string getCurrentFilePath(); // Get current active path
 
 void processEvent(const SDL_Event& event); // New input handler
 

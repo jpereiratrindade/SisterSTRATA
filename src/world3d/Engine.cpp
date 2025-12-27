@@ -10,6 +10,8 @@
 #include "world3d/loader/ObjLoader.hpp"
 #include "world3d/loader/CsvLoader.hpp"
 #include "world3d/generators/TerrainGenerator.hpp"
+#include "world3d/exporter/ObjExporter.hpp"
+#include "world3d/exporter/CsvExporter.hpp"
 
 namespace World3D {
 
@@ -328,6 +330,10 @@ void Engine::loadFile(const std::string& path) {
         // return;  <-- Uncomment to enforce strict mode
     }
 
+
+
+
+    // ...
     std::cout << "[Engine] Requesting load: " << path << std::endl;
     
     // Async load to prevent UI freeze
@@ -353,7 +359,7 @@ void Engine::loadFile(const std::string& path) {
                 (*verticesPtr)[i].color = data.colors[i];
             }
 
-            commandQueue_.push([this, verticesPtr, count = data.points.size()]() {
+            commandQueue_.push([this, verticesPtr, count = data.points.size(), path]() {
                 if (!context_ || !renderer_) return;
                 
                 RenderObject pointsObj;
@@ -369,12 +375,19 @@ void Engine::loadFile(const std::string& path) {
                 renderer_->copyBuffer(pointsStaging.getHandle(), pointsObj.vertexBuffer->getHandle(), pointsSize);
                 
                 scene_.addObject(pointsObj);
+                
+                // Track Actives
+                activeVertices_ = verticesPtr;
+                activeVertexBuffer_ = pointsObj.vertexBuffer;
+                activeTopology_ = vk::PrimitiveTopology::ePointList; // Track Topology
+                currentFilePath_ = path; // Track Path
+
                 std::cout << "[Engine] CSV Loaded: " << count << " points." << std::endl;
             });
 
         // --- OBJ (Mesh) ---
         } else if (ext == ".obj") {
-             auto verticesPtr = std::make_shared<std::vector<Rendering::Vertex>>();
+             auto verticesPtr = std::make_shared<std::vector<Rendering::Vertex>>(); // Non-indexed
              if (Loader::ObjLoader::load(path, *verticesPtr)) {
                  // --- Auto-Color based on Height (Z) ---
                  if (!verticesPtr->empty()) {
@@ -393,8 +406,6 @@ void Engine::loadFile(const std::string& path) {
                          float h = (v.pos.z - minZ) / (maxZ - minZ);
                          
                          // Simple Gradient: Dark Green (Low) -> White (High)
-                         // Low: 0.1, 0.4, 0.1
-                         // High: 1.0, 1.0, 1.0
                          glm::vec3 cLow(0.1f, 0.45f, 0.15f);
                          glm::vec3 cHigh(0.95f, 0.95f, 0.95f);
                          
@@ -402,7 +413,7 @@ void Engine::loadFile(const std::string& path) {
                      }
                  }
                 
-                commandQueue_.push([this, verticesPtr]() {
+                commandQueue_.push([this, verticesPtr, path]() {
                      RenderObject obj;
                      obj.topology = vk::PrimitiveTopology::eTriangleList; // OBJ is usually triangles
                      obj.vertexCount = static_cast<uint32_t>(verticesPtr->size());
@@ -419,6 +430,8 @@ void Engine::loadFile(const std::string& path) {
                      // Store references for analysis tools
                      activeVertices_ = verticesPtr;
                      activeVertexBuffer_ = obj.vertexBuffer;
+                     activeTopology_ = vk::PrimitiveTopology::eTriangleList; // Track Topology
+                     currentFilePath_ = path; // Track Path
                      
                      std::cout << "[Engine] OBJ Loaded." << std::endl;
                 });
@@ -429,6 +442,37 @@ void Engine::loadFile(const std::string& path) {
             std::cerr << "[Engine] Unsupported file format: " << ext << std::endl;
         }
     });
+}
+
+bool Engine::saveFile(const std::string& path) {
+    if (!activeVertices_ || activeVertices_->empty()) {
+        std::cerr << "[Engine] No active data to save." << std::endl;
+        return false;
+    }
+
+    std::filesystem::path p(path);
+    std::string ext = p.extension().string();
+
+    bool result = false;
+
+    if (ext == ".obj") {
+        result = Exporter::ObjExporter::save(path, *activeVertices_, activeTopology_);
+    } else if (ext == ".csv" || ext == ".txt" || ext == ".xyz") {
+        // CSV always exports points, even if it was a mesh
+        result = Exporter::CsvExporter::save(path, *activeVertices_);
+    } else {
+        std::cerr << "[Engine] Unsupported export format: " << ext << std::endl;
+        return false;
+    }
+
+    if (result) {
+        std::cout << "[Engine] File saved successfully: " << path << std::endl;
+        currentFilePath_ = path; // Update current path on successful save
+    } else {
+        std::cerr << "[Engine] Failed to save file: " << path << std::endl;
+    }
+
+    return result;
 }
 
 void Engine::applySlopeVisualization() {

@@ -214,6 +214,7 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     // Better to linking them once in init? Or just copy here.
     mainMenu_.onLoadDemo = onLoadDemo;
     mainMenu_.onOpenFile = onOpenFile;
+    mainMenu_.onSaveFile = onSaveFile; // Link
     mainMenu_.onCloseFile = onCloseFile;
     mainMenu_.onExit = onExit;
 

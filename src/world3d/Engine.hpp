@@ -64,40 +64,45 @@ public:
         int total = 0;
     };
     
-    SlopeStats getLastSlopeStats() const { return lastStats_; }
+    SlopeStats getSlopeAnalysisStats() const { return lastStats_; }
+    // IO
+    bool saveFile(const std::string& path); 
+    std::string getCurrentFilePath() const { return currentFilePath_; }
+
+    // Terrain
+    bool generateSampleTerrain(const std::string& filename, int width, int height, float spacing, int type, bool autoLoad = true);
+    bool isTerrainGenerating() const { return isGenerating_; }
+
+    // Analysis
     bool saveSlopeStats(const std::string& filepath);
-    
-    // Tools
-    bool generateSampleTerrain(const std::string& filename, int width, int height, float spacing, int type, bool autoLoad);
-    bool isGenerating() const { return isGenerating_; }
-    
+
     // Settings
     void setCameraSpeed(float speed);
 
 private:
     void notifyStatus(const std::string& msg);
-    void uploadReferenceGrid(); // Persistent visual reference
-    
+    void uploadReferenceGrid();
+
     SlopeStats lastStats_;
     std::atomic<bool> isGenerating_{false};
 
+    // Systems
     std::shared_ptr<Rendering::VulkanContext> context_;
     std::unique_ptr<Rendering::VulkanRenderer> renderer_;
     std::unique_ptr<Camera> camera_;
     std::unique_ptr<CameraInputController> inputController_;
-    
-    // Threading
     std::unique_ptr<Infrastructure::Threading::ThreadPool> threadPool_;
     Infrastructure::Threading::CommandQueue commandQueue_;
-
     
-    Scene scene_; // New Scene member
+    Scene scene_;
+    vk::DescriptorPool descriptorPool_; // Managed by Engine for strict RAII
     
-    // Keep reference to active mesh for analysis
+    // Active Data for Analysis/Export
     std::shared_ptr<std::vector<Rendering::Vertex>> activeVertices_;
-    std::shared_ptr<Rendering::Buffer> activeVertexBuffer_; // To update GPU data
+    std::shared_ptr<Rendering::Buffer> activeVertexBuffer_;
+    vk::PrimitiveTopology activeTopology_ = vk::PrimitiveTopology::eTriangleList; // New
+    std::string currentFilePath_; // New
 
-    vk::DescriptorPool descriptorPool_;
     bool framebufferResized_ = false;
 
     // Lighting Data

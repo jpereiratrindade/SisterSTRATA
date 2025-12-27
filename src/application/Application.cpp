@@ -41,6 +41,7 @@ void Application::init() {
     // Bind UI Callbacks
     ui_->onLoadDemo = []() { World3D::loadDemoCloud(); };
     ui_->onOpenFile = [](std::string path) { World3D::loadFile(path); };
+    ui_->onSaveFile = [](std::string path) { World3D::saveFile(path); }; // Bind
     ui_->onCloseFile = []() { World3D::clear(); }; 
     ui_->onExit = [this]() { this->running_ = false; };
 

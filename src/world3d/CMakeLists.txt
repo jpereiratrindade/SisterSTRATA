@@ -13,6 +13,8 @@ add_library(world3d
     camera/Camera.cpp
     camera/CameraInputController.cpp
     generators/TerrainGenerator.cpp
+    exporter/ObjExporter.cpp
+    exporter/CsvExporter.cpp
 )
 
 # Shader Compilation

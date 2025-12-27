@@ -41,6 +41,16 @@ void loadFile(const std::string& path) {
     if (g_Engine) g_Engine->loadFile(path);
 }
 
+bool saveFile(const std::string& path) {
+    if (g_Engine) return g_Engine->saveFile(path);
+    return false;
+}
+
+std::string getCurrentFilePath() {
+    if (g_Engine) return g_Engine->getCurrentFilePath();
+    return "";
+}
+
 vk::Instance getInstance() { return g_Engine ? g_Engine->getContext()->getInstance() : nullptr; }
 vk::PhysicalDevice getPhysicalDevice() { return g_Engine ? g_Engine->getContext()->getPhysicalDevice() : nullptr; }
 vk::Device getDevice() { return g_Engine ? g_Engine->getContext()->getDevice() : nullptr; }
@@ -99,7 +109,7 @@ void applySlopeAnalysis() { if (g_Engine) g_Engine->applySlopeVisualization(); }
 
 SlopeStats getSlopeAnalysisStats() {
     if (g_Engine) {
-        auto s = g_Engine->getLastSlopeStats();
+        auto s = g_Engine->getSlopeAnalysisStats();
         return {s.countFlat, s.countGentle, s.countModerate, s.countSteep, s.total};
     }
     return {};
@@ -116,7 +126,7 @@ bool generateTerrain(const std::string& filename, int width, int height, float s
 }
 
 bool isTerrainGenerating() {
-    if (g_Engine) return g_Engine->isGenerating();
+    if (g_Engine) return g_Engine->isTerrainGenerating();
     return false;
 }
 
