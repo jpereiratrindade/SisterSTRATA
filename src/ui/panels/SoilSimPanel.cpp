@@ -1,5 +1,6 @@
 #include "SoilSimPanel.hpp"
 #include "world3d/World3D.hpp"
+#include "core/domain/soils/SoilSystem.hpp" // Added
 #include "core/domain/soils/SiBCS.hpp" // Added
 #include <string>
 
@@ -202,17 +203,21 @@ void SoilSimPanel::drawSiBCS(bool* open) {
 
         // Universal Legend Logic 
         auto commonSoils = Core::Domain::Soils::SiBCSHelper::getCommonVectors(visualizationLevel_);
-        
-        ImGui::BeginChild("LegendScroll", ImVec2(0, 0), false, 0); // Scrollable area for legend
-        for (const auto& soil : commonSoils) {
-            glm::vec3 c = Core::Domain::Soils::SiBCSHelper::getColor(soil, visualizationLevel_);
-            std::string name = Core::Domain::Soils::SiBCSHelper::getName(soil, visualizationLevel_);
-            
-            ImGui::ColorButton("##c", ImVec4(c.r, c.g, c.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20));
-            ImGui::SameLine();
-            ImGui::TextWrapped("%s", name.c_str());
+        if (ImGui::CollapsingHeader("Legend (Colors)", ImGuiTreeNodeFlags_DefaultOpen)) {
+            // Use ACTUAL detected classes from the system
+            const auto& legendItems = Core::Domain::Soils::SoilSystem::getLastDetectedClasses();
+
+            if (legendItems.empty()) {
+               ImGui::TextDisabled("(No soils detected matching filters)");
+            }
+
+            for (const auto& soil : legendItems) {
+                glm::vec3 color = Core::Domain::Soils::SiBCSHelper::getColor(soil, visualizationLevel_);
+                ImGui::ColorButton("##legend", ImVec4(color.r, color.g, color.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(16, 16));
+                ImGui::SameLine();
+                ImGui::Text("%s", Core::Domain::Soils::SiBCSHelper::getName(soil, visualizationLevel_).c_str());
+            }
         }
-        ImGui::EndChild();
         
     }
     ImGui::End();

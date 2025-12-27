@@ -5,6 +5,9 @@
 
 namespace Core::Domain::Soils {
 
+// Define static member
+std::vector<SiBCSClassification> SoilSystem::lastDetectedClasses_;
+
 void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, const ScorpanParams& params, int visualizationLevel, const SiBCSFilter& filter) {
     if (vertices.empty()) return;
 
@@ -20,9 +23,8 @@ void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, cons
     if (maxZ == minZ) maxZ = minZ + 1.0f;
 
     // 2. Iterate and Predict
-    std::vector<SiBCSClassification> uniqueClasses; 
-    // Simple helper to check uniqueness without full set overhead if count is low, 
-    // or just use vector and unique at end. Given mesh size, let's just collect and sort/unique.
+    lastDetectedClasses_.clear(); // Clear previous
+    std::vector<SiBCSClassification> frameClasses; 
 
     for (auto& v : vertices) {
         float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
@@ -31,31 +33,35 @@ void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, cons
 
         auto classification = predict(params, slopeDeg, v.pos.z, relElev);
         
-        // Debug: Collect for reporting (dumb but effective for now)
-        // Optimization: Check if last added allows reducing duplicates effectively
-        if (uniqueClasses.empty() || !(uniqueClasses.back() == classification)) {
-            bool exists = false;
-             for(const auto& c : uniqueClasses) if(c == classification) exists = true;
-             if (!exists) uniqueClasses.push_back(classification);
-        }
-
         // Filter Check
         if (!SiBCSHelper::matches(classification, filter)) {
-            // Mask out: make it neutral grey to indicate "not selected"
             v.color = glm::vec3(0.3f, 0.3f, 0.3f); 
             continue;
         }
+        
+        // Collect UNIQUE classes for Legend (only if they pass filter!)
+        // Simple linear check is fine for typical counts ( < 20 classes)
+        bool exists = false;
+        for(const auto& c : frameClasses) if(c == classification) { exists = true; break; }
+        if (!exists) frameClasses.push_back(classification);
 
         // Visualize
         v.color = SiBCSHelper::getColor(classification, visualizationLevel);
     }
+    
+    // Assign to static (sorted makes legend nicer)
+    lastDetectedClasses_ = frameClasses;
 
     std::cout << "[SoilSystem] Soil Map Generated." << std::endl;
     std::cout << "[SoilSystem] === Detected Classes in Simulation ===" << std::endl;
-    for (const auto& c : uniqueClasses) {
+    for (const auto& c : lastDetectedClasses_) {
         std::cout << "  - " << SiBCSHelper::getName(c, 6) << std::endl;
     }
     std::cout << "============================================" << std::endl;
+}
+
+const std::vector<SiBCSClassification>& SoilSystem::getLastDetectedClasses() {
+    return lastDetectedClasses_;
 }
 
 SiBCSClassification SoilSystem::predict(const ScorpanParams& global, float slopeDeg, float elevation, float relElevation) {
