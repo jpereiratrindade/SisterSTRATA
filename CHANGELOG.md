@@ -2,6 +2,12 @@
 
 All notable changes to the SisterPEC project will be documented in this file.
 
+## [1.2.0] - 2025-12-29
+### Added
+- **Scientific Foundation**: Added `docs/SISTERSTRATA_SCIENTIFIC_FOUNDATION.md` as the core "living document" for model governance.
+- **Documentation**: Updated README to reflect the project's scientific nature.
+- **Models**: Formalized SCORPAN (Soil), Conservation of Mass (Hydrology), and V-Cell (Vegetation) in the knowledge architecture.
+
 ## [1.1.0] - 2025-12-27
 
 ### Added
