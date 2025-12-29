@@ -19,3 +19,7 @@ imgui.ini
 
 # Documentation
 docs/doxygen/
+
+# Generated Assets
+assets/data/generated_*.obj
+assets/data/slope_report.txt
