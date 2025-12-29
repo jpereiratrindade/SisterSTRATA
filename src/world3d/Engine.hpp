@@ -81,9 +81,32 @@ public:
     std::string getCurrentFilePath() const { return currentFilePath_; }
 
     // Terrain
+    /**
+     * @brief Generates a sample terrain asynchronously.
+     * @param filename Output path (OBJ).
+     * @param width Width in vertices.
+     * @param height Height in vertices.
+     * @param spacing Vertex spacing.
+     * @param type Terrain Type (Flat, Hills, etc.).
+     * @param autoLoad If true, automatically queues a loadFile request upon completion.
+     * @return true if parameters are valid and system is ready.
+     */
     bool generateSampleTerrain(const std::string& filename, int width, int height, float spacing, int type, bool autoLoad = true);
+    
+    /**
+     * @brief Checks if the system is currently busy generating or loading terrain.
+     * @return true if busy.
+     */
     bool isTerrainGenerating() const { return isGenerating_ || isLoading_; }
+    
+    /**
+     * @brief Gets the current generation progress (0.0 to 1.0).
+     */
     float getGenerationProgress() const { return generationProgress_; }
+
+    /**
+     * @brief Gets the current status message (e.g., "Generating Vertices", "Loading...").
+     */
     std::string getGenerationMessage() const;
 
     // Analysis

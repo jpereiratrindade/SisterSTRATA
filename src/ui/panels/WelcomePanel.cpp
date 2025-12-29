@@ -12,7 +12,7 @@ void WelcomePanel::draw(bool* open, const Application::DTO::UIData& data) {
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 320.0f - panelMargin, panelMargin + 18.0f), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(320.0f, 200.0f), ImGuiCond_FirstUseEver); // Allow resize
     
-    if (ImGui::Begin("Welcome to SisterPEC", open)) {
+    if (ImGui::Begin("Welcome to SisterSTRATA", open)) {
         ImGui::Text("Scientific Data Platform - VULKAN BACKEND");
         ImGui::Separator();
         

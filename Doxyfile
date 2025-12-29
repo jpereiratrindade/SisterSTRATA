@@ -1,7 +1,7 @@
 # Doxyfile 1.9.1
 
 # Project Options
-PROJECT_NAME           = "SisterPEC"
+PROJECT_NAME           = "SisterSTRATA"
 PROJECT_NUMBER         = "4.2.1"
 PROJECT_BRIEF          = "Scientific Data Platform for Soil and Environment Simulation"
 OUTPUT_DIRECTORY       = docs/doxygen

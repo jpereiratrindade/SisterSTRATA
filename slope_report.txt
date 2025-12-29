@@ -1,0 +1,9 @@
+Slope Analysis Report
+=====================
+
+Total Vertices: 6279174
+
+Flat (0-5 deg): 981451 (15.6%)
+Gentle (5-20 deg): 665718 (10.6%)
+Moderate (20-45 deg): 1657961 (26.4%)
+Steep (>45 deg): 2974044 (47.4%)

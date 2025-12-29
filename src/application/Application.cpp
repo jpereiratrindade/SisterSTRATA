@@ -18,7 +18,7 @@ void Application::init() {
     std::cout << "[Application] Initializing..." << std::endl;
 
     // 1. Initialize Window
-    window_ = std::make_unique<Infrastructure::Windowing::Window>("SisterPEC - Scientific Platform", 1280, 720);
+    window_ = std::make_unique<Infrastructure::Windowing::Window>("SisterSTRATA - Scientific Engine for Layered Landscapes", 1280, 720);
 
     // 2. Initialize World3D (Vulkan)
     // Critical: Must be done before UI because UI depends on Vulkan Context

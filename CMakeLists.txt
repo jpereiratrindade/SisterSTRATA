@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(SisterPEC VERSION 1.0.0 LANGUAGES CXX)
+project(SisterSTRATA VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,10 +22,10 @@ add_subdirectory(src/ui)
 add_subdirectory(tests)
 
 # Entry point
-add_executable(SisterPEC src/main.cpp)
+add_executable(SisterSTRATA src/main.cpp)
 
 # Link modules to executable
-target_link_libraries(SisterPEC PRIVATE
+target_link_libraries(SisterSTRATA PRIVATE
     core
     application
     infrastructure

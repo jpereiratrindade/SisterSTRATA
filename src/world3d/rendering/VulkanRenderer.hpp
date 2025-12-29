@@ -27,13 +27,33 @@ struct UniformBufferObject {
     alignas(4)  float ambientStrength;
 };
 
+/**
+ * @brief Handles the Vulkan rendering pipeline, including Swapchain management and command buffer recording.
+ */
 class VulkanRenderer {
 public:
+    /**
+     * @brief Initializes the renderer, creates semaphores, and prepares the graphics pipeline.
+     */
     VulkanRenderer(std::shared_ptr<VulkanContext> context, uint32_t width, uint32_t height);
     ~VulkanRenderer();
 
+    /**
+     * @brief Begins frame recording. Acquires the next image from the swapchain.
+     * @param camera The active scene camera for Value updates.
+     */
     void beginFrame(const Camera& camera); 
+    
+    /**
+     * @brief Records drawing commands for the provided scene geometry.
+     * @param scene The scene containing vertices/indices to draw.
+     */
     void render(const Scene& scene); // New
+    
+    /**
+     * @brief Ends frame recording and submits the command buffer to the graphics queue.
+     * Presents the image to the screen.
+     */
     void endFrame();
     void recreateSwapchain(); // Handling Resize
     void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
