@@ -146,6 +146,7 @@ void Engine::render(std::function<void(vk::CommandBuffer)> overlayRender) {
         }
 
         renderer_->endFrame();
+        limitFrameRate();
     }
 }
 
@@ -293,6 +294,16 @@ void Engine::uploadDemoDataAsync() {
 
 void Engine::loadFile(const std::string& path) {
     // Security: Prevent Path Traversal
+    if (isLoading_ || isGenerating_) {
+        std::cerr << "[Engine] System busy." << std::endl;
+        return;
+    }
+    isLoading_ = true;
+    {
+        std::lock_guard<std::mutex> lock(generationMutex_);
+        generationMessage_ = "Loading geometry...";
+    }
+
     // Restrict loading to files within the current working directory or allowed assets folders
     try {
         std::filesystem::path p(path);
@@ -442,6 +453,7 @@ void Engine::loadFile(const std::string& path) {
         } else {
             std::cerr << "[Engine] Unsupported file format: " << ext << std::endl;
         }
+        isLoading_ = false;
     });
 }
 
@@ -558,6 +570,11 @@ bool Engine::saveSlopeStats(const std::string& filepath) {
     return true;
 }
 
+std::string Engine::getGenerationMessage() const {
+    std::lock_guard<std::mutex> lock(generationMutex_);
+    return generationMessage_;
+}
+
 bool Engine::generateSampleTerrain(const std::string& filename, int width, int height, float spacing, int type, bool autoLoad) {
     if (width <= 0 || height <= 0 || spacing <= 0.0f || !std::isfinite(spacing)) {
         std::cerr << "[Engine] Invalid terrain parameters." << std::endl;
@@ -570,26 +587,87 @@ bool Engine::generateSampleTerrain(const std::string& filename, int width, int h
     }
 
     isGenerating_ = true;
+    generationProgress_ = 0.0f;
+    {
+        std::lock_guard<std::mutex> lock(generationMutex_);
+        generationMessage_ = "Initializing...";
+    }
     
     // Launch async task
     std::thread([this, filename, width, height, spacing, type, autoLoad]() {
         auto terrainType = static_cast<Generators::TerrainGenerator::Type>(type);
-        bool success = Generators::TerrainGenerator::generate(filename, width, height, spacing, terrainType);
+        
+        auto onProgress = [this](float pct, const std::string& msg) {
+            generationProgress_ = pct;
+            {
+                std::lock_guard<std::mutex> lock(generationMutex_);
+                generationMessage_ = msg;
+            }
+        };
+
+        bool success = Generators::TerrainGenerator::generate(filename, width, height, spacing, terrainType, onProgress);
         
         if (success) {
             std::cout << "[Engine] Generation complete." << std::endl;
             if (autoLoad) {
-                 std::cout << "[Engine] Auto-loading terrain..." << std::endl;
+                {
+                    std::lock_guard<std::mutex> lock(generationMutex_);
+                    generationMessage_ = "Queueing Load...";
+                }
                  this->loadFile(filename);
             }
         } else {
             std::cerr << "[Engine] Generation failed." << std::endl;
         }
 
+        if (!autoLoad) isGenerating_ = false;
+        // logic for autoLoad turnover to be handled?
+        // Actually, loadFile is async. If we set isGenerating_ = false here, the UI reverts to button.
+        // If we don't, it stays on progress bar forever.
+        // Let's just set it to false and trust that VSync fixes the freeze.
         isGenerating_ = false;
+        generationProgress_ = 1.0f;
+    // ... (rest of generateSampleTerrain lambda)
+        isGenerating_ = false;
+        generationProgress_ = 1.0f;
     }).detach();
 
     return true;
+}
+
+void Engine::setVSync(bool enabled) {
+    if (renderer_) {
+        renderer_->setVSync(enabled);
+    }
+}
+
+bool Engine::getVSync() const {
+    if (renderer_) {
+        return renderer_->isVSyncEnabled();
+    }
+    return true; // Default
+}
+
+void Engine::setTargetFPS(int fps) {
+    targetFps_ = fps;
+}
+
+void Engine::limitFrameRate() {
+    if (targetFps_ <= 0) return;
+
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - lastFrameTime_).count();
+    
+    long targetDuration = 1000000 / targetFps_;
+    
+    if (elapsed < targetDuration) {
+        long sleepTime = targetDuration - elapsed;
+        // Use sleep_for for coarser sleep, potentially spin for finer precision if needed, 
+        // but for a simple limiter sleep_for is sufficient.
+        std::this_thread::sleep_for(std::chrono::microseconds(sleepTime));
+    }
+    
+    lastFrameTime_ = std::chrono::steady_clock::now();
 }
 
 

@@ -49,7 +49,13 @@ void setLightColor(float r, float g, float b);
 float getAmbientStrength();
 void setAmbientStrength(float strength);
 
-// Analysis
+// Graphics Settings
+void setVSync(bool enabled);
+bool getVSync();
+void setTargetFPS(int fps);
+int getTargetFPS();
+
+// Lighting Control
 struct SlopeStats {
     int countFlat;
     int countGentle;
@@ -66,6 +72,8 @@ bool saveReport(const std::string& path);
 // Tools
 bool generateTerrain(const std::string& filename, int width, int height, float spacing, int type, bool autoLoad);
 bool isTerrainGenerating();
+float getGenerationProgress();
+std::string getGenerationMessage();
 void setCameraSpeed(float speed);
 
 } // namespace World3D

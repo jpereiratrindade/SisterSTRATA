@@ -54,6 +54,9 @@ public:
         ambientStrength_ = ambient;
     }
 
+    void setVSync(bool enabled);
+    bool isVSyncEnabled() const { return vsyncEnabled_; }
+
 private:
     void createRenderPass();
     void createFramebuffers();
@@ -100,6 +103,7 @@ private:
     
     uint32_t currentFrame_ = 0;
     uint32_t imageIndex_ = 0;
+    bool vsyncEnabled_ = true;
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 };
 

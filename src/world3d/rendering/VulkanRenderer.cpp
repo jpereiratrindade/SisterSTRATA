@@ -255,7 +255,9 @@ void VulkanRenderer::copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::
     cmdBuffer.end();
 
     vk::SubmitInfo submitInfo(0, nullptr, nullptr, 1, &cmdBuffer, 0, nullptr);
-    context_->getGraphicsQueue().submit(1, &submitInfo, VK_NULL_HANDLE);
+    if (context_->getGraphicsQueue().submit(1, &submitInfo, VK_NULL_HANDLE) != vk::Result::eSuccess) {
+        throw std::runtime_error("failed to submit copy buffer command!");
+    }
     context_->getGraphicsQueue().waitIdle();
 
     context_->getDevice().freeCommandBuffers(commandPool_, 1, &cmdBuffer);
@@ -331,33 +333,32 @@ void VulkanRenderer::updateUniformBuffer(uint32_t currentImage, const Camera& ca
     memcpy(uniformBuffersMapped_[currentImage], &ubo, sizeof(ubo));
 }
 
+void VulkanRenderer::setVSync(bool enabled) {
+    if (vsyncEnabled_ != enabled) {
+        vsyncEnabled_ = enabled;
+        recreateSwapchain();
+    }
+}
+
 void VulkanRenderer::recreateSwapchain() {
     auto device = context_->getDevice();
     device.waitIdle();
 
     int w = 0, h = 0;
     SDL_Window* window = context_->getWindow();
-    // Use Drawable Size for pixel-perfect match (Retina/HiDPI support in future)
-    // But currently using window size since we stripped HighDPI flag.
     SDL_Vulkan_GetDrawableSize(window, &w, &h);
 
-    // Handle minimization
     while (w == 0 || h == 0) {
         SDL_Vulkan_GetDrawableSize(window, &w, &h);
         SDL_WaitEvent(nullptr);
     }
 
-    swapchain_->recreate(w, h);
+    swapchain_->recreate(w, h, vsyncEnabled_);
 
-    // Recreate Framebuffers dependent on Swapchain size
     for (auto framebuffer : framebuffers_) {
         device.destroyFramebuffer(framebuffer);
     }
     createFramebuffers();
-    
-    // Note: RenderPass and Pipelines usually don't need recreation on resize 
-    // IF the Swapchain Image Format doesn't change.
-    // Dynamic State (Viewport/Scissor) handles the size change in beginFrame command recording.
 }
 
 } // namespace World3D::Rendering

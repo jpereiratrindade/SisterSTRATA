@@ -30,6 +30,18 @@ void SettingsPanel::draw(bool* open) {
                 World3D::setCameraSpeed(moveSpeed);
             }
         }
+        
+        if (ImGui::CollapsingHeader("Performance")) {
+            bool vsync = World3D::getVSync();
+            if (ImGui::Checkbox("Enable VSync", &vsync)) {
+                World3D::setVSync(vsync);
+            }
+
+            int targetFps = World3D::getTargetFPS();
+            if (ImGui::SliderInt("Max FPS (0 = Uncapped)", &targetFps, 0, 240)) {
+                World3D::setTargetFPS(targetFps);
+            }
+        }
     }
     ImGui::End();
 }

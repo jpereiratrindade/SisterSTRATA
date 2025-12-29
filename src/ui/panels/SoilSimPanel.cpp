@@ -15,6 +15,32 @@ void SoilSimPanel::drawScorpan(bool* open) {
         ImGui::TextWrapped("Configure environmental factors (Inputs).");
         ImGui::Separator();
 
+        // Presets
+        const char* presets[] = { "Custom", "Tropical Mature (All Soils)", "Young/Mountanous", "Arid" };
+        static int currentPreset = 0;
+        int presetCount = static_cast<int>(sizeof(presets) / sizeof(presets[0]));
+        if (ImGui::Combo("Presets", &currentPreset, presets, presetCount)) {
+            if (currentPreset == 1) { // Tropical Mature
+                params_.rainfall = 2500.0f;
+                params_.temperature = 28.0f;
+                params_.ageFactor = 0.85f; // Ensures Latossolos (>0.7)
+                params_.vegetationDensity = 0.9f;
+                params_.parentMaterial = Core::Domain::Soils::ParentMaterialType::Sedimentary;
+            } else if (currentPreset == 2) { // Young
+                params_.rainfall = 1800.0f;
+                params_.temperature = 22.0f;
+                params_.ageFactor = 0.2f; // Only young soils (Cambissolos, Neossolos)
+                params_.vegetationDensity = 0.4f;
+                params_.parentMaterial = Core::Domain::Soils::ParentMaterialType::Igneous;
+            } else if (currentPreset == 3) { // Arid
+                params_.rainfall = 400.0f;
+                params_.temperature = 35.0f;
+                params_.ageFactor = 0.6f;
+                params_.vegetationDensity = 0.1f;
+            }
+        }
+        ImGui::Separator();
+
         // C - Climate
         ImGui::Text("Climate (C)");
         ImGui::SliderFloat("Rainfall (mm)", &params_.rainfall, 0.0f, 4000.0f);

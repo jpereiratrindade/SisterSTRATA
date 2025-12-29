@@ -12,8 +12,9 @@ void TerrainGenPanel::draw(bool* open) {
         static int genWidth = 100;
         static int genHeight = 100;
         static float genSpacing = 1.0f;
-        static int genType = 0;
-        const char* typeItems[] = { "Hills", "Mountains", "Flat", "Canyon" };
+        static int genType = 2; // Default to Mountains (2)
+        // Must match TerrainGenerator::Type enum order: Flat, Hills, Mountains, Canyon, Showcase
+        const char* typeItems[] = { "Flat", "Hills", "Mountains", "Canyon", "Showcase (All Soils Demo)" };
 
         ImGui::InputText("Output Filename", genFilename, IM_ARRAYSIZE(genFilename));
         ImGui::InputInt("Width", &genWidth);
@@ -30,7 +31,11 @@ void TerrainGenPanel::draw(bool* open) {
 
         bool isGen = World3D::isTerrainGenerating();
         if (isGen) {
+            float progress = World3D::getGenerationProgress();
+            std::string msg = World3D::getGenerationMessage();
             ImGui::Text("Generating... Please wait.");
+            ImGui::ProgressBar(progress, ImVec2(-FLT_MIN, 0));
+            ImGui::TextWrapped("%s", msg.c_str());
         } else {
             if (ImGui::Button("Generate & Load")) {
                 if (World3D::generateTerrain(genFilename, genWidth, genHeight, genSpacing, genType, true)) {

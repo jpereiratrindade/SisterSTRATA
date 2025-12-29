@@ -11,7 +11,7 @@ public:
     Swapchain(VulkanContext& context, uint32_t width, uint32_t height);
     ~Swapchain();
 
-    void recreate(uint32_t width, uint32_t height);
+    void recreate(uint32_t width, uint32_t height, bool vsync);
     
     [[nodiscard]] vk::SwapchainKHR getHandle() const { return swapchain_; }
     [[nodiscard]] vk::Format getImageFormat() const { return imageFormat_; }
@@ -20,12 +20,12 @@ public:
     [[nodiscard]] uint32_t getImageCount() const { return static_cast<uint32_t>(images_.size()); }
 
 private:
-    void createSwapchain(uint32_t width, uint32_t height);
+    void createSwapchain(uint32_t width, uint32_t height, bool vsync);
     void createImageViews();
     void cleanup();
 
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats);
-    vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes);
+    vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes, bool vsync);
     vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, uint32_t width, uint32_t height);
 
     VulkanContext& context_;

@@ -15,10 +15,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Add subdirectories
 add_subdirectory(src/core)
-add_subdirectory(src/application)
 add_subdirectory(src/infrastructure)
-add_subdirectory(src/ui)
+add_subdirectory(src/application)
 add_subdirectory(src/world3d)
+add_subdirectory(src/ui)
 add_subdirectory(tests)
 
 # Entry point
@@ -32,5 +32,3 @@ target_link_libraries(SisterPEC PRIVATE
     ui
     world3d
 )
-
-target_include_directories(SisterPEC PRIVATE src)

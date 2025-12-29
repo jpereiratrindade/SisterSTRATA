@@ -6,7 +6,7 @@ namespace World3D::Rendering {
 
 Swapchain::Swapchain(VulkanContext& context, uint32_t width, uint32_t height)
     : context_(context) {
-    createSwapchain(width, height);
+    createSwapchain(width, height, true); // Default VSync ON
     createImageViews();
 }
 
@@ -23,13 +23,13 @@ void Swapchain::cleanup() {
     }
 }
 
-void Swapchain::recreate(uint32_t width, uint32_t height) {
+void Swapchain::recreate(uint32_t width, uint32_t height, bool vsync) {
     cleanup();
-    createSwapchain(width, height);
+    createSwapchain(width, height, vsync);
     createImageViews();
 }
 
-void Swapchain::createSwapchain(uint32_t width, uint32_t height) {
+void Swapchain::createSwapchain(uint32_t width, uint32_t height, bool vsync) {
     auto device = context_.getPhysicalDevice();
     auto surface = context_.getSurface();
 
@@ -38,7 +38,7 @@ void Swapchain::createSwapchain(uint32_t width, uint32_t height) {
     auto presentModes = device.getSurfacePresentModesKHR(surface);
 
     auto surfaceFormat = chooseSwapSurfaceFormat(formats);
-    auto presentMode = chooseSwapPresentMode(presentModes);
+    auto presentMode = chooseSwapPresentMode(presentModes, vsync);
     auto extent = chooseSwapExtent(capabilities, width, height);
 
     uint32_t imageCount = capabilities.minImageCount + 1;
@@ -112,12 +112,26 @@ vk::SurfaceFormatKHR Swapchain::chooseSwapSurfaceFormat(const std::vector<vk::Su
     return availableFormats[0];
 }
 
-vk::PresentModeKHR Swapchain::chooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes) {
+vk::PresentModeKHR Swapchain::chooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes, bool vsync) {
+    // If VSync is requested, prefer FIFO (which is guaranteed to be available)
+    if (vsync) {
+        return vk::PresentModeKHR::eFifo;
+    }
+
+    // If VSync Disabled, prefer Mailbox (Triple Buffering) or Immediate
     for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
             return availablePresentMode;
         }
     }
+    // Fallback to Immediate if Mailbox not available (unlikely for discrete GPUs)
+    // Some drivers might only support FIFO even if we want otherwise, but usually Immediate is there.
+    for (const auto& availablePresentMode : availablePresentModes) {
+        if (availablePresentMode == vk::PresentModeKHR::eImmediate) {
+            return availablePresentMode;
+        }
+    }
+
     return vk::PresentModeKHR::eFifo;
 }
 

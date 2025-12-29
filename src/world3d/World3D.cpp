@@ -134,6 +134,32 @@ bool isTerrainGenerating() {
     return false;
 }
 
+float getGenerationProgress() {
+    if (g_Engine) return g_Engine->getGenerationProgress();
+    return 0.0f;
+}
+
+std::string getGenerationMessage() {
+    if (g_Engine) return g_Engine->getGenerationMessage();
+    return "";
+}
+void setVSync(bool enabled) {
+    if (g_Engine) g_Engine->setVSync(enabled);
+}
+
+bool getVSync() {
+    if (g_Engine) return g_Engine->getVSync();
+    return true;
+}
+
+void setTargetFPS(int fps) {
+    if (g_Engine) g_Engine->setTargetFPS(fps);
+}
+
+int getTargetFPS() {
+    if (g_Engine) return g_Engine->getTargetFPS();
+    return 0;
+}
 void setCameraSpeed(float speed) {
     if (g_Engine) g_Engine->setCameraSpeed(speed);
 }

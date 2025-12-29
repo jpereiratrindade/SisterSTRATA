@@ -85,59 +85,111 @@ float TerrainGenerator::getHeight(float x, float y, float cx, float cy, Type typ
     
     if (type == Type::Hills) {
         // Gentle rolling hills with 4 octaves
-        float baseNoise = fbm(x * 0.01f, y * 0.01f, 4, 0.5f, seed);
-        val = (baseNoise - 0.5f) * 20.0f; // Range: -10 to +10
+        float baseNoise = fbm(x * 0.005f, y * 0.005f, 5, 0.5f, seed); // Lower freq, more octaves
+        val = (baseNoise - 0.5f) * 60.0f; // Range: -30 to +30 (Steepers)
         
         // Add a subtle central peak
         float d2 = std::pow(x, 2) + std::pow(y, 2);
-        val += std::exp(-d2 / 8000.0f) * 15.0f;
+        val += std::exp(-d2 / 15000.0f) * 30.0f;
     } 
     else if (type == Type::Mountains) {
         // Sharp mountainous terrain with 6 octaves
-        float baseNoise = fbm(x * 0.008f, y * 0.008f, 6, 0.6f, seed);
-        val = (baseNoise - 0.5f) * 50.0f; // Higher amplitude
+        float baseNoise = fbm(x * 0.006f, y * 0.006f, 7, 0.55f, seed); // More rugged
+        val = (baseNoise - 0.5f) * 300.0f; // Much higher amplitude for >35deg slopes
         
         // Add dramatic central peak
         float d2 = std::pow(x, 2) + std::pow(y, 2);
-        val += std::exp(-d2 / 10000.0f) * 60.0f;
+        val += std::exp(-d2 / 20000.0f) * 150.0f;
         
         // Add sharp ridges using noise derivative
-        float ridgeNoise = fbm(x * 0.02f, y * 0.02f, 3, 0.5f, seed + 100);
-        val += (1.0f - std::abs(ridgeNoise - 0.5f) * 2.0f) * 8.0f;
+        float ridgeNoise = fbm(x * 0.015f, y * 0.015f, 4, 0.5f, seed + 100);
+        val += (1.0f - std::abs(ridgeNoise - 0.5f) * 2.0f) * 20.0f;
     }
     else if (type == Type::Canyon) {
         // Canyon/valley with erosion-like features
-        float baseNoise = fbm(x * 0.015f, y * 0.015f, 5, 0.5f, seed);
+        float baseNoise = fbm(x * 0.01f, y * 0.01f, 6, 0.5f, seed);
         
         // Create central valley (inverted)
         float d2 = std::pow(x, 2) + std::pow(y / 3.0f, 2); // Elongated
-        val = -std::exp(-d2 / 12000.0f) * 40.0f;
+        val = -std::exp(-d2 / 25000.0f) * 150.0f;
         
         // Add erosion detail
-        val += (baseNoise - 0.5f) * 8.0f;
+        val += (baseNoise - 0.5f) * 25.0f;
+    }
+    else if (type == Type::Showcase) {
+        // "Showcase" / Complete Demo
+        // Designed to capture ALL soil types:
+        // 1. High Flat Plateau -> Latossolos
+        // 2. Steep Slopes -> Neossolos
+        // 3. Moderate Slopes -> Argissolos/Cambissolos
+        // 4. Low Valleys -> Gleissolos (if wet)
+        
+        float baseNoise = fbm(x * 0.004f, y * 0.004f, 6, 0.5f, seed);
+        
+        // Define Plateau Shape (Central high area)
+        // Use a smooth step or sigmoid to create a flat top
+        float shape = baseNoise; 
+        
+        // Quantize/Flatten top to create plateau
+        // Map 0..1 noise to -100..+200
+        // But force ranges > 0.7 to be flat
+        
+        if (shape > 0.65f) {
+            // Plateau (Top) - Very subtle noise to ensure slope < 8 deg for Latossolos
+            // Flatten significantly
+            val = 150.0f + (shape - 0.65f) * 2.0f; 
+        } else if (shape < 0.3f) {
+            // Valley (Bottom)
+            val = -50.0f + (shape - 0.3f) * 20.0f; // Low, gentle
+        } else {
+            // Slopes (Steep transition)
+            // Remap 0.3..0.65 to -50..150
+            float t = (shape - 0.3f) / (0.65f - 0.3f); // 0..1
+            // Use smoothstep for organic transition
+            t = t * t * (3.0f - 2.0f * t);
+            val = -50.0f + t * 200.0f;
+            
+            // Add ruggedness to slopes specifically (Neossolos)
+            float rug = fbm(x * 0.02f, y * 0.02f, 3, 0.5f, seed+99);
+            val += (rug - 0.5f) * 30.0f; 
+        }
     }
 
     return val;
 }
 
-bool TerrainGenerator::generate(const std::string& filename, int width, int height, float spacing, Type type) {
+bool TerrainGenerator::generate(const std::string& filename, int width, int height, float spacing, Type type, std::function<void(float, const std::string&)> onProgress) {
     // Ensure directory exists
     std::filesystem::path path(filename);
     if (path.has_parent_path()) {
         std::filesystem::create_directories(path.parent_path());
     }
 
+    if (onProgress) onProgress(0.0f, "Initializing...");
     std::cout << "[Generator] Generating terrain " << width << "x" << height << " to " << filename << "..." << std::endl;
 
     std::vector<glm::vec3> vertices;
+    // Reserve memory to avoid reallocations
+    vertices.reserve(width * height);
+    
     std::vector<glm::vec3> normals;
+    normals.reserve(width * height);
+    
     std::vector<glm::ivec3> faces;
+    faces.reserve((width - 1) * (height - 1) * 2);
 
     float cx = (width * spacing) / 2.0f;
     float cy = (height * spacing) / 2.0f;
 
     // 1. Generate Vertices and Normals
+    if (onProgress) onProgress(0.1f, "Generating Vertices...");
     for (int i = 0; i < width; i++) {
+        // Report progress periodically (every 1% or so)
+        if (onProgress && i % (width / 100 + 1) == 0) {
+            float pct = 0.1f + (0.4f * ((float)i / width)); // 10% to 50%
+            onProgress(pct, "Generating Vertices...");
+        }
+
         for (int j = 0; j < height; j++) {
             float x = (i * spacing) - cx;
             float y = (j * spacing) - cy;
@@ -162,7 +214,13 @@ bool TerrainGenerator::generate(const std::string& filename, int width, int heig
     }
 
     // 2. Generate Faces
+    if (onProgress) onProgress(0.5f, "Generating Topology...");
     for (int i = 0; i < width - 1; i++) {
+        if (onProgress && i % (width / 100 + 1) == 0) {
+            float pct = 0.5f + (0.2f * ((float)i / (width - 1))); // 50% to 70%
+            onProgress(pct, "Generating Topology...");
+        }
+
         for (int j = 0; j < height - 1; j++) {
             // 1-based indices
             int base = i * height + j + 1;
@@ -186,6 +244,7 @@ bool TerrainGenerator::generate(const std::string& filename, int width, int heig
     }
 
     // 3. Write OBJ
+    if (onProgress) onProgress(0.7f, "Writing to disk...");
     std::ofstream file(filename);
     if (!file.is_open()) {
         std::cerr << "[Generator] Failed to open file: " << filename << std::endl;

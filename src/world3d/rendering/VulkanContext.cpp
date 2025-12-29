@@ -5,13 +5,14 @@
 namespace World3D::Rendering {
 
 // Debug callback function
+// Debug callback function
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    vk::DebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    vk::DebugUtilsMessageTypeFlagsEXT messageType,
+    const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData) {
-    (void)messageType; (void)pUserData;
-    if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+    (void)messageSeverity; (void)messageType; (void)pUserData;
+    if (messageSeverity >= vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning) {
         std::cerr << "Validation Layer: " << pCallbackData->pMessage << std::endl;
     }
     return VK_FALSE;
@@ -68,12 +69,10 @@ void VulkanContext::createInstance(SDL_Window* window, const std::string& appNam
 void VulkanContext::setupDebugMessenger() {
     if (!enableValidationLayers || !checkValidationLayerSupport()) return;
 
-    vk::DebugUtilsMessengerCreateInfoEXT createInfo(
-        {},
-        vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
-        vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance,
-        debugCallback
-    );
+    vk::DebugUtilsMessengerCreateInfoEXT createInfo;
+    createInfo.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+    createInfo.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
+    createInfo.pfnUserCallback = debugCallback;
 
     // Dynamic dispatch for extension function
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance_, "vkCreateDebugUtilsMessengerEXT");

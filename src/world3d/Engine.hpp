@@ -13,6 +13,8 @@
 #include <string> // Added this include as it's implied by the instruction snippet but not in original
 #include <vector>
 #include <atomic>
+#include <chrono>
+#include <thread>
 #include <glm/glm.hpp> 
 #include "core/domain/soils/Scorpan.hpp"
 #include "core/domain/soils/SiBCS.hpp" // Moved here
@@ -80,20 +82,36 @@ public:
 
     // Terrain
     bool generateSampleTerrain(const std::string& filename, int width, int height, float spacing, int type, bool autoLoad = true);
-    bool isTerrainGenerating() const { return isGenerating_; }
+    bool isTerrainGenerating() const { return isGenerating_ || isLoading_; }
+    float getGenerationProgress() const { return generationProgress_; }
+    std::string getGenerationMessage() const;
 
     // Analysis
     bool saveSlopeStats(const std::string& filepath);
 
     // Settings
     void setCameraSpeed(float speed);
+    
+    void setVSync(bool enabled);
+    bool getVSync() const;
+
+    void setTargetFPS(int fps);
+    int getTargetFPS() const { return targetFps_; }
 
 private:
     void notifyStatus(const std::string& msg);
     void uploadReferenceGrid();
+    void limitFrameRate(); // New helper
+
+    int targetFps_ = 0; // 0 = unlimited
+    std::chrono::steady_clock::time_point lastFrameTime_;
 
     SlopeStats lastStats_;
     std::atomic<bool> isGenerating_{false};
+    std::atomic<bool> isLoading_{false};
+    std::atomic<float> generationProgress_{0.0f};
+    std::string generationMessage_;
+    mutable std::mutex generationMutex_;
 
     // Systems
     std::shared_ptr<Rendering::VulkanContext> context_;
