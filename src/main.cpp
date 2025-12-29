@@ -3,7 +3,7 @@
 
 int main() {
     try {
-        SisterPEC::Application app;
+        SisterSTRATA::Application app;
         app.run();
     } catch (const std::exception& e) {
         std::cerr << "Fatal Error: " << e.what() << std::endl;

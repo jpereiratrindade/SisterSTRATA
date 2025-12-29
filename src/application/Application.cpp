@@ -4,7 +4,7 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 
-namespace SisterPEC {
+namespace SisterSTRATA {
 
 Application::Application() {
     init();
@@ -134,4 +134,4 @@ void Application::processEvents() {
 }
 
 
-} // namespace SisterPEC
+} // namespace SisterSTRATA

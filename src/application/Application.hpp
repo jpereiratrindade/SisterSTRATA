@@ -5,7 +5,7 @@
 #include "application/Session.hpp"
 #include "ui/UI.hpp"
 
-namespace SisterPEC {
+namespace SisterSTRATA {
 
 class Application {
 public:
