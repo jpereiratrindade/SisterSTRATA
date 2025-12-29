@@ -17,7 +17,10 @@
 #include <thread>
 #include <glm/glm.hpp> 
 #include "core/domain/soils/Scorpan.hpp"
-#include "core/domain/soils/SiBCS.hpp" // Moved here
+#include "core/domain/soils/SiBCS.hpp"
+#include "core/domain/hydro/HydroGrid.hpp" // Added
+#include "core/domain/hydro/HydrologyReport.hpp"
+#include "core/value_objects/Vector3.hpp"
 
 namespace World3D {
 
@@ -44,6 +47,9 @@ public:
     void uploadDemoDataAsync(); 
 
     void loadFile(const std::string& path); // Generic loader
+    void loadPointCloud(const std::vector<Core::ValueObjects::Vector3>& points,
+                        const std::vector<glm::vec3>& colors,
+                        const std::string& label);
     
     // Callbacks for UI reporting
     std::function<void(const std::string&)> onStatusMessage;
@@ -52,6 +58,8 @@ public:
     void setLightDirection(float x, float y, float z);
     void setLightColor(float r, float g, float b);
     void setAmbientStrength(float strength);
+    void setPointSize(float size);
+    bool requestScreenshot(const std::string& path);
     
     const glm::vec3& getLightDirection() const { return lightDir_; }
     const glm::vec3& getLightColor() const { return lightColor_; }
@@ -66,6 +74,23 @@ public:
     // Analysis
     void applySlopeVisualization();
     void applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& params, int visualizationLevel, const ::Core::Domain::Soils::SiBCSFilter& filter);
+    struct DrainageStats {
+        int maxAccumulation = 0;
+        float meanAccumulation = 0.0f;
+        int riverCells = 0;
+        std::string message;
+    };
+
+    /**
+     * @brief Applies drainage simulation on the active terrain.
+     * @return Statistics of the simulation.
+     */
+    DrainageStats applyDrainageSimulation();
+    bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity);
+    ::Core::Domain::Hydro::HydrologyStats getHydrologyStats(float streamThreshold);
+    bool generateHydrologyReport(const std::string& filepath, float streamThreshold);
+
+    const ::Core::Domain::Hydro::HydroGrid& getHydroGrid() const { return lastHydroGrid_; }
 
     struct SlopeStats {
         int countFlat = 0;
@@ -121,6 +146,12 @@ public:
     void setTargetFPS(int fps);
     int getTargetFPS() const { return targetFps_; }
 
+    // Analysis Access
+    const std::vector<Rendering::Vertex>& getActiveVertices() const { 
+        static const std::vector<Rendering::Vertex> empty;
+        return activeVertices_ ? *activeVertices_ : empty; 
+    }
+
 private:
     void notifyStatus(const std::string& msg);
     void uploadReferenceGrid();
@@ -130,6 +161,9 @@ private:
     std::chrono::steady_clock::time_point lastFrameTime_;
 
     SlopeStats lastStats_;
+    DrainageStats lastDrainageStats_;
+    ::Core::Domain::Hydro::HydrologyStats lastHydrologyStats_;
+    ::Core::Domain::Hydro::HydroGrid lastHydroGrid_; // Added
     std::atomic<bool> isGenerating_{false};
     std::atomic<bool> isLoading_{false};
     std::atomic<float> generationProgress_{0.0f};
@@ -159,6 +193,11 @@ private:
     glm::vec3 lightDir_ = glm::vec3(0.5f, 1.0f, 2.0f);
     glm::vec3 lightColor_ = glm::vec3(1.0f);
     float ambientStrength_ = 0.3f;
+
+    enum class HydroVisMode { None, Drainage, Watershed };
+    HydroVisMode hydroVisMode_ = HydroVisMode::None;
+    std::vector<glm::vec3> baseColors_;
+    bool baseColorsValid_ = false;
 };
 
 

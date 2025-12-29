@@ -64,6 +64,10 @@ const std::vector<SiBCSClassification>& SoilSystem::getLastDetectedClasses() {
     return lastDetectedClasses_;
 }
 
+void SoilSystem::clearLastDetectedClasses() {
+    lastDetectedClasses_.clear();
+}
+
 SiBCSClassification SoilSystem::predict(const ScorpanParams& global, float slopeDeg, float elevation, float relElevation) {
     SiBCSClassification result;
 

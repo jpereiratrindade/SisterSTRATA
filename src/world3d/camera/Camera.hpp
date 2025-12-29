@@ -11,6 +11,7 @@ public:
 
     void move(glm::vec3 delta);
     void rotate(float yawDelta, float pitchDelta);
+    void orbit(float yawDelta, float pitchDelta); // New
     void setAspectRatio(float aspectRatio);
 
     [[nodiscard]] glm::mat4 getViewMatrix() const;

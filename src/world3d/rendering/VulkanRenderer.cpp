@@ -1,6 +1,7 @@
 #include "world3d/rendering/VulkanRenderer.hpp"
 #include <stdexcept>
 #include <iostream>
+#include <algorithm>
 
 namespace World3D::Rendering {
 
@@ -209,6 +210,9 @@ void VulkanRenderer::render(const Scene& scene) {
 void VulkanRenderer::endFrame() {
     auto cmd = commandBuffers_[currentFrame_];
     cmd.endRenderPass();
+    if (!pendingScreenshotPath_.empty()) {
+        recordScreenshotCopy(cmd);
+    }
     cmd.end();
 
     vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
@@ -232,6 +236,12 @@ void VulkanRenderer::endFrame() {
         (void)context_->getGraphicsQueue().presentKHR(presentInfo);
     } catch (const vk::OutOfDateKHRError&) {
         // Resize handled elsewhere
+    }
+
+    if (screenshotPending_) {
+        auto device = context_->getDevice();
+        (void)device.waitForFences(1, &inFlightFences_[currentFrame_], VK_TRUE, UINT64_MAX);
+        writeScreenshotToDisk();
     }
 
     currentFrame_ = (currentFrame_ + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -261,6 +271,131 @@ void VulkanRenderer::copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::
     context_->getGraphicsQueue().waitIdle();
 
     context_->getDevice().freeCommandBuffers(commandPool_, 1, &cmdBuffer);
+}
+
+bool VulkanRenderer::requestScreenshot(const std::string& path) {
+    if (path.empty()) return false;
+    pendingScreenshotPath_ = path;
+    return true;
+}
+
+void VulkanRenderer::recordScreenshotCopy(vk::CommandBuffer cmd) {
+    auto extent = swapchain_->getExtent();
+    screenshotWidth_ = extent.width;
+    screenshotHeight_ = extent.height;
+    screenshotFormat_ = swapchain_->getImageFormat();
+
+    const vk::DeviceSize imageSize = static_cast<vk::DeviceSize>(screenshotWidth_) * screenshotHeight_ * 4;
+    screenshotBuffer_ = std::make_unique<Buffer>(
+        *context_,
+        imageSize,
+        vk::BufferUsageFlagBits::eTransferDst,
+        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+    );
+
+    auto image = swapchain_->getImages()[imageIndex_];
+    vk::ImageSubresourceRange range(
+        vk::ImageAspectFlagBits::eColor,
+        0,
+        1,
+        0,
+        1
+    );
+
+    vk::ImageMemoryBarrier toTransfer(
+        vk::AccessFlagBits::eColorAttachmentWrite,
+        vk::AccessFlagBits::eTransferRead,
+        vk::ImageLayout::ePresentSrcKHR,
+        vk::ImageLayout::eTransferSrcOptimal,
+        VK_QUEUE_FAMILY_IGNORED,
+        VK_QUEUE_FAMILY_IGNORED,
+        image,
+        range
+    );
+    cmd.pipelineBarrier(
+        vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits::eTransfer,
+        {},
+        nullptr,
+        nullptr,
+        toTransfer
+    );
+
+    vk::BufferImageCopy copyRegion(
+        0,
+        0,
+        0,
+        vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
+        vk::Offset3D{0, 0, 0},
+        vk::Extent3D{screenshotWidth_, screenshotHeight_, 1}
+    );
+    cmd.copyImageToBuffer(image, vk::ImageLayout::eTransferSrcOptimal, screenshotBuffer_->getHandle(), 1, &copyRegion);
+
+    vk::ImageMemoryBarrier toPresent(
+        vk::AccessFlagBits::eTransferRead,
+        vk::AccessFlagBits::eMemoryRead,
+        vk::ImageLayout::eTransferSrcOptimal,
+        vk::ImageLayout::ePresentSrcKHR,
+        VK_QUEUE_FAMILY_IGNORED,
+        VK_QUEUE_FAMILY_IGNORED,
+        image,
+        range
+    );
+    cmd.pipelineBarrier(
+        vk::PipelineStageFlagBits::eTransfer,
+        vk::PipelineStageFlagBits::eBottomOfPipe,
+        {},
+        nullptr,
+        nullptr,
+        toPresent
+    );
+
+    screenshotPending_ = true;
+}
+
+void VulkanRenderer::writeScreenshotToDisk() {
+    if (!screenshotBuffer_) {
+        screenshotPending_ = false;
+        pendingScreenshotPath_.clear();
+        return;
+    }
+
+    void* data = nullptr;
+    screenshotBuffer_->map(&data);
+    const size_t imageSize = static_cast<size_t>(screenshotWidth_) * screenshotHeight_ * 4;
+    const unsigned char* src = static_cast<unsigned char*>(data);
+
+    std::vector<unsigned char> rgba(imageSize);
+    for (uint32_t y = 0; y < screenshotHeight_; ++y) {
+        size_t srcRow = static_cast<size_t>(y) * screenshotWidth_ * 4;
+        size_t dstRow = srcRow;
+        for (uint32_t x = 0; x < screenshotWidth_; ++x) {
+            size_t i = srcRow + x * 4;
+            size_t o = dstRow + x * 4;
+            unsigned char b = src[i + 0];
+            unsigned char g = src[i + 1];
+            unsigned char r = src[i + 2];
+            unsigned char a = src[i + 3];
+            if (screenshotFormat_ == vk::Format::eB8G8R8A8Srgb || screenshotFormat_ == vk::Format::eB8G8R8A8Unorm) {
+                rgba[o + 0] = r;
+                rgba[o + 1] = g;
+                rgba[o + 2] = b;
+                rgba[o + 3] = a;
+            } else {
+                rgba[o + 0] = b;
+                rgba[o + 1] = g;
+                rgba[o + 2] = r;
+                rgba[o + 3] = a;
+            }
+        }
+    }
+    screenshotBuffer_->unmap();
+
+    WritePng(pendingScreenshotPath_, rgba, static_cast<int>(screenshotWidth_), static_cast<int>(screenshotHeight_));
+
+    screenshotBuffer_.reset();
+    screenshotPending_ = false;
+    pendingScreenshotPath_.clear();
 }
 
 void VulkanRenderer::createUniformBuffers() {
@@ -329,6 +464,7 @@ void VulkanRenderer::updateUniformBuffer(uint32_t currentImage, const Camera& ca
     ubo.lightDir = glm::vec4(lightDir_, 0.0f);
     ubo.lightColor = glm::vec4(lightColor_, 1.0f);
     ubo.ambientStrength = ambientStrength_;
+    ubo.pointSize = pointSize_;
 
     memcpy(uniformBuffersMapped_[currentImage], &ubo, sizeof(ubo));
 }

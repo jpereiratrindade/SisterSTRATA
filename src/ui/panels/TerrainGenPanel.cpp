@@ -8,7 +8,7 @@ void TerrainGenPanel::draw(bool* open) {
     if (!open || !(*open)) return;
 
     if (ImGui::Begin("Generate Terrain", open)) {
-        static char genFilename[256] = "assets/data/generated_terrain.obj";
+        static char genFilename[256] = "assets/data/generated_terrain.csv";
         static int genWidth = 100;
         static int genHeight = 100;
         static float genSpacing = 1.0f;
@@ -17,6 +17,7 @@ void TerrainGenPanel::draw(bool* open) {
         const char* typeItems[] = { "Flat", "Hills", "Mountains", "Canyon", "Showcase (All Soils Demo)" };
 
         ImGui::InputText("Output Filename", genFilename, IM_ARRAYSIZE(genFilename));
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Use .csv extension to generate analysis-ready Point Cloud (for Drainage). Use .obj for Mesh.");
         ImGui::InputInt("Width", &genWidth);
         ImGui::InputInt("Height", &genHeight);
         ImGui::InputFloat("Spacing (m)", &genSpacing);

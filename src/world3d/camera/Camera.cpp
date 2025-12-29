@@ -1,4 +1,7 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include "world3d/camera/Camera.hpp"
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace World3D {
 
@@ -30,6 +33,51 @@ void Camera::rotate(float yawDelta, float pitchDelta) {
     if (pitch_ < -89.0f) pitch_ = -89.0f;
 
     updateVectors();
+}
+
+void Camera::orbit(float yawDelta, float pitchDelta) {
+    float distance = 100.0f;
+    // Heuristic pivot: Ray plane intersection or fixed
+    if (front_.z < -0.1f) { 
+        float t = -position_.z / front_.z;
+        if (t > 0.0f) distance = t;
+    }
+    
+    glm::vec3 pivot = position_ + front_ * distance;
+    glm::vec3 relPos = position_ - pivot;
+
+    // Use Quaternions for Arcball to allow full freedom (no clamps)
+    // Rotate around World Up (Global Yaw)
+    glm::quat qYaw = glm::angleAxis(glm::radians(-yawDelta), worldUp_);
+    // Rotate around Camera Right (Local Pitch)
+    glm::quat qPitch = glm::angleAxis(glm::radians(pitchDelta), right_);
+    
+    glm::quat qRot = qYaw * qPitch;
+
+    // Update Position
+    relPos = qRot * relPos;
+    position_ = pivot + relPos;
+
+    // Update Orientation
+    front_ = glm::normalize(qRot * front_);
+    right_ = glm::normalize(glm::cross(front_, worldUp_)); // Keep horizon stable? 
+    // If we want FULL 3-axis (rolling), we shouldn't use worldUp_ for cross.
+    // We should just rotate Up and Right.
+    // But usually 'girar sobre eixos' implies stable horizon unless it's a space sim.
+    // "sobre os três eixos" implies rolling is allowed/happens?
+    // Let's stick to stable horizon first (Model Viewer style).
+    // If they want 3 axes, maybe they mean X, Y, AND Z?
+    // The previous implementation WAS stable horizon.
+    // The "Limited" complaint might be the CLAMPING.
+    
+    // Let's allow full pitch rotation (over the pole).
+    // To do that, we update Front and Up directly.
+    up_ = glm::normalize(qRot * up_);
+    right_ = glm::normalize(glm::cross(front_, up_));
+    
+    // Sync Euler for compatibility (best effort, though simple Euler fails at poles)
+    pitch_ = glm::degrees(asin(front_.z));
+    yaw_ = glm::degrees(atan2(front_.y, front_.x));
 }
 
 void Camera::setAspectRatio(float aspectRatio) {

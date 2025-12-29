@@ -41,6 +41,12 @@ void loadFile(const std::string& path) {
     if (g_Engine) g_Engine->loadFile(path);
 }
 
+void loadPointCloud(const std::vector<Core::ValueObjects::Vector3>& points,
+                    const std::vector<glm::vec3>& colors,
+                    const std::string& label) {
+    if (g_Engine) g_Engine->loadPointCloud(points, colors, label);
+}
+
 bool saveFile(const std::string& path) {
     if (g_Engine) return g_Engine->saveFile(path);
     return false;
@@ -104,11 +110,24 @@ glm::vec3 getLightColor() { return g_Engine ? g_Engine->getLightColor() : glm::v
 void setLightColor(float r, float g, float b) { if (g_Engine) g_Engine->setLightColor(r, g, b); }
 float getAmbientStrength() { return g_Engine ? g_Engine->getAmbientStrength() : 0.0f; }
 void setAmbientStrength(float strength) { if (g_Engine) g_Engine->setAmbientStrength(strength); }
+void setPointSize(float size) { if (g_Engine) g_Engine->setPointSize(size); }
+bool requestScreenshot(const std::string& path) { return g_Engine ? g_Engine->requestScreenshot(path) : false; }
 
 void applySlopeAnalysis() { if (g_Engine) g_Engine->applySlopeVisualization(); }
 
 void applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& params, int visualizationLevel, const ::Core::Domain::Soils::SiBCSFilter& filter) { 
     if (g_Engine) g_Engine->applySoilSimulation(params, visualizationLevel, filter); 
+}
+
+DrainageStats applyDrainageSimulation() {
+    if (!g_Engine) return {};
+    auto eStats = g_Engine->applyDrainageSimulation();
+    World3D::DrainageStats stats;
+    stats.maxAccumulation = eStats.maxAccumulation;
+    stats.meanAccumulation = eStats.meanAccumulation;
+    stats.riverCells = eStats.riverCells;
+    stats.message = eStats.message;
+    return stats;
 }
 
 SlopeStats getSlopeAnalysisStats() {
@@ -162,6 +181,23 @@ int getTargetFPS() {
 }
 void setCameraSpeed(float speed) {
     if (g_Engine) g_Engine->setCameraSpeed(speed);
+}
+
+
+const std::vector<World3D::Rendering::Vertex>& getVertices() {
+    static const std::vector<World3D::Rendering::Vertex> empty;
+    return g_Engine ? g_Engine->getActiveVertices() : empty;
+}
+
+const std::vector<Core::Domain::Soils::SiBCSClassification>& getSoilClasses() {
+    static const std::vector<Core::Domain::Soils::SiBCSClassification> empty;
+    // SoilSystem doesn't store per-vertex classes, only legend.
+    // SoilSimPanel should use predict() to reconstruct if needed.
+    // For this accessor, we might just return the legend classes (lastDetected)?
+    // But the name suggests per-vertex.
+    // Let's return empty for now and let SoilSimPanel handle the reconstruction
+    // via SoilSystem::predict which we just made public.
+    return empty; 
 }
 
 } // namespace World3D

@@ -21,9 +21,11 @@ public:
      * Used for populating the dynamic legend.
      */
     static const std::vector<SiBCSClassification>& getLastDetectedClasses();
+    /**
+     * @brief Clears any cached classes from the last simulation (legend reset).
+     */
+    static void clearLastDetectedClasses();
 
-private:
-    static std::vector<SiBCSClassification> lastDetectedClasses_;
     
     /**
      * @brief Core prediction logic determining the soil class for a given point.
@@ -35,6 +37,9 @@ private:
      * @return The calculated SiBCS classification.
      */
     static SiBCSClassification predict(const ScorpanParams& global, float slopeDeg, float elevation, float relElevation);
+
+private:
+    static std::vector<SiBCSClassification> lastDetectedClasses_;
 };
 
 } // namespace Core::Domain::Soils

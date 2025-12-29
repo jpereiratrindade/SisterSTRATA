@@ -168,6 +168,9 @@ void UserInterface::init(SDL_Window* window, const VulkanInitInfo& info) {
     // Assuming implicit upload or we can do it manually if needed, but Init usually defers until NewFrame if no cmd provided? 
     // Actually ImGui_ImplVulkan_CreateFontsTexture is needed if we want it available immediately, 
     // but deferred creation in NewFrame is often supported or we might see a stutter.
+    // Link Panels
+    soilSimPanel_.setPatchAnalysisPanel(&patchAnalysisPanel_);
+
     // For now, let's proceed. If text is missing, we'll know.
 }
 
@@ -223,6 +226,7 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
 
     // 3. Draw Panels (Logic controlled by MainMenu state)
     analysisPanel_.draw(&mainMenu_.showAnalysisReport);
+    patchAnalysisPanel_.draw(&mainMenu_.showPatchAnalysis);
     terrainGenPanel_.draw(&mainMenu_.showTerrainGen);
     settingsPanel_.draw(&mainMenu_.showSettings);
     welcomePanel_.draw(&mainMenu_.showWelcome, data);

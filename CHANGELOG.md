@@ -2,6 +2,25 @@
 
 All notable changes to the SisterPEC project will be documented in this file.
 
+## [1.4.0] - 2025-12-29
+### Added
+- **Enhanced Drainage Analysis**: New dialog in "Analyze Drainage" with flow statistics (Max/Mean Accumulation, River Cell count) and color ramp legends.
+- **Improved 3D Rendering**: Enhanced point cloud visualization with depth-aware color ramps and adjustable point size for drainage patterns.
+- **Native File Dialogs**: Integrated native-style file selection for Patch Analysis, improving usability and path safety.
+
+### Changed
+- **Namespace Refactor**: Migrated all core components from `farina::diversity` to `LandscapeEcologyTools` for better domain alignment.
+- **Simplified Project Structure**: Relocated headers from `include/` to `src/`, streamlining the build system and developer experience.
+
+## [1.3.0] - 2025-12-29
+### Added
+- **Unified File Browser**: Integrated the visual `FileSelector` component into the Main Menu for "Open File" and "Save As", replacing legacy text inputs.
+- **Raster Grid Support**: "File > Open" now automatically detects and loads Soil Raster CSVs (`# Origin:` header), visualizing them as colored point clouds.
+
+### Fixed
+- **Stability**: Fixed a startup crash caused by static initialization order in the filesystem component.
+- **UX**: Resolved issue where manual offsets were cancelled by the engine's auto-centering (Engine now uses absolute origin).
+
 ## [1.2.0] - 2025-12-29
 ### Added
 - **Scientific Foundation**: Added `docs/SISTERSTRATA_SCIENTIFIC_FOUNDATION.md` as the core "living document" for model governance.

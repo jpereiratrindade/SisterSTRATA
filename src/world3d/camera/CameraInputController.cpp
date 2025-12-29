@@ -61,10 +61,17 @@ void CameraInputController::processEvent(const SDL_Event& event) {
             SDL_SetRelativeMouseMode(SDL_FALSE);
         }
     } else if (event.type == SDL_MOUSEMOTION) {
-        if (rightMouseButtonDown_ || leftMouseButtonDown_) {
+        if (rightMouseButtonDown_) {
+            // Right Click: Free Look (FPS)
             camera_.rotate(
                 event.motion.xrel * mouseSensitivity_,
-                -event.motion.yrel * mouseSensitivity_ // Invert Y typically
+                -event.motion.yrel * mouseSensitivity_
+            );
+        } else if (leftMouseButtonDown_) {
+            // Left Click: Orbit (Model/Terrain Viewer)
+            camera_.orbit(
+                event.motion.xrel * mouseSensitivity_,
+                -event.motion.yrel * mouseSensitivity_
             );
         }
     }

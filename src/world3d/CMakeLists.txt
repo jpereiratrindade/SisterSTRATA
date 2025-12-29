@@ -9,6 +9,7 @@ add_library(world3d
     rendering/VulkanRenderer.cpp
     rendering/Pipeline.cpp
     rendering/Buffer.cpp
+    rendering/ImageWriter.cpp
     ScientificAdapter.cpp
     camera/Camera.cpp
     camera/CameraInputController.cpp
@@ -46,6 +47,7 @@ add_dependencies(world3d Shaders)
 target_include_directories(world3d PUBLIC
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/external
     ${Vulkan_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
 )

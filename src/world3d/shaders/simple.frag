@@ -7,19 +7,21 @@ layout(location = 2) in vec3 fragPos;
 layout(location = 0) out vec4 outColor;
 
 // UBO Declaration (Same as Vert)
-layout(binding = 0) uniform UniformBufferObject {
+layout(std140, binding = 0) uniform UniformBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
-    vec3 lightDir;
-    vec3 lightColor;
+    vec4 lightDir;
+    vec4 lightColor;
     float ambientStrength;
+    float pointSize;
+    vec2 _padding;
 } ubo;
 
 void main() {
     // 1. Setup Light (Dynamic from UBO)
-    vec3 lightDirection = normalize(ubo.lightDir); 
-    vec3 lightCol = ubo.lightColor;
+    vec3 lightDirection = normalize(ubo.lightDir.xyz); 
+    vec3 lightCol = ubo.lightColor.xyz;
     vec3 objectColor = fragColor;
 
     // 2. Ambient Component

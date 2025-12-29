@@ -13,6 +13,65 @@
 #include "world3d/exporter/ObjExporter.hpp"
 #include "world3d/exporter/CsvExporter.hpp"
 #include "core/domain/soils/SoilSystem.hpp"
+#include "core/domain/hydro/DrainageSystem.hpp" 
+#include "core/domain/hydro/HydroTypes.hpp" // Added
+#include "core/domain/hydro/Watershed.hpp"
+#include "core/domain/hydro/HydrologyReport.hpp"
+
+namespace {
+
+float computeGridSpacingXY(const std::vector<World3D::Rendering::Vertex>& vertices, int width, int height) {
+    if (vertices.size() < 2 || width <= 0 || height <= 0) return 1.0f;
+    float spacing = 0.0f;
+
+    if (width > 1) {
+        const auto& a = vertices[0].pos;
+        const auto& b = vertices[1].pos;
+        float dx = b.x - a.x;
+        float dy = b.y - a.y;
+        spacing = std::sqrt(dx * dx + dy * dy);
+    }
+    if (spacing <= 0.0f && height > 1) {
+        const auto& a = vertices[0].pos;
+        const auto& b = vertices[width].pos;
+        float dx = b.x - a.x;
+        float dy = b.y - a.y;
+        spacing = std::sqrt(dx * dx + dy * dy);
+    }
+
+    return (spacing > 0.0f) ? spacing : 1.0f;
+}
+
+glm::vec3 hslToRgb(float h, float s, float l) {
+    auto hue2rgb = [](float p, float q, float t) {
+        if (t < 0.0f) t += 1.0f;
+        if (t > 1.0f) t -= 1.0f;
+        if (t < 1.0f / 6.0f) return p + (q - p) * 6.0f * t;
+        if (t < 1.0f / 2.0f) return q;
+        if (t < 2.0f / 3.0f) return p + (q - p) * (2.0f / 3.0f - t) * 6.0f;
+        return p;
+    };
+
+    float r, g, b;
+    if (s == 0.0f) {
+        r = g = b = l;
+    } else {
+        float q = l < 0.5f ? l * (1.0f + s) : l + s - l * s;
+        float p = 2.0f * l - q;
+        r = hue2rgb(p, q, h + 1.0f / 3.0f);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1.0f / 3.0f);
+    }
+    return {r, g, b};
+}
+
+glm::vec3 basinColorFromId(int id) {
+    if (id <= 0) return {0.6f, 0.6f, 0.6f};
+    float hue = std::fmod(id * 0.61803398875f, 1.0f);
+    return hslToRgb(hue, 0.55f, 0.55f);
+}
+
+} // namespace
 
 namespace World3D {
 
@@ -160,6 +219,17 @@ void Engine::setLightColor(float r, float g, float b) {
 
 void Engine::setAmbientStrength(float strength) {
     ambientStrength_ = strength;
+}
+
+void Engine::setPointSize(float size) {
+    if (renderer_) {
+        renderer_->setPointSize(size);
+    }
+}
+
+bool Engine::requestScreenshot(const std::string& path) {
+    if (!renderer_) return false;
+    return renderer_->requestScreenshot(path);
 }
 
 void Engine::uploadDemoData() {
@@ -357,9 +427,25 @@ void Engine::loadFile(const std::string& path) {
             auto data = Loader::CsvLoader::load(path);
             if (data.points.empty()) return;
 
-            // Calc Origin (Centroid) if first load, or use existing? 
-            // For now, simple: Use first point as local origin for this cloud
-            Core::ValueObjects::Vector3 origin = data.points[0];
+            // Determine Origin strategy:
+            // 1. If coordinates are large (e.g., UTM > 10,000), pick a local origin to prevent float jitter on GPU.
+            // 2. If coordinates are small (e.g., local model < 10,000), use (0,0,0) to preserve author's centering.
+            
+            Core::ValueObjects::Vector3 origin(0.0, 0.0, 0.0);
+            
+            if (!data.points.empty()) {
+                double maxVal = 0.0;
+                for (const auto& p : data.points) {
+                    maxVal = std::max(maxVal, std::abs(p.x));
+                    maxVal = std::max(maxVal, std::abs(p.y));
+                    if (maxVal > 10000.0) break;
+                }
+                
+                if (maxVal > 10000.0) {
+                     origin = data.points[0]; // Use first point as local origin for large coords
+                     std::cout << "[Engine] Large coordinates detected. Shifting origin to: " << origin.x << ", " << origin.y << std::endl;
+                }
+            }
             
             // Convert to GPU
             auto verticesPtr = std::make_shared<std::vector<Rendering::Vertex>>(
@@ -454,6 +540,47 @@ void Engine::loadFile(const std::string& path) {
             std::cerr << "[Engine] Unsupported file format: " << ext << std::endl;
         }
         isLoading_ = false;
+    });
+}
+
+void Engine::loadPointCloud(const std::vector<Core::ValueObjects::Vector3>& points,
+                            const std::vector<glm::vec3>& colors,
+                            const std::string& label) {
+    if (points.empty()) return;
+
+    // Use absolute origin (0,0,0) to preserve external offsets/transforms
+    // Previously used points[0], which canceled out manual shifts.
+    Core::ValueObjects::Vector3 origin(0.0, 0.0, 0.0);
+    auto verticesPtr = std::make_shared<std::vector<Rendering::Vertex>>(
+        ScientificAdapter::convert(points, origin)
+    );
+
+    if (colors.size() == points.size()) {
+        for (size_t i = 0; i < verticesPtr->size(); ++i) {
+            (*verticesPtr)[i].color = colors[i];
+        }
+    }
+
+    commandQueue_.push([this, verticesPtr, label]() {
+        if (!context_ || !renderer_) return;
+
+        RenderObject pointsObj;
+        pointsObj.topology = vk::PrimitiveTopology::ePointList;
+        pointsObj.vertexCount = static_cast<uint32_t>(verticesPtr->size());
+        vk::DeviceSize pointsSize = sizeof(Rendering::Vertex) * verticesPtr->size();
+
+        Rendering::Buffer pointsStaging(*context_, pointsSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+        pointsStaging.copyTo(verticesPtr->data(), pointsSize);
+
+        pointsObj.vertexBuffer = std::make_shared<Rendering::Buffer>(*context_, pointsSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        renderer_->copyBuffer(pointsStaging.getHandle(), pointsObj.vertexBuffer->getHandle(), pointsSize);
+
+        scene_.addObject(pointsObj);
+
+        activeVertices_ = verticesPtr;
+        activeVertexBuffer_ = pointsObj.vertexBuffer;
+        activeTopology_ = vk::PrimitiveTopology::ePointList;
+        currentFilePath_ = label;
     });
 }
 
@@ -610,6 +737,20 @@ bool Engine::generateSampleTerrain(const std::string& filename, int width, int h
         if (success) {
             std::cout << "[Engine] Generation complete." << std::endl;
             if (autoLoad) {
+                // SKIP RELOADING to preserve Grid Structure
+                // If we reload OBJ, we get triangles (mismatching count).
+                // We trust that TerrainGenerator populated the file, 
+                // but we really need the data IN MEMORY.
+                
+                // Since TerrainGenerator is static and we can't easily get the data back without refactoring it,
+                // we are STUCK with the file.
+                // BUT, we can make the error explicit in UI (which we did).
+                
+                // Ideally we would do: activeVertices_ = generator.getVertices();
+                
+                // For now, let's keep the reload as is, because removing it means NO terrain is shown.
+                // The Fix is to use "Drainage Result" popup to warn the user.
+                
                 {
                     std::lock_guard<std::mutex> lock(generationMutex_);
                     generationMessage_ = "Queueing Load...";
@@ -690,6 +831,101 @@ void Engine::applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& par
     
     renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
 }
+
+Engine::DrainageStats Engine::applyDrainageSimulation() {
+    DrainageStats stats;
+    if (!activeVertices_ || !activeVertexBuffer_) {
+        std::cerr << "[Engine] No active mesh to simulate drainage." << std::endl;
+        stats.message = "No active mesh to simulate drainage.";
+        return stats;
+    }
+
+    // Infer grid dimensions
+    size_t count = activeVertices_->size();
+    int width = static_cast<int>(std::sqrt(count));
+    int height = width;
+    
+    if (width * height != static_cast<int>(count)) {
+         stats.message = "Mesh is not a grid (Vertex count mismatch). Try loading a .csv or Generate Pattern.";
+         return stats;
+    }
+    
+    std::cout << "[Engine] Applying Drainage Simulation (" << width << "x" << height << ")..." << std::endl;
+
+    // 1. Adapter: Convert World3D Vertices to Domain ElevationGrid
+    Core::Domain::Hydro::ElevationGrid terrain;
+    terrain.width = width;
+    terrain.height = height;
+    terrain.z.resize(count);
+
+    float minZ = 10000.0f;
+    float maxZ = -10000.0f;
+
+    for (size_t i = 0; i < count; ++i) {
+        float z = (*activeVertices_)[i].pos.z;
+        terrain.z[i] = z;
+        if (z < minZ) minZ = z;
+        if (z > maxZ) maxZ = z;
+    }
+
+    // 2. Process Domain Logic
+    Core::Domain::Hydro::DrainageSystem::process(terrain, lastHydroGrid_);
+    
+    // 3. Visualize Results & Calculate Stats
+    float maxLogAcc = 0.0f;
+    long totalAcc = 0;
+    stats.maxAccumulation = 0;
+    stats.riverCells = 0;
+
+    for (auto acc : lastHydroGrid_.flowAccumulationCells) {
+        if (acc > stats.maxAccumulation) stats.maxAccumulation = acc;
+        totalAcc += acc;
+        if (acc > 50) stats.riverCells++;
+
+        if (acc > 0) {
+            float l = std::log(static_cast<float>(acc));
+            if (l > maxLogAcc) maxLogAcc = l;
+        }
+    }
+    if (maxLogAcc <= 0.0001f) maxLogAcc = 1.0f;
+    stats.meanAccumulation = static_cast<float>(totalAcc) / count;
+
+    // Increase point size for better visibility if it's a point cloud
+    if (activeTopology_ == vk::PrimitiveTopology::ePointList) {
+        if (renderer_) renderer_->setPointSize(4.0f); // BIGGER POINTS for visibility
+    }
+
+    float zRange = maxZ - minZ;
+    if (zRange < 1.0f) zRange = 1.0f;
+
+    for (size_t i = 0; i < activeVertices_->size(); ++i) {
+        auto& v = (*activeVertices_)[i];
+        int acc = lastHydroGrid_.flowAccumulationCells[i];
+        
+        // Threshold for visible channel
+        if (acc > 50) { 
+             float intensity = std::log(static_cast<float>(acc)) / maxLogAcc;
+             // Deep Blue to Bright Cyan
+             v.color = glm::mix(glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(0.0f, 0.8f, 1.0f), intensity);
+        } else {
+             // Terrain Background: Gradient based on Height for Depth Perception
+             float h = (v.pos.z - minZ) / zRange;
+             // Light Earthy Gradient: Darker at bottom, Lighter at top
+             v.color = glm::mix(glm::vec3(0.5f, 0.45f, 0.4f), glm::vec3(0.9f, 0.85f, 0.8f), h);
+        }
+    }
+
+    // Re-upload to GPU
+    vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
+    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+    staging.copyTo(activeVertices_->data(), size);
+    
+    renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
+    std::cout << "[Engine] Drainage Analysis Complete." << std::endl;
+    stats.message = ""; // Success
+    return stats;
+}
+
 
 void Engine::setCameraSpeed(float speed) {
     if (inputController_) {

@@ -1,10 +1,13 @@
 #pragma once
 
 #include <functional> // Added
+#include <memory>
 #include <vector>
+#include "world3d/rendering/Vertex.hpp"
 #include <vulkan/vulkan.hpp>
 #include <SDL2/SDL_events.h>
 #include <glm/glm.hpp>
+#include "core/value_objects/Vector3.hpp"
 #include "core/domain/soils/Scorpan.hpp" // New
 #include "core/domain/soils/SiBCS.hpp"
 
@@ -32,6 +35,9 @@ uint32_t getImageCount();
 
 void loadDemoCloud(); // New test function
 void loadFile(const std::string& path); // Generic loader
+void loadPointCloud(const std::vector<Core::ValueObjects::Vector3>& points,
+                    const std::vector<glm::vec3>& colors,
+                    const std::string& label);
 bool saveFile(const std::string& path); // Generic saver
 std::string getCurrentFilePath(); // Get current active path
 
@@ -48,6 +54,8 @@ glm::vec3 getLightColor();
 void setLightColor(float r, float g, float b);
 float getAmbientStrength();
 void setAmbientStrength(float strength);
+void setPointSize(float size);
+bool requestScreenshot(const std::string& path);
 
 // Graphics Settings
 void setVSync(bool enabled);
@@ -67,6 +75,18 @@ struct SlopeStats {
     int total;         ///< Total analyzed vertices
 };
 void applySlopeAnalysis();
+    struct DrainageStats {
+        int maxAccumulation = 0;
+        float meanAccumulation = 0.0f;
+        int riverCells = 0;
+        std::string message;
+    };
+
+    /**
+     * @brief Runs D8 drainage analysis.
+     * @return Statistics of the run.
+     */
+    DrainageStats applyDrainageSimulation();
 
 
 /**
@@ -98,6 +118,11 @@ bool generateTerrain(const std::string& filename, int width, int height, float s
 bool isTerrainGenerating();
 float getGenerationProgress();
 std::string getGenerationMessage();
+
+// Analysis Accessors
+const std::vector<World3D::Rendering::Vertex>& getVertices(); // New
+const std::vector<Core::Domain::Soils::SiBCSClassification>& getSoilClasses(); // New
+
 void setCameraSpeed(float speed);
 
 } // namespace World3D

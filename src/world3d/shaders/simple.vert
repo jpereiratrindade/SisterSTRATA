@@ -1,12 +1,14 @@
 #version 450
 
-layout(binding = 0) uniform UniformBufferObject {
+layout(std140, binding = 0) uniform UniformBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
-    vec3 lightDir;
-    vec3 lightColor;
+    vec4 lightDir;
+    vec4 lightColor;
     float ambientStrength;
+    float pointSize;
+    vec2 _padding;
 } ubo;
 
 layout(location = 0) in vec3 inPosition;
@@ -20,7 +22,7 @@ layout(location = 2) out vec3 fragPos;
 
 void main() {
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
-    gl_PointSize = 4.0;
+    gl_PointSize = ubo.pointSize;
     
     // Pass world position and normal to frag shader for lighting
     fragPos = vec3(ubo.model * vec4(inPosition, 1.0));

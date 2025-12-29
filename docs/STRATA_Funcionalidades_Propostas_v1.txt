@@ -1,0 +1,221 @@
+===============================================================================
+STRATA — FUNCIONALIDADES PROPOSTAS
+VERSÃO: 1.0
+STATUS: Documento de Planejamento Funcional
+FORMATO: Texto estruturado (.txt)
+===============================================================================
+
+Este documento organiza funcionalidades potenciais para o STRATA,
+respeitando os princípios já definidos no DDD:
+- Core científico protegido
+- Separação entre ciência, visualização e infraestrutura
+- Foco em uso científico real (não engine de jogo)
+
+===============================================================================
+1. FUNCIONALIDADES DO CORE DOMAIN (CIÊNCIA)
+===============================================================================
+
+1.1 Pipelines Científicos Versionáveis
+-------------------------------------
+Descrição:
+- Pipeline passa a ser entidade/versionável.
+- Cada execução possui:
+  - ID
+  - parâmetros
+  - timestamp
+  - referência ao dataset de origem
+
+Benefícios:
+- Reprodutibilidade científica
+- Comparação entre cenários
+- Auditoria de resultados
+
+Observação:
+- Pipeline NÃO depende de UI ou 3D.
+
+-------------------------------------
+
+1.2 Análise Espacial de Patches
+-------------------------------------
+Descrição:
+- Cálculo de métricas de paisagem:
+  - Área
+  - Perímetro
+  - Shape index
+  - Edge density
+  - Conectividade
+  - Contagion
+
+Integração:
+- Patch ↔ solo ↔ drenagem ↔ vegetação
+
+Benefícios:
+- Análise estrutural da paisagem
+- Base para inferência ecológica
+
+-------------------------------------
+
+1.3 Simulação Temporal Discreta
+-------------------------------------
+Descrição:
+- Estados explícitos no tempo (t0, t1, t2, …).
+- Cada estado é imutável após computado.
+
+Possibilidades:
+- Comparação entre estados
+- Cálculo de diferenças (delta)
+- Visualização temporal
+
+Observação:
+- Tempo como eixo científico, não como frame gráfico.
+
+===============================================================================
+2. FUNCIONALIDADES DO CONTEXTO 3D (WORLD CONTEXT)
+===============================================================================
+
+2.1 Modos Científicos de Visualização
+-------------------------------------
+Descrição:
+- Views baseadas em variáveis científicas:
+  - água
+  - declividade
+  - solo
+  - processo (erosão, fluxo)
+
+Regras:
+- Paletas científicas consistentes
+- Sem interpolação estética enganosa
+
+-------------------------------------
+
+2.2 Cortes e Perfis no Mundo 3D
+-------------------------------------
+Descrição:
+- Corte vertical e horizontal no mundo.
+- Perfil de solo e atributos por profundidade.
+
+Uso:
+- Análise geomorfológica
+- Ensino e comunicação científica
+
+-------------------------------------
+
+2.3 Observador Científico Persistente
+-------------------------------------
+Descrição:
+- Câmera com estado persistente:
+  - posição
+  - orientação
+  - zoom
+
+Benefícios:
+- Comparação visual precisa entre simulações
+- Reprodutibilidade visual
+
+===============================================================================
+3. FUNCIONALIDADES DA UI CIENTÍFICA
+===============================================================================
+
+3.1 Workspace Científico Persistente
+-------------------------------------
+Descrição:
+- Workspace salva:
+  - datasets
+  - pipelines
+  - views
+  - estado da sessão
+
+Uso:
+- Reabrir trabalhos como “caderno de campo digital”.
+
+-------------------------------------
+
+3.2 Painel de Hipóteses
+-------------------------------------
+Descrição:
+- Usuário declara hipóteses explícitas.
+- Hipóteses vinculadas a pipelines e resultados.
+
+Exemplo:
+- “Maior declividade aumenta conectividade de drenagem”.
+
+Objetivo:
+- Apoiar método científico explícito.
+
+===============================================================================
+4. INFRAESTRUTURA E EXTENSIBILIDADE
+===============================================================================
+
+4.1 Sistema de Plugins Científicos
+-------------------------------------
+Descrição:
+- Plugins para:
+  - métricas
+  - modelos
+  - transformações
+
+Regra:
+- Plugins NÃO alteram regras do Core Domain.
+- Comunicação via interfaces.
+
+-------------------------------------
+
+4.2 Exportação Científica Avançada
+-------------------------------------
+Formatos:
+- OBJ / GLTF com metadados
+- CSV / HDF5 / NetCDF
+- Relatórios compatíveis com LaTeX
+
+Objetivo:
+- Integração com outros ambientes de análise.
+
+===============================================================================
+5. FUNCIONALIDADES AVANÇADAS (OPCIONAIS / FUTURAS)
+===============================================================================
+
+5.1 Modo Experimento
+-------------------------------------
+Descrição:
+- Definição de variáveis livres
+- Execução em batch
+- Análise estatística dos resultados
+
+Uso:
+- Exploração de cenários
+- Sensibilidade de parâmetros
+
+-------------------------------------
+
+5.2 Anotações Espaciais
+-------------------------------------
+Descrição:
+- Comentários ancorados no espaço 3D.
+- Exportáveis junto com a sessão.
+
+Uso:
+- Comunicação científica
+- Ensino
+- Revisão colaborativa
+
+===============================================================================
+6. PRIORIDADES SUGERIDAS
+===============================================================================
+
+Alta prioridade:
+- Pipelines versionáveis
+- Análise de patches
+- Simulação temporal
+- Workspace persistente
+
+Média prioridade:
+- Cortes 3D
+- Observador científico
+
+Baixa prioridade:
+- Modo experimento
+- Anotações espaciais
+
+===============================================================================
+FIM DO DOCUMENTO
+===============================================================================

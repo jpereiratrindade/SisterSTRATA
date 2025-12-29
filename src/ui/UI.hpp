@@ -7,6 +7,7 @@
 
 #include "ui/menus/MainMenu.hpp"
 #include "ui/panels/AnalysisPanel.hpp"
+#include "ui/panels/PatchAnalysisPanel.hpp"
 #include "ui/panels/SettingsPanel.hpp"
 #include "ui/panels/TerrainGenPanel.hpp"
 #include "ui/panels/WelcomePanel.hpp"
@@ -56,6 +57,7 @@ private:
     // Components
     Menus::MainMenu mainMenu_;
     Panels::AnalysisPanel analysisPanel_;
+    Panels::PatchAnalysisPanel patchAnalysisPanel_;
     Panels::SettingsPanel settingsPanel_;
     Panels::TerrainGenPanel terrainGenPanel_;
     Panels::WelcomePanel welcomePanel_;

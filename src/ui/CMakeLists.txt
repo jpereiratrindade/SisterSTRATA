@@ -10,6 +10,7 @@ add_library(ui
     UI.cpp
     menus/MainMenu.cpp
     panels/AnalysisPanel.cpp
+    panels/PatchAnalysisPanel.cpp
     panels/SettingsPanel.cpp
     panels/TerrainGenPanel.cpp
     panels/WelcomePanel.cpp

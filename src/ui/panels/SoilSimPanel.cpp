@@ -2,7 +2,14 @@
 #include "world3d/World3D.hpp"
 #include "core/domain/soils/SoilSystem.hpp" // Added
 #include "core/domain/soils/SiBCS.hpp" // Added
+#include "core/domain/analysis/SoilRasterizer.hpp" 
+#include "ui/panels/PatchAnalysisPanel.hpp"
 #include <string>
+#include <cstdio>
+#include <fstream>
+#include <algorithm>
+#include <cmath>
+#include <iostream>
 
 namespace UI::Panels {
 
@@ -220,6 +227,10 @@ void SoilSimPanel::drawSiBCS(bool* open) {
             filter_.allowedFamilies.clear();
             filter_.allowedSeries.clear();
         }
+        ImGui::SameLine();
+        if (ImGui::Button("Clear Classification")) {
+            Core::Domain::Soils::SoilSystem::clearLastDetectedClasses();
+        }
 
         ImGui::Spacing();
         ImGui::Separator();
@@ -246,6 +257,113 @@ void SoilSimPanel::drawSiBCS(bool* open) {
         }
         
     }
+
+    ImGui::Separator();
+    ImGui::Text("Analysis");
+    ImGui::InputFloat("Raster Grid Size (m)", &rasterCellSize_, 0.5f, 5.0f, "%.1f");
+    if (rasterCellSize_ < 0.1f) rasterCellSize_ = 0.1f;
+
+    if (ImGui::Button("Rasterize & Analyze Patches", ImVec2(-1, 40))) {
+        rasterStatus_ = "Starting Rasterization...";
+
+        if (!patchAnalysisPanel_) {
+            rasterStatus_ = "Error: Patch Panel not linked.";
+        } else {
+            const auto& vertices = World3D::getVertices();
+            if (vertices.empty()) {
+                rasterStatus_ = "Error: No Active Terrain.";
+            } else {
+                // 1. Calculate Bounds for Relative Elevation (needed for Prediction)
+                float minZ = 1e9f;
+                float maxZ = -1e9f;
+                for (const auto& v : vertices) {
+                    minZ = std::min(minZ, v.pos.z);
+                    maxZ = std::max(maxZ, v.pos.z);
+                }
+                if (maxZ == minZ) maxZ = minZ + 1.0f;
+
+                // 2. Reconstruct Soil Classifications
+                std::vector<Core::Domain::Soils::SiBCSClassification> classes;
+                classes.reserve(vertices.size());
+                
+                std::vector<Core::Domain::Soils::SiBCSClassification> uniqueClasses;
+
+                for (const auto& v : vertices) {
+                    float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
+                    float slopeDeg = glm::degrees(std::acos(dot));
+                    float relElev = (v.pos.z - minZ) / (maxZ - minZ);
+                    
+                    // Call Public Predict
+                    auto c = Core::Domain::Soils::SoilSystem::predict(params_, slopeDeg, v.pos.z, relElev);
+                    classes.push_back(c);
+
+                    // Track uniques for legend
+                    bool exists = false;
+                    for(const auto& u : uniqueClasses) if(u == c) { exists = true; break; }
+                    if (!exists) uniqueClasses.push_back(c);
+                }
+
+                // 3. Rasterize
+                auto grid = Core::Domain::Analysis::SoilRasterizer::Rasterize(vertices, classes, (double)rasterCellSize_);
+                
+                // 4. Save to Disk (for PatchAnalysisPanel to load)
+                std::string csvPath = "assets/data/soil_raster_" + std::to_string((int)rasterCellSize_) + "m.csv";
+                
+                // Write Grid CSV manually here or use a helper? 
+                // PatchAnalysis expects CSV. SoilRasterizer returning GridData is nice, but we need to serialize it.
+                // Helper SoilRasterizer::SaveGridCsv? Or direct write?
+                // Let's do direct write to keep it simple or check if PaatchAnalysis has a saver.
+                // PatchAnalysis::WriteCsv writes METRICS, not the grid itself.
+                // We need to write the GRID values.
+                
+                std::ofstream file(csvPath);
+                if (file.is_open()) {
+                    // Write Metadata Header
+                    file << "# Origin: " << grid.originX << ", " << grid.originY << "\n";
+                    
+                    for (int y = 0; y < grid.height; y++) {
+                        for (int x = 0; x < grid.width; x++) {
+                            file << grid.values[y * grid.width + x];
+                            if (x < grid.width - 1) file << ",";
+                        }
+                        file << "\n";
+                    }
+                    file.close();
+
+                    // 4b. Save Elevation CSV (for 3D Overlay)
+                    if (!grid.elevation.empty()) {
+                         std::string elevPath = "assets/data/soil_elevation_" + std::to_string((int)rasterCellSize_) + "m.csv";
+                         std::ofstream ef(elevPath);
+                         if (ef.is_open()) {
+                             for (int y = 0; y < grid.height; y++) {
+                                for (int x = 0; x < grid.width; x++) {
+                                    ef << grid.elevation[y * grid.width + x];
+                                    if (x < grid.width - 1) ef << ",";
+                                }
+                                ef << "\n";
+                             }
+                         }
+                    }
+
+                    // 5. Save Legend
+                    std::string legendPath = "assets/data/soil_legend.csv"; 
+                    Core::Domain::Analysis::SoilRasterizer::SaveLegendCsv(legendPath, uniqueClasses);
+
+                    // 6. Trigger Panel
+                    patchAnalysisPanel_->SetInputPath(csvPath);
+                    patchAnalysisPanel_->SetLegendPath(legendPath);
+
+                    rasterStatus_ = "Success! Grid saved to " + csvPath;
+                } else {
+                    rasterStatus_ = "Error: Could not write CSV.";
+                }
+            }
+        }
+    }
+    if (!rasterStatus_.empty()) {
+        ImGui::TextColored(ImVec4(1,1,0,1), "%s", rasterStatus_.c_str());
+    }
+
     ImGui::End();
 }
 

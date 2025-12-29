@@ -4,6 +4,7 @@
 #include "world3d/rendering/Swapchain.hpp"
 #include "world3d/rendering/Pipeline.hpp"
 #include "world3d/rendering/Buffer.hpp"
+#include "world3d/rendering/ImageWriter.hpp"
 #include "world3d/rendering/Vertex.hpp"
 #include <memory>
 #include <vector>
@@ -11,6 +12,7 @@
 #include "world3d/scene/Scene.hpp"
 #include "world3d/camera/Camera.hpp"
 #include <glm/glm.hpp>
+#include <string>
 
 namespace World3D::Rendering {
 // Forward declaration if needed, but we included Scene.hpp
@@ -25,6 +27,8 @@ struct UniformBufferObject {
     alignas(16) glm::vec4 lightDir;   // Direction TO light? Or FROM light. Usually to source.
     alignas(16) glm::vec4 lightColor;
     alignas(4)  float ambientStrength;
+    alignas(4)  float pointSize;
+    alignas(8)  glm::vec2 _padding;
 };
 
 /**
@@ -57,6 +61,7 @@ public:
     void endFrame();
     void recreateSwapchain(); // Handling Resize
     void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
+    bool requestScreenshot(const std::string& path);
 
     [[nodiscard]] vk::RenderPass getRenderPass() const { return renderPass_; }
     [[nodiscard]] vk::CommandPool getCommandPool() const { return commandPool_; }
@@ -73,6 +78,7 @@ public:
         lightColor_ = color;
         ambientStrength_ = ambient;
     }
+    void setPointSize(float size) { pointSize_ = size; }
 
     void setVSync(bool enabled);
     bool isVSyncEnabled() const { return vsyncEnabled_; }
@@ -86,6 +92,8 @@ private:
     void createUniformBuffers(); // New
     void createDescriptorPool(); // New
     void createDescriptorSets(); // New
+    void recordScreenshotCopy(vk::CommandBuffer cmd);
+    void writeScreenshotToDisk();
 
 
     std::shared_ptr<VulkanContext> context_;
@@ -98,6 +106,7 @@ private:
     glm::vec3 lightDir_ = glm::vec3(0.5f, 1.0f, 2.0f);
     glm::vec3 lightColor_ = glm::vec3(1.0f);
     float ambientStrength_ = 0.3f;
+    float pointSize_ = 4.0f;
     
     // Buffers removed - now in Scene objects
 
@@ -125,6 +134,13 @@ private:
     uint32_t imageIndex_ = 0;
     bool vsyncEnabled_ = true;
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
+    std::string pendingScreenshotPath_;
+    std::unique_ptr<Buffer> screenshotBuffer_;
+    uint32_t screenshotWidth_ = 0;
+    uint32_t screenshotHeight_ = 0;
+    vk::Format screenshotFormat_ = vk::Format::eUndefined;
+    bool screenshotPending_ = false;
 };
 
 } // namespace World3D::Rendering
