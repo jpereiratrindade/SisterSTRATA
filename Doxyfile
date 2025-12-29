@@ -1,0 +1,36 @@
+# Doxyfile 1.9.1
+
+# Project Options
+PROJECT_NAME           = "SisterPEC"
+PROJECT_NUMBER         = "4.2.1"
+PROJECT_BRIEF          = "Scientific Data Platform for Soil and Environment Simulation"
+OUTPUT_DIRECTORY       = docs/doxygen
+CREATE_SUBDIRS         = NO
+ALLOW_UNICODE_NAMES    = NO
+OUTPUT_LANGUAGE        = English
+
+# Build Options
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+RECURSIVE              = YES
+EXCLUDE                = build external assets
+EXCLUDE_PATTERNS       = */CMakeFiles/* */.git/*
+INPUT                  = src
+FILE_PATTERNS          = *.cpp *.hpp *.h
+
+# Visual Options
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+GENERATE_LATEX         = NO
+HAVE_DOT               = NO
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+
+# Source Browsing
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+STRIP_CODE_COMMENTS    = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES

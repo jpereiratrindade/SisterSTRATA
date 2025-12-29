@@ -16,4 +16,6 @@ lib/
 .gemini/
 SisterAppPEC/
 imgui.ini
-slope_report.txt
+
+# Documentation
+docs/doxygen/
