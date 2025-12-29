@@ -12,6 +12,7 @@
 #include "ui/panels/TerrainGenPanel.hpp"
 #include "ui/panels/WelcomePanel.hpp"
 #include "ui/panels/SoilSimPanel.hpp"
+#include "ui/panels/HydrologyPanel.hpp"
 
 namespace UI {
 
@@ -62,6 +63,7 @@ private:
     Panels::TerrainGenPanel terrainGenPanel_;
     Panels::WelcomePanel welcomePanel_;
     Panels::SoilSimPanel soilSimPanel_;
+    Panels::HydrologyPanel hydrologyPanel_;
 };
 
 } // namespace UI

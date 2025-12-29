@@ -3,6 +3,7 @@
 #include <functional> // Added
 #include <memory>
 #include <vector>
+#include <string>
 #include "world3d/rendering/Vertex.hpp"
 #include <vulkan/vulkan.hpp>
 #include <SDL2/SDL_events.h>
@@ -10,6 +11,7 @@
 #include "core/value_objects/Vector3.hpp"
 #include "core/domain/soils/Scorpan.hpp" // New
 #include "core/domain/soils/SiBCS.hpp"
+#include "core/domain/hydro/HydrologyReport.hpp"
 
 
 struct SDL_Window;
@@ -87,6 +89,22 @@ void applySlopeAnalysis();
      * @return Statistics of the run.
      */
     DrainageStats applyDrainageSimulation();
+    /**
+     * @brief Toggle drainage and watershed visualization overlays.
+     */
+    bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity);
+    /**
+     * @brief Compute hydrology statistics for the current grid.
+     */
+    HydrologyStats getHydrologyStats(float streamThreshold);
+    /**
+     * @brief Generate a hydrology report to disk.
+     */
+    bool generateHydrologyReport(const std::string& path, float streamThreshold);
+    bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity);
+    using HydrologyStats = ::Core::Domain::Hydro::HydrologyStats;
+    HydrologyStats getHydrologyStats(float streamThreshold);
+    bool generateHydrologyReport(const std::string& path, float streamThreshold);
 
 
 /**

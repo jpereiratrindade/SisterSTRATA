@@ -7,6 +7,8 @@
 #include <fstream>
 #include <iomanip>
 #include <future>
+#include <cmath>
+#include <algorithm>
 #include "world3d/loader/ObjLoader.hpp"
 #include "world3d/loader/CsvLoader.hpp"
 #include "world3d/generators/TerrainGenerator.hpp"
@@ -658,6 +660,9 @@ void Engine::applySlopeVisualization() {
             lastStats_.countSteep++;
         }
     }
+
+    hydroVisMode_ = HydroVisMode::None;
+    baseColorsValid_ = false;
     
     // Re-upload to GPU
     vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
@@ -824,6 +829,9 @@ void Engine::applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& par
     // Delegate to Domain System
     Core::Domain::Soils::SoilSystem::process(*activeVertices_, params, visualizationLevel, filter);
 
+    hydroVisMode_ = HydroVisMode::None;
+    baseColorsValid_ = false;
+
     // Re-upload to GPU
     vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
     Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
@@ -844,35 +852,26 @@ Engine::DrainageStats Engine::applyDrainageSimulation() {
     size_t count = activeVertices_->size();
     int width = static_cast<int>(std::sqrt(count));
     int height = width;
-    
+
     if (width * height != static_cast<int>(count)) {
-         stats.message = "Mesh is not a grid (Vertex count mismatch). Try loading a .csv or Generate Pattern.";
-         return stats;
+        stats.message = "Mesh is not a grid (Vertex count mismatch). Try loading a .csv or Generate Pattern.";
+        return stats;
     }
-    
+
     std::cout << "[Engine] Applying Drainage Simulation (" << width << "x" << height << ")..." << std::endl;
 
-    // 1. Adapter: Convert World3D Vertices to Domain ElevationGrid
+    // Adapter: Convert World3D Vertices to Domain ElevationGrid
     Core::Domain::Hydro::ElevationGrid terrain;
     terrain.width = width;
     terrain.height = height;
     terrain.z.resize(count);
 
-    float minZ = 10000.0f;
-    float maxZ = -10000.0f;
-
     for (size_t i = 0; i < count; ++i) {
-        float z = (*activeVertices_)[i].pos.z;
-        terrain.z[i] = z;
-        if (z < minZ) minZ = z;
-        if (z > maxZ) maxZ = z;
+        terrain.z[i] = (*activeVertices_)[i].pos.z;
     }
 
-    // 2. Process Domain Logic
     Core::Domain::Hydro::DrainageSystem::process(terrain, lastHydroGrid_);
-    
-    // 3. Visualize Results & Calculate Stats
-    float maxLogAcc = 0.0f;
+
     long totalAcc = 0;
     stats.maxAccumulation = 0;
     stats.riverCells = 0;
@@ -881,49 +880,207 @@ Engine::DrainageStats Engine::applyDrainageSimulation() {
         if (acc > stats.maxAccumulation) stats.maxAccumulation = acc;
         totalAcc += acc;
         if (acc > 50) stats.riverCells++;
+    }
 
-        if (acc > 0) {
-            float l = std::log(static_cast<float>(acc));
-            if (l > maxLogAcc) maxLogAcc = l;
+    stats.meanAccumulation = (count > 0) ? static_cast<float>(totalAcc) / count : 0.0f;
+    stats.message = "";
+    lastDrainageStats_ = stats;
+
+    std::cout << "[Engine] Drainage Analysis Complete." << std::endl;
+    return stats;
+}
+
+bool Engine::setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity) {
+    if (!activeVertices_ || !activeVertexBuffer_) {
+        std::cerr << "[Engine] No active mesh to visualize drainage." << std::endl;
+        return false;
+    }
+
+    size_t count = activeVertices_->size();
+    int width = static_cast<int>(std::sqrt(count));
+    int height = width;
+    if (width * height != static_cast<int>(count)) {
+        std::cerr << "[Engine] Mesh is not a grid (Vertex count mismatch)." << std::endl;
+        return false;
+    }
+
+    auto& verts = *activeVertices_;
+
+    if (!showDrainage && !showWatersheds) {
+        if (baseColorsValid_ && baseColors_.size() == count) {
+            for (size_t i = 0; i < count; ++i) {
+                verts[i].color = baseColors_[i];
+            }
+        }
+        hydroVisMode_ = HydroVisMode::None;
+        baseColorsValid_ = false;
+    } else {
+        if (!baseColorsValid_ || baseColors_.size() != count || hydroVisMode_ == HydroVisMode::None) {
+            baseColors_.resize(count);
+            for (size_t i = 0; i < count; ++i) {
+                baseColors_[i] = verts[i].color;
+            }
+            baseColorsValid_ = true;
+        }
+
+        if (lastHydroGrid_.flowAccumulationCells.size() != count) {
+            DrainageStats stats = applyDrainageSimulation();
+            if (!stats.message.empty()) return false;
+        }
+
+        if (showWatersheds) {
+            if (lastHydroGrid_.watershedMap.size() != count) {
+                lastHydroGrid_.watershedMap.assign(count, 0);
+            }
+
+            bool hasBasins = false;
+            for (int id : lastHydroGrid_.watershedMap) {
+                if (id > 0) { hasBasins = true; break; }
+            }
+            if (!hasBasins) {
+                Core::Domain::Hydro::Watershed::segmentGlobal(lastHydroGrid_);
+            }
+
+            const int dx[] = {0, 1, 1, 1, 0, -1, -1, -1};
+            const int dy[] = {-1, -1, 0, 1, 1, 1, 0, -1};
+
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    int idx = y * width + x;
+                    int id = lastHydroGrid_.watershedMap[idx];
+                    glm::vec3 color = (id > 0) ? basinColorFromId(id) : baseColors_[idx];
+
+                    if (showBasinOutlines && id > 0) {
+                        bool edge = false;
+                        for (int k = 0; k < 8; ++k) {
+                            int nx = x + dx[k];
+                            int ny = y + dy[k];
+                            if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+                            int nIdx = ny * width + nx;
+                            int nId = lastHydroGrid_.watershedMap[nIdx];
+                            if (nId != id) {
+                                edge = true;
+                                break;
+                            }
+                        }
+                        if (edge) {
+                            color = glm::vec3(0.05f, 0.05f, 0.05f);
+                        }
+                    }
+
+                    verts[idx].color = color;
+                }
+            }
+            hydroVisMode_ = HydroVisMode::Watershed;
+        } else {
+            float maxLogAcc = 1.0f;
+            int maxAccum = 0;
+            for (auto acc : lastHydroGrid_.flowAccumulationCells) {
+                if (acc > maxAccum) maxAccum = acc;
+                if (acc > 0) {
+                    float l = std::log(static_cast<float>(acc));
+                    if (l > maxLogAcc) maxLogAcc = l;
+                }
+            }
+
+            float intensityClamped = std::clamp(intensity, 0.05f, 1.0f);
+            int threshold = std::max(1, static_cast<int>(maxAccum * intensityClamped * 0.02f));
+            float scale = 0.5f + intensityClamped * 1.5f;
+
+            for (size_t i = 0; i < count; ++i) {
+                int acc = lastHydroGrid_.flowAccumulationCells[i];
+                glm::vec3 base = baseColors_[i];
+                if (acc >= threshold) {
+                    float t = std::log(static_cast<float>(acc)) / maxLogAcc;
+                    t = std::clamp(t * scale, 0.0f, 1.0f);
+                    glm::vec3 river = glm::mix(glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(0.0f, 0.8f, 1.0f), t);
+                    verts[i].color = glm::mix(base, river, t);
+                } else {
+                    verts[i].color = base;
+                }
+            }
+            hydroVisMode_ = HydroVisMode::Drainage;
         }
     }
-    if (maxLogAcc <= 0.0001f) maxLogAcc = 1.0f;
-    stats.meanAccumulation = static_cast<float>(totalAcc) / count;
 
     // Increase point size for better visibility if it's a point cloud
     if (activeTopology_ == vk::PrimitiveTopology::ePointList) {
-        if (renderer_) renderer_->setPointSize(4.0f); // BIGGER POINTS for visibility
-    }
-
-    float zRange = maxZ - minZ;
-    if (zRange < 1.0f) zRange = 1.0f;
-
-    for (size_t i = 0; i < activeVertices_->size(); ++i) {
-        auto& v = (*activeVertices_)[i];
-        int acc = lastHydroGrid_.flowAccumulationCells[i];
-        
-        // Threshold for visible channel
-        if (acc > 50) { 
-             float intensity = std::log(static_cast<float>(acc)) / maxLogAcc;
-             // Deep Blue to Bright Cyan
-             v.color = glm::mix(glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(0.0f, 0.8f, 1.0f), intensity);
-        } else {
-             // Terrain Background: Gradient based on Height for Depth Perception
-             float h = (v.pos.z - minZ) / zRange;
-             // Light Earthy Gradient: Darker at bottom, Lighter at top
-             v.color = glm::mix(glm::vec3(0.5f, 0.45f, 0.4f), glm::vec3(0.9f, 0.85f, 0.8f), h);
-        }
+        if (renderer_) renderer_->setPointSize(4.0f);
     }
 
     // Re-upload to GPU
-    vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
-    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
-    staging.copyTo(activeVertices_->data(), size);
-    
+    vk::DeviceSize size = sizeof(Rendering::Vertex) * verts.size();
+    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc,
+                              vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+    staging.copyTo(verts.data(), size);
     renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
-    std::cout << "[Engine] Drainage Analysis Complete." << std::endl;
-    stats.message = ""; // Success
+
+    return true;
+}
+
+::Core::Domain::Hydro::HydrologyStats Engine::getHydrologyStats(float streamThreshold) {
+    ::Core::Domain::Hydro::HydrologyStats stats;
+    if (!activeVertices_) return stats;
+
+    size_t count = activeVertices_->size();
+    int width = static_cast<int>(std::sqrt(count));
+    int height = width;
+    if (width * height != static_cast<int>(count)) return stats;
+
+    if (lastHydroGrid_.flowAccumulationCells.size() != count) {
+        DrainageStats dStats = applyDrainageSimulation();
+        if (!dStats.message.empty()) return stats;
+    }
+
+    bool hasBasins = false;
+    if (lastHydroGrid_.watershedMap.size() == count) {
+        for (int id : lastHydroGrid_.watershedMap) {
+            if (id > 0) { hasBasins = true; break; }
+        }
+    }
+    if (!hasBasins) {
+        Core::Domain::Hydro::Watershed::segmentGlobal(lastHydroGrid_);
+    }
+
+    Core::Domain::Hydro::ElevationGrid terrain;
+    terrain.width = width;
+    terrain.height = height;
+    terrain.z.resize(count);
+    for (size_t i = 0; i < count; ++i) {
+        terrain.z[i] = (*activeVertices_)[i].pos.z;
+    }
+
+    float spacing = computeGridSpacingXY(*activeVertices_, width, height);
+    stats = Core::Domain::Hydro::HydrologyReport::analyze(terrain, lastHydroGrid_, spacing, streamThreshold);
+    lastHydrologyStats_ = stats;
     return stats;
+}
+
+bool Engine::generateHydrologyReport(const std::string& filepath, float streamThreshold) {
+    if (!activeVertices_) return false;
+
+    size_t count = activeVertices_->size();
+    int width = static_cast<int>(std::sqrt(count));
+    int height = width;
+    if (width * height != static_cast<int>(count)) return false;
+
+    if (lastHydroGrid_.flowAccumulationCells.size() != count) {
+        DrainageStats dStats = applyDrainageSimulation();
+        if (!dStats.message.empty()) return false;
+    }
+
+    Core::Domain::Hydro::Watershed::segmentGlobal(lastHydroGrid_);
+
+    Core::Domain::Hydro::ElevationGrid terrain;
+    terrain.width = width;
+    terrain.height = height;
+    terrain.z.resize(count);
+    for (size_t i = 0; i < count; ++i) {
+        terrain.z[i] = (*activeVertices_)[i].pos.z;
+    }
+
+    float spacing = computeGridSpacingXY(*activeVertices_, width, height);
+    return Core::Domain::Hydro::HydrologyReport::generateToFile(terrain, lastHydroGrid_, spacing, filepath, streamThreshold);
 }
 
 

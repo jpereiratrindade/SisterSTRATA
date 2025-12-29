@@ -42,16 +42,36 @@ struct HydrologyStats {
     int areaCells = 0;
     std::vector<HydrologyStats> topBasins;
 
+    /**
+     * @brief Initialize min/max ranges for aggregation.
+     */
     void initRanges();
 };
 
 class HydrologyReport {
 public:
+    /**
+     * @brief Analyze hydrologic metrics from elevation and flow data.
+     * @param terrain Elevation grid.
+     * @param grid Hydro grid with flow accumulation and basins.
+     * @param resolution Cell spacing in world units.
+     * @param streamThreshold Flow accumulation threshold (cells).
+     * @return Aggregated hydrology statistics.
+     */
     static HydrologyStats analyze(const ElevationGrid& terrain,
                                   const HydroGrid& grid,
                                   float resolution,
                                   float streamThreshold = 100.0f);
 
+    /**
+     * @brief Generate a formatted hydrology report and save to disk.
+     * @param terrain Elevation grid.
+     * @param grid Hydro grid with flow accumulation and basins.
+     * @param resolution Cell spacing in world units.
+     * @param filepath Output report path.
+     * @param streamThreshold Flow accumulation threshold (cells).
+     * @return true if report was saved successfully.
+     */
     static bool generateToFile(const ElevationGrid& terrain,
                                const HydroGrid& grid,
                                float resolution,

@@ -90,6 +90,9 @@ A água é o agente conector do sistema.
 *   **Princípio da Conservação de Massa:** $V_{entrada} - V_{saida} = \Delta V_{armazenado}$.
 *   **Fluxo Superficial:** A água move-se da célula de maior potencial gravitacional para a de menor, transportando sedimentos (Erosão/Deposição) e solutos.
 *   **Infiltração:** A água que penetra no solo torna-se disponível para a vegetação ($O$) e altera as propriedades do solo ($S$).
+*   **Drenagem D8:** Direção de fluxo baseada em declividade máxima (8 vizinhos).
+*   **Acumulação de Fluxo:** Propagação topológica para obter área contribuinte por célula.
+*   **Bacias e Relatórios:** Segmentação de bacias, TWI, densidade de drenagem e relatórios exportáveis.
 
 ### 4.3. DOMÍNIO: VEGETAÇÃO
 A vegetação é modelada como um autômato celular complexo, sensível ao nicho ecológico.

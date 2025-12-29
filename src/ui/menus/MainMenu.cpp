@@ -73,8 +73,13 @@ void MainMenu::draw() {
                         "- Gradient: Elevation Depth", 
                         stats.maxAccumulation, stats.meanAccumulation, stats.riverCells);
                     drainageResultMsg = std::string(buf);
+                    World3D::setDrainageVisualization(true, false, false, 0.2f);
                 }
                 openDrainagePopup = true;
+            }
+
+            if (ImGui::MenuItem("Hydrology Inspector")) {
+                showHydrologyPanel = true;
             }
 
             if (ImGui::MenuItem("Patch Analysis (CSV)")) {

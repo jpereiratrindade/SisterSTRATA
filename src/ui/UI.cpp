@@ -229,6 +229,7 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     patchAnalysisPanel_.draw(&mainMenu_.showPatchAnalysis);
     terrainGenPanel_.draw(&mainMenu_.showTerrainGen);
     settingsPanel_.draw(&mainMenu_.showSettings);
+    hydrologyPanel_.draw(&mainMenu_.showHydrologyPanel);
     welcomePanel_.draw(&mainMenu_.showWelcome, data);
     soilSimPanel_.drawScorpan(&mainMenu_.showScorpanWindow);
     soilSimPanel_.drawSiBCS(&mainMenu_.showSiBCSWindow);

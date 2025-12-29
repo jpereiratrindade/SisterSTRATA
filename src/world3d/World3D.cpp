@@ -130,6 +130,21 @@ DrainageStats applyDrainageSimulation() {
     return stats;
 }
 
+bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity) {
+    if (!g_Engine) return false;
+    return g_Engine->setDrainageVisualization(showDrainage, showWatersheds, showBasinOutlines, intensity);
+}
+
+HydrologyStats getHydrologyStats(float streamThreshold) {
+    if (!g_Engine) return {};
+    return g_Engine->getHydrologyStats(streamThreshold);
+}
+
+bool generateHydrologyReport(const std::string& path, float streamThreshold) {
+    if (!g_Engine) return false;
+    return g_Engine->generateHydrologyReport(path, streamThreshold);
+}
+
 SlopeStats getSlopeAnalysisStats() {
     if (g_Engine) {
         auto s = g_Engine->getSlopeAnalysisStats();

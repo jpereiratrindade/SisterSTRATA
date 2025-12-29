@@ -86,6 +86,18 @@ public:
      * @return Statistics of the simulation.
      */
     DrainageStats applyDrainageSimulation();
+    /**
+     * @brief Toggle drainage and watershed visualization overlays.
+     */
+    bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity);
+    /**
+     * @brief Compute hydrology statistics using current grid state.
+     */
+    ::Core::Domain::Hydro::HydrologyStats getHydrologyStats(float streamThreshold);
+    /**
+     * @brief Generate a hydrology report to disk.
+     */
+    bool generateHydrologyReport(const std::string& filepath, float streamThreshold);
     bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity);
     ::Core::Domain::Hydro::HydrologyStats getHydrologyStats(float streamThreshold);
     bool generateHydrologyReport(const std::string& filepath, float streamThreshold);

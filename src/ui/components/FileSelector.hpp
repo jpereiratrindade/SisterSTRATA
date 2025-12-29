@@ -37,6 +37,7 @@ public:
     bool draw(bool* open, std::string& result, const std::string& extensionFilter = "", bool allowCreate = false) {
         if (!open || !*open) return false;
 
+        ensureCurrentPath();
         bool selected = false;
         if (openRequested_) {
             ImGui::OpenPopup(title_.c_str());
@@ -106,19 +107,28 @@ public:
             }
             if (ImGui::Button(allowCreate ? "Save" : "Open", ImVec2(120, 0))) {
                 if (allowCreate) {
+                    if (!hasSaveName && selectedFile_.empty()) {
+                        // Ignore clicks when no target is selected.
+                    } else {
                     std::filesystem::path out = currentPath_;
                     if (hasSaveName) {
                         out /= std::string(inputName_.data());
                     } else {
                         out = selectedFile_;
                     }
-                    result = std::filesystem::absolute(out).string();
+                        if (out.empty()) {
+                            out = std::filesystem::current_path();
+                        }
+                        result = std::filesystem::absolute(out).string();
+                    }
                 } else {
                     result = std::filesystem::absolute(selectedFile_).string();
                 }
-                selected = true;
-                *open = false;
-                ImGui::CloseCurrentPopup();
+                if (!result.empty()) {
+                    selected = true;
+                    *open = false;
+                    ImGui::CloseCurrentPopup();
+                }
             }
             if ((!allowCreate && selectedFile_.empty()) || (allowCreate && !hasSaveName && selectedFile_.empty())) {
                 ImGui::EndDisabled();
@@ -140,16 +150,13 @@ public:
         } else {
             // If file, go to parent; if invalid, fall back to cwd.
             std::filesystem::path p(path);
+            if (p.has_filename()) {
+                setInputName(p.filename().string());
+            }
             if (std::filesystem::exists(p) && p.has_parent_path()) {
                 currentPath_ = p.parent_path();
-                if (p.has_filename()) {
-                    setInputName(p.filename().string());
-                }
             } else if (p.has_parent_path() && std::filesystem::exists(p.parent_path())) {
                 currentPath_ = p.parent_path();
-                if (p.has_filename()) {
-                    setInputName(p.filename().string());
-                }
             } else {
                 currentPath_ = std::filesystem::current_path();
             }
@@ -159,6 +166,13 @@ public:
 
 private:
     void refresh() {
+        if (currentPath_.empty()) {
+            try {
+                currentPath_ = std::filesystem::current_path();
+            } catch (...) {
+                return;
+            }
+        }
         directories_.clear();
         files_.clear();
         selectedFile_.clear();
@@ -187,6 +201,15 @@ private:
     void setInputName(const std::string& name) {
         inputName_.fill('\0');
         std::snprintf(inputName_.data(), inputName_.size(), "%s", name.c_str());
+    }
+
+    void ensureCurrentPath() {
+        if (!currentPath_.empty()) return;
+        try {
+            currentPath_ = std::filesystem::current_path();
+            refresh();
+        } catch (...) {
+        }
     }
 };
 
