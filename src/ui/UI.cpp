@@ -227,7 +227,6 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     // 3. Draw Panels (Logic controlled by MainMenu state)
     analysisPanel_.draw(&mainMenu_.showAnalysisReport);
     patchAnalysisPanel_.draw(&mainMenu_.showPatchAnalysis);
-    terrainGenPanel_.draw(&mainMenu_.showTerrainGen);
     settingsPanel_.draw(&mainMenu_.showSettings);
     hydrologyPanel_.draw(&mainMenu_.showHydrologyPanel);
     welcomePanel_.draw(&mainMenu_.showWelcome, data);

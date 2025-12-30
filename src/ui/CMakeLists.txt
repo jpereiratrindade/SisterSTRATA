@@ -12,7 +12,6 @@ add_library(ui
     panels/AnalysisPanel.cpp
     panels/PatchAnalysisPanel.cpp
     panels/SettingsPanel.cpp
-    panels/TerrainGenPanel.cpp
     panels/WelcomePanel.cpp
     panels/SoilSimPanel.cpp
     panels/HydrologyPanel.cpp

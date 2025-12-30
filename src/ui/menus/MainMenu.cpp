@@ -62,9 +62,6 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("Patch Analysis (CSV)")) {
                 showPatchAnalysis = true;
             }
-            if (ImGui::MenuItem("Generate Pattern")) {
-                showTerrainGen = true;
-            }
             if (ImGui::BeginMenu("Soil Simulation")) {
                 if (ImGui::MenuItem("SCORPAN Parameters (Input)")) {
                     showScorpanWindow = true;

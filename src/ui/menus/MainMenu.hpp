@@ -27,7 +27,6 @@ public:
     bool showSettings = false;
     bool showAnalysisReport = false;
     bool showPatchAnalysis = false;
-    bool showTerrainGen = false;
     bool showHydrologyPanel = false;
     bool showWelcome = true; // Default true as per original
     bool showScorpanWindow = false; // New
