@@ -8,7 +8,10 @@ All notable changes to the SisterPEC project will be documented in this file.
 - **Fourth Dimension System (Resilience)**: New observational layer for temporal landscape analysis.
 - **TimeSlice & Trajectory**: Implementation of immutable state snapshots and resilience trajectories.
 - **Ghost Mode**: Non-destructive historic state visualization with stable semantic coloring.
-- **Timeline UI**: Dedicated panel for state capture and trajectory navigation.
+- **Timeline UI**: Dedicated panel for state capture, trajectory navigation, and analysis.
+- **Coherence Mapping**: Quantitative similarity analysis (Type, Structure, Edge) between landscape states.
+- **Cognitive Assistance Context (CAC)**: Hybrid interpretative layer using Qwen (mock adapter) for hermeneutic analysis based on quantitative metrics.
+- **Ports & Adapters Architecture**: Decoupled LLM integration with asynchronous infrastructure.
 
 ## [1.5.0] - 2025-12-28
 ### Added

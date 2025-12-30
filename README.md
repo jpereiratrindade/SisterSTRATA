@@ -9,9 +9,10 @@ SisterSTRATA é um instrumento científico digital projetado para a simulação 
 Para entender a filosofia, a governança dos modelos e a arquitetura de conhecimento que rege este projeto, consulte:
 
 *   **[Fundação Científica (Scientific Foundation)](docs/SISTERSTRATA_SCIENTIFIC_FOUNDATION.md)**: O documento "constitucional/white paper" que define as leis físicas, o contrato de pipeline (Input/Derived/Observable) e a estrutura dos domínios científicos.
+*   **[Fourth Dimension System (Resilience)](DDD_FourthDimensionSystem.txt)**: O modelo de trajetória e análise de resiliência.
+*   **[Cognitive Assistance Integration Plan (Qwen)](docs/DDD_Cognitive_Assistance_INTEGRATION_PLAN.md)**
 *   **[Domain-Driven Design (DDD)](projeto_app_ddd_v10.txt)**: A arquitetura de software e organização do código.
 *   **[Arquitetura do Sistema](ARCHITECTURE.md)**: Detalhes sobre a implementação técnica em C++ e Vulkan.
-*   **[Quarta Dimensão (Fourth Dimension System)](DDD_FourthDimensionSystem.txt)**: O modelo de trajetória e análise de resiliência.
 
 ## Build e Instalação
 

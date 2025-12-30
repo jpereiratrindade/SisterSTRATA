@@ -33,7 +33,7 @@ struct VulkanInitInfo {
 class UserInterface {
 public:
     void init(SDL_Window* window, const VulkanInitInfo& info);
-    void setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory);
+    void setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory, Application::Ports::ILLMService* llmService);
     void shutdown();
 
     // Callbacks

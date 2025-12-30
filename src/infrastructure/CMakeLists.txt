@@ -5,6 +5,7 @@ add_library(infrastructure
     threading/ThreadPool.cpp
     threading/CommandQueue.hpp
     filesystem/StdFileSystem.hpp
+    llm/OllamaMockAdapter.cpp
 )
 
 target_include_directories(infrastructure PUBLIC

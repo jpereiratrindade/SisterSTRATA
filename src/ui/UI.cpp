@@ -172,8 +172,8 @@ void UserInterface::init(SDL_Window* window, const VulkanInitInfo& info) {
     soilSimPanel_.setPatchAnalysisPanel(&patchAnalysisPanel_);
 }
 
-void UserInterface::setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory) {
-    timelinePanel_.setDependencies(trajectory, &vegetationDeclarationPanel_);
+void UserInterface::setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory, Application::Ports::ILLMService* llmService) {
+    timelinePanel_.setDependencies(trajectory, &vegetationDeclarationPanel_, llmService);
 }
 
 void UserInterface::shutdown() {

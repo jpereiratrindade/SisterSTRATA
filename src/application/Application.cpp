@@ -1,6 +1,7 @@
 #include "application/Application.hpp"
 #include "world3d/World3D.hpp"
 #include "application/dtos/UIData.hpp"
+#include "infrastructure/llm/OllamaMockAdapter.hpp"
 #include <iostream>
 #include <SDL2/SDL.h>
 
@@ -38,6 +39,7 @@ void Application::init() {
 
     // 4. Initialize Session (First, so UI can link to it)
     session_ = std::make_unique<::Application::Session>();
+    session_->setLLMService(std::make_unique<::Infrastructure::LLM::OllamaMockAdapter>());
 
     ui_ = std::make_unique<::UI::UserInterface>();
     
@@ -51,7 +53,7 @@ void Application::init() {
     ui_->init(window_->getNativeWindow(), info);
     
     // Link Fourth Dimension System
-    ui_->setupFourthDimension(&session_->getTrajectory());
+    ui_->setupFourthDimension(&session_->getTrajectory(), session_->getLLMService());
 
     std::cout << "[Application] Initialization Complete." << std::endl;
 }

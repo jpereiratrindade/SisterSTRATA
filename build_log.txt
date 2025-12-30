@@ -1,85 +1,22 @@
-Change Dir: '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile
-/usr/bin/cmake -S/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA -B/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build --check-build-system CMakeFiles/Makefile.cmake 0
-/usr/bin/cmake -E cmake_progress_start /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/CMakeFiles /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build//CMakeFiles/progress.marks
-/usr/bin/gmake  -f CMakeFiles/Makefile2 all
-gmake[1]: Entrando no diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-/usr/bin/gmake  -f src/world3d/CMakeFiles/Shaders.dir/build.make src/world3d/CMakeFiles/Shaders.dir/depend
-gmake[2]: Entrando no diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/world3d /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/world3d/CMakeFiles/Shaders.dir/DependInfo.cmake "--color="
-gmake[2]: Saindo do diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-/usr/bin/gmake  -f src/world3d/CMakeFiles/Shaders.dir/build.make src/world3d/CMakeFiles/Shaders.dir/build
-gmake[2]: Entrando no diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-gmake[2]: Nada a ser feito para 'src/world3d/CMakeFiles/Shaders.dir/build'. 
-gmake[2]: Saindo do diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
 [  3%] Built target Shaders
-/usr/bin/gmake  -f src/core/CMakeFiles/core.dir/build.make src/core/CMakeFiles/core.dir/depend
-gmake[2]: Entrando no diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/core /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/core /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/core/CMakeFiles/core.dir/DependInfo.cmake "--color="
-gmake[2]: Saindo do diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-/usr/bin/gmake  -f src/core/CMakeFiles/core.dir/build.make src/core/CMakeFiles/core.dir/build
-gmake[2]: Entrando no diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-gmake[2]: Nada a ser feito para 'src/core/CMakeFiles/core.dir/build'. 
-gmake[2]: Saindo do diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
 [ 16%] Built target core
-/usr/bin/gmake  -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/depend
-gmake[2]: Entrando no diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/DependInfo.cmake "--color="
-Dependencies file "src/ui/CMakeFiles/ui.dir/UI.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/compiler_depend.internal".
-Dependencies file "src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/compiler_depend.internal".
-Dependencies file "src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/compiler_depend.internal".
-Dependencies file "src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/compiler_depend.internal".
-Dependencies file "src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/compiler_depend.internal".
-Dependencies file "src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/compiler_depend.internal".
-Dependencies file "src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/compiler_depend.internal".
-Dependencies file "src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/compiler_depend.internal".
-Dependencies file "src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/ui/CMakeFiles/ui.dir/compiler_depend.internal".
-Consolidate compiler generated dependencies of target ui
-gmake[2]: Saindo do diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-/usr/bin/gmake  -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/build
-gmake[2]: Entrando no diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-gmake[2]: Nada a ser feito para 'src/ui/CMakeFiles/ui.dir/build'. 
-gmake[2]: Saindo do diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-[ 45%] Built target ui
-/usr/bin/gmake  -f src/world3d/CMakeFiles/world3d.dir/build.make src/world3d/CMakeFiles/world3d.dir/depend
-gmake[2]: Entrando no diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/world3d /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/world3d/CMakeFiles/world3d.dir/DependInfo.cmake "--color="
-Dependencies file "src/world3d/CMakeFiles/world3d.dir/World3D.cpp.o.d" is newer than depends file "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/world3d/CMakeFiles/world3d.dir/compiler_depend.internal".
-Consolidate compiler generated dependencies of target world3d
-gmake[2]: Saindo do diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-/usr/bin/gmake  -f src/world3d/CMakeFiles/world3d.dir/build.make src/world3d/CMakeFiles/world3d.dir/build
-gmake[2]: Entrando no diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-[ 46%] Building CXX object src/world3d/CMakeFiles/world3d.dir/World3D.cpp.o
-cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/src/world3d && /usr/bin/c++  -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d/include -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/external -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/_deps/imgui-src -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/_deps/imgui-src/backends -isystem /usr/include/SDL2 -std=c++20 -MD -MT src/world3d/CMakeFiles/world3d.dir/World3D.cpp.o -MF CMakeFiles/world3d.dir/World3D.cpp.o.d -o CMakeFiles/world3d.dir/World3D.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d/World3D.cpp
-In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d/World3D.cpp:2:
-/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d/Engine.hpp:85:10: error: ‘void World3D::Engine::applySoilSimulation(const Core::Domain::Soils::ScorpanParams&, int, const Core::Domain::Soils::SiBCSFilter&)’ cannot be overloaded with ‘void World3D::Engine::applySoilSimulation(const Core::Domain::Soils::ScorpanParams&, int, const Core::Domain::Soils::SiBCSFilter&)’
-   85 |     void applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& params, int visualizationLevel, const ::Core::Domain::Soils::SiBCSFilter& filter);
-      |          ^~~~~~~~~~~~~~~~~~~
-/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d/Engine.hpp:84:10: note: previous declaration ‘void World3D::Engine::applySoilSimulation(const Core::Domain::Soils::ScorpanParams&, int, const Core::Domain::Soils::SiBCSFilter&)’
-   84 |     void applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& params, int visualizationLevel, const ::Core::Domain::Soils::SiBCSFilter& filter);
-      |          ^~~~~~~~~~~~~~~~~~~
-gmake[2]: *** [src/world3d/CMakeFiles/world3d.dir/build.make:79: src/world3d/CMakeFiles/world3d.dir/World3D.cpp.o] Error 1
-gmake[2]: Saindo do diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-gmake[1]: *** [CMakeFiles/Makefile2:425: src/world3d/CMakeFiles/world3d.dir/all] Error 2
-gmake[1]: Saindo do diretório '/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build'
-
-gmake: *** [Makefile:101: all] Error 2
-
+[ 19%] Built target core_tests
+[ 22%] Built target patch_analysis_tests
+[ 25%] Built target soil_rasterizer_tests
+[ 54%] Built target ui
+[ 79%] Built target world3d
+[ 80%] Building CXX object src/application/CMakeFiles/application.dir/Session.cpp.o
+[ 82%] Building CXX object src/application/CMakeFiles/application.dir/Application.cpp.o
+[ 83%] Linking CXX static library ../../lib/libapplication.a
+[ 83%] Built target application
+[ 85%] Building CXX object src/infrastructure/CMakeFiles/infrastructure.dir/llm/OllamaMockAdapter.cpp.o
+[ 87%] Linking CXX static library ../../lib/libinfrastructure.a
+[ 90%] Built target infrastructure
+[ 91%] Linking CXX executable ../../bin/infrastructure_tests
+[ 93%] Building CXX object tests/application/CMakeFiles/application_tests.dir/TestUseCases.cpp.o
+[ 95%] Building CXX object CMakeFiles/SisterSTRATA.dir/src/main.cpp.o
+[ 96%] Built target infrastructure_tests
+[ 98%] Linking CXX executable ../../bin/application_tests
+[ 98%] Built target application_tests
+[100%] Linking CXX executable bin/SisterSTRATA
+[100%] Built target SisterSTRATA
