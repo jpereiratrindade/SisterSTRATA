@@ -51,6 +51,7 @@ private:
     int newRuleLandUseIndex_ = 0;
     float newRuleSlopeMin_ = 0.0f;
     float newRuleSlopeMax_ = 90.0f;
+    int newRuleSoilOrderIndex_ = 0; // New: Index for Soil Order combo
     int newRulePriority_ = 1;
 
     // Analysis Stats

@@ -6,6 +6,7 @@ All notable changes to the SisterPEC project will be documented in this file.
 ### Added
 - **Resilience Analysis**: New `ResilienceAnalyser` for spatio-temporal coherence evaluation.
 - **Trajectory Management**: Added `TerritorialTrajectory` and `TerritorySnapshot` for historical state tracking.
+- **Land Use Process Vectors**: Integrated Soil Order (SiBCS) into the `TerritorialHypothesis` allocation rules, enabling multi-vector biophysical filtering.
 - **Land Use Guidelines**: Integrated `SISTERSTRATA_Diretrizes_Uso_da_Terra_Vetores_Processo_v1.0.txt` as normative architectural guideline.
 - **Spatio-Temporal Guidelines**: Integrated `STRATA_Diretrizes_Resiliencia_Espaco_Tempo_v1.0.txt` for resilience modelling.
 - **Hypothesis Schema**: formalized `TerritorialHypothesis` with explicit bio-physical, ecological, and socio-economic vectors.

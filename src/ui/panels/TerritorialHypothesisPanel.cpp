@@ -199,6 +199,25 @@ void TerritorialHypothesisPanel::drawAllocationRules() {
     
     ImGui::DragFloat("Slope Min (deg)", &newRuleSlopeMin_, 1.0f, 0.0f, 90.0f);
     ImGui::DragFloat("Slope Max (deg)", &newRuleSlopeMax_, 1.0f, 0.0f, 90.0f);
+    
+    // Soil Order Selector
+    auto orders = Core::Domain::Soils::SiBCSHelper::getAllOrders();
+    std::vector<std::string> orderNames;
+    orderNames.push_back("Qualquer"); // Option to ignore soil filter
+    for (auto o : orders) orderNames.push_back(Core::Domain::Soils::SiBCSHelper::getBaseName(o));
+    
+    if (newRuleSoilOrderIndex_ >= orderNames.size()) newRuleSoilOrderIndex_ = 0;
+    
+    if (ImGui::BeginCombo("Soil Order", orderNames[newRuleSoilOrderIndex_].c_str())) {
+        for (int i = 0; i < orderNames.size(); i++) {
+            const bool is_selected = (newRuleSoilOrderIndex_ == i);
+            if (ImGui::Selectable(orderNames[i].c_str(), is_selected)) {
+                newRuleSoilOrderIndex_ = i;
+            }
+        }
+        ImGui::EndCombo();
+    }
+
     ImGui::InputInt("Priority (1=High)", &newRulePriority_);
     
     if (ImGui::Button("Add Rule")) {
@@ -208,6 +227,7 @@ void TerritorialHypothesisPanel::drawAllocationRules() {
             newRule.priority = newRulePriority_;
             newRule.parameters["slope_min"] = std::to_string(newRuleSlopeMin_);
             newRule.parameters["slope_max"] = std::to_string(newRuleSlopeMax_);
+            newRule.parameters["soil_order"] = orderNames[newRuleSoilOrderIndex_];
             currentHypothesis_.addAllocationRule(newRule);
         }
     }

@@ -74,6 +74,15 @@ public:
                    if (s > maxS) fits = false;
                 }
                 
+                // --- NEW: Soil Order Parameter ---
+                if (fits && rule.parameters.count("soil_order")) {
+                    std::string requestedOrder = rule.parameters.at("soil_order");
+                    if (requestedOrder != "Qualquer") {
+                        std::string currentOrder = Soils::SiBCSHelper::getBaseName(soilLayer[i].order);
+                        if (currentOrder != requestedOrder) fits = false;
+                    }
+                }
+                
                 if (fits) {
                     bestPriority = rule.priority;
                     winnerId = rule.landUseId;
@@ -106,7 +115,7 @@ public:
                 
                 if (hasRules) {
                     incoherentUses++;
-                    report += "[Fail] " + potential.getName() + ": 0% allocated (Overwritten by higher priority?). ";
+                    report += "[Fail] " + potential.getName() + ": 0% allocated (Overwritten or Constraints too tight). ";
                 } else {
                     report += "[Info] " + potential.getName() + ": No rules defined. ";
                 }
@@ -179,6 +188,15 @@ public:
                     if (s > std::stof(rule.parameters.at("slope_max"))) fits = false;
                 }
                 
+                // --- NEW: Soil Order Parameter ---
+                if (fits && rule.parameters.count("soil_order")) {
+                    std::string requestedOrder = rule.parameters.at("soil_order");
+                    if (requestedOrder != "Qualquer") {
+                        std::string currentOrder = Soils::SiBCSHelper::getBaseName(soil.order);
+                        if (currentOrder != requestedOrder) fits = false;
+                    }
+                }
+                
                 if (fits) {
                     // Find color
                     for (const auto& p : potentials) {
@@ -223,6 +241,7 @@ public:
         
         for (size_t i = 0; i < count; ++i) {
             float s = slopeLayer[i];
+            const auto& soil = soilLayer[i];
             
             std::string assignedId = ""; // Default: Unallocated
             int bestPriority = 999;
@@ -238,6 +257,15 @@ public:
                 }
                 if (rule.parameters.count("slope_max")) {
                     if (s > std::stof(rule.parameters.at("slope_max"))) fits = false;
+                }
+                
+                // --- NEW: Soil Order Parameter ---
+                if (fits && rule.parameters.count("soil_order")) {
+                    std::string requestedOrder = rule.parameters.at("soil_order");
+                    if (requestedOrder != "Qualquer") {
+                        std::string currentOrder = Soils::SiBCSHelper::getBaseName(soil.order);
+                        if (currentOrder != requestedOrder) fits = false;
+                    }
                 }
                 
                 if (fits) {
