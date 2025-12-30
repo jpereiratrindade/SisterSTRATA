@@ -218,6 +218,8 @@ void TerritorialHypothesisPanel::drawAllocationRules() {
         ImGui::EndCombo();
     }
 
+    ImGui::DragFloat("Min Patch Size (cells)", &newRuleMinPatchSize_, 1.0f, 1.0f, 1000.0f);
+
     ImGui::InputInt("Priority (1=High)", &newRulePriority_);
     
     if (ImGui::Button("Add Rule")) {
@@ -228,6 +230,7 @@ void TerritorialHypothesisPanel::drawAllocationRules() {
             newRule.parameters["slope_min"] = std::to_string(newRuleSlopeMin_);
             newRule.parameters["slope_max"] = std::to_string(newRuleSlopeMax_);
             newRule.parameters["soil_order"] = orderNames[newRuleSoilOrderIndex_];
+            newRule.parameters["min_patch_size"] = std::to_string(newRuleMinPatchSize_);
             currentHypothesis_.addAllocationRule(newRule);
         }
     }

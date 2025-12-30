@@ -48,23 +48,18 @@ public:
         }
 
         // 2. Evaluate Allocation Competition (Priority-Based)
-        std::map<std::string, size_t> allocationCounts;
-        size_t allocatedTotal = 0;
+        std::vector<std::string> preliminaryAllocation(totalCells, "");
         const auto& rules = hypothesis.getAllocationRules();
         
-        // Parallelize? No, keep simple for now or use OpenMP
         for (size_t i = 0; i < totalCells; ++i) {
             float s = slopeLayer[i];
-            
             int bestPriority = 999;
             std::string winnerId;
             
             for (const auto& rule : rules) {
-                // Optimization: Skip if we already have a better priority match
                 if (bestPriority != 999 && rule.priority >= bestPriority) continue;
                 
                 bool fits = true;
-                // Check Parameters
                 if (rule.parameters.count("slope_min")) {
                    float minS = std::stof(rule.parameters.at("slope_min"));
                    if (s < minS) fits = false;
@@ -74,7 +69,6 @@ public:
                    if (s > maxS) fits = false;
                 }
                 
-                // --- NEW: Soil Order Parameter ---
                 if (fits && rule.parameters.count("soil_order")) {
                     std::string requestedOrder = rule.parameters.at("soil_order");
                     if (requestedOrder != "Qualquer") {
@@ -88,28 +82,74 @@ public:
                     winnerId = rule.landUseId;
                 }
             }
-            
-            if (!winnerId.empty()) {
-                allocationCounts[winnerId]++;
+            preliminaryAllocation[i] = winnerId;
+        }
+
+        // 3. NEW: Ecological Refinement (Spatial Context)
+        // Group rules by landUseId to check for spatial constraints
+        std::map<std::string, double> minPatchSizes;
+        for (const auto& rule : rules) {
+            if (rule.parameters.count("min_patch_size")) {
+                double val = std::stod(rule.parameters.at("min_patch_size"));
+                // If multiple rules for same use, take the stricter (higher) min size? Or maybe per rule?
+                // Per architecture guidelines, we treat the use as a whole in the meso scale.
+                minPatchSizes[rule.landUseId] = std::max(minPatchSizes[rule.landUseId], val);
+            }
+        }
+
+        std::vector<std::string> finalAllocation = preliminaryAllocation;
+        size_t ecologicalResolutionFiltered = 0;
+
+        for (auto const& [landUseId, minSize] : minPatchSizes) {
+            if (minSize <= 1.0) continue; // 1 cell is default
+
+            SpatialPattern::GridData grid;
+            grid.width = territory.getWidth();
+            grid.height = territory.getHeight();
+            grid.values.resize(totalCells, 0.0);
+            for(size_t i=0; i<totalCells; ++i) {
+                if(preliminaryAllocation[i] == landUseId) grid.values[i] = 1.0;
+            }
+
+            SpatialPattern::AnalysisConfig cfg;
+            cfg.threshold = 0.5;
+            cfg.keepLabels = true;
+            auto result = SpatialPattern::AnalyzeGrid(grid, cfg);
+
+            // Map cell to patch metrics
+            for(size_t i=0; i<totalCells; ++i) {
+                uint32_t label = result.labelImage.labels[i];
+                if (label > 0) {
+                    const auto& patch = result.patches[label - 1];
+                    // patch.area is in cells * cellWidth * cellHeight. 
+                    // Assume area is comparable to minSize (usually in cells for now unless specified)
+                    if (patch.area < minSize) {
+                        finalAllocation[i] = ""; // De-allocate
+                        ecologicalResolutionFiltered++;
+                    }
+                }
+            }
+        }
+
+        // 4. Generate Report
+        std::map<std::string, size_t> allocationCounts;
+        size_t allocatedTotal = 0;
+        for(const auto& id : finalAllocation) {
+            if (!id.empty()) {
+                allocationCounts[id]++;
                 allocatedTotal++;
             }
         }
 
-        // 3. Generate Report
         std::string report;
         int incoherentUses = 0;
         
         for (const auto& potential : hypothesis.getLandUseTypes()) {
             size_t count = allocationCounts[potential.getId()];
             float pct = (float)count / (float)totalCells;
-            
-            // Format percentage
             int pctInt = (int)(pct * 100.0f);
             
             if (count == 0) {
-                // Determine if this is a failure. 
-                // If a LandUse exists in hypothesis but gets 0 allocation:
-                // Check if it even HAS rules.
                 bool hasRules = false;
                 for(const auto& r : rules) { if(r.landUseId == potential.getId()) hasRules=true; }
                 
@@ -124,12 +164,15 @@ public:
             }
         }
 
-        // Report Unallocated/Constrained
+        if (ecologicalResolutionFiltered > 0) {
+            report += "[Ecological] " + std::to_string(ecologicalResolutionFiltered) + " cells below Ecological Resolution. ";
+        }
+
         size_t unallocatedCount = totalCells - allocatedTotal;
         if (unallocatedCount > 0) {
             float unallocatedPct = (float)unallocatedCount / (float)totalCells;
             int unallocatedInt = (int)(unallocatedPct * 100.0f);
-            report += "[Info] Unallocated/Constrained: " + std::to_string(unallocatedInt) + "%. ";
+            report += "[Info] Unallocated: " + std::to_string(unallocatedInt) + "%. ";
         }
 
         if (incoherentUses > 0) {
@@ -152,63 +195,26 @@ public:
     {
         const auto& slopeLayer = territory.getSlopeLayer();
         const auto& soilLayer = territory.getSoilLayer();
-        size_t count = slopeLayer.size();
-        
-        std::vector<glm::vec3> colors;
-        colors.reserve(count);
-        
-        // Pre-fetch potentials for lookup
-        const auto& potentials = hypothesis.getLandUseTypes();
+        size_t totalCells = slopeLayer.size();
         
         if (slopeLayer.empty() || soilLayer.empty() || slopeLayer.size() != soilLayer.size()) {
-            // Return empty or error colors
-            return std::vector<glm::vec3>(slopeLayer.size(), glm::vec3(1.0f, 0.0f, 1.0f)); // Magenta error
+            return std::vector<glm::vec3>(totalCells, glm::vec3(1.0f, 0.0f, 1.0f)); // Magenta error
         }
-        
-        for (size_t i = 0; i < count; ++i) {
-            float s = slopeLayer[i];
-            const auto& soil = soilLayer[i];
-            
-            // Default: No Allocation (Black/Dark Grey)
-            glm::vec3 assignedColor(0.1f, 0.1f, 0.1f);
-            int bestPriority = 999;
-            
-            // Find best matching rule
-            for (const auto& rule : hypothesis.getAllocationRules()) {
-                if (rule.priority > bestPriority) continue; // Optimization: only check better or equal priority (assuming lower # is better?)
-                // Actually strictly better: <
-                if (rule.priority >= bestPriority && bestPriority != 999) continue;
 
-                // Check constraints
-                bool fits = true;
-                if (rule.parameters.count("slope_min")) {
-                    if (s < std::stof(rule.parameters.at("slope_min"))) fits = false;
-                }
-                if (rule.parameters.count("slope_max")) {
-                    if (s > std::stof(rule.parameters.at("slope_max"))) fits = false;
-                }
-                
-                // --- NEW: Soil Order Parameter ---
-                if (fits && rule.parameters.count("soil_order")) {
-                    std::string requestedOrder = rule.parameters.at("soil_order");
-                    if (requestedOrder != "Qualquer") {
-                        std::string currentOrder = Soils::SiBCSHelper::getBaseName(soil.order);
-                        if (currentOrder != requestedOrder) fits = false;
-                    }
-                }
-                
-                if (fits) {
-                    // Find color
-                    for (const auto& p : potentials) {
-                        if (p.getId() == rule.landUseId) {
-                            assignedColor = p.getColor();
-                            bestPriority = rule.priority;
-                            break;
-                        }
-                    }
-                }
+        auto finalAllocation = generateLandUseVector(territory, hypothesis);
+        std::vector<glm::vec3> colors;
+        colors.reserve(totalCells);
+
+        const auto& potentials = hypothesis.getLandUseTypes();
+        std::map<std::string, glm::vec3> colorMap;
+        for(const auto& p : potentials) colorMap[p.getId()] = p.getColor();
+
+        for (const auto& id : finalAllocation) {
+            if (id.empty()) {
+                colors.push_back(glm::vec3(0.1f, 0.1f, 0.1f));
+            } else {
+                colors.push_back(colorMap[id]);
             }
-            colors.push_back(assignedColor);
         }
         
         return colors;
@@ -216,13 +222,6 @@ public:
 
     /**
      * @brief Generates the Land Use ID vector for resilience analysis.
-     * 
-     * @param territory The physical context.
-     * @param hypothesis The configuration rules.
-     * @return std::vector<std::string> Land Use ID for each cell/vertex.
-     * 
-     * @note This method replicates the allocation logic to produce a storable vector
-     *       of land use decisions, crucial for calculating spatial overlap over time.
      */
     static std::vector<std::string> generateLandUseVector(
         const Territory& territory,
@@ -230,27 +229,23 @@ public:
     {
         const auto& slopeLayer = territory.getSlopeLayer();
         const auto& soilLayer = territory.getSoilLayer();
-        size_t count = slopeLayer.size();
-        
-        std::vector<std::string> landUses;
-        landUses.reserve(count);
+        size_t totalCells = slopeLayer.size();
         
         if (slopeLayer.empty() || soilLayer.empty() || slopeLayer.size() != soilLayer.size()) {
-            return std::vector<std::string>(count, "");
+            return std::vector<std::string>(totalCells, "");
         }
-        
-        for (size_t i = 0; i < count; ++i) {
+
+        std::vector<std::string> allocation(totalCells, "");
+        const auto& rules = hypothesis.getAllocationRules();
+
+        for (size_t i = 0; i < totalCells; ++i) {
             float s = slopeLayer[i];
-            const auto& soil = soilLayer[i];
-            
-            std::string assignedId = ""; // Default: Unallocated
             int bestPriority = 999;
+            std::string winnerId;
             
-            // Find best matching rule
-            for (const auto& rule : hypothesis.getAllocationRules()) {
+            for (const auto& rule : rules) {
                 if (rule.priority >= bestPriority && bestPriority != 999) continue;
 
-                // Check constraints
                 bool fits = true;
                 if (rule.parameters.count("slope_min")) {
                     if (s < std::stof(rule.parameters.at("slope_min"))) fits = false;
@@ -259,24 +254,55 @@ public:
                     if (s > std::stof(rule.parameters.at("slope_max"))) fits = false;
                 }
                 
-                // --- NEW: Soil Order Parameter ---
                 if (fits && rule.parameters.count("soil_order")) {
                     std::string requestedOrder = rule.parameters.at("soil_order");
                     if (requestedOrder != "Qualquer") {
-                        std::string currentOrder = Soils::SiBCSHelper::getBaseName(soil.order);
+                        std::string currentOrder = Soils::SiBCSHelper::getBaseName(soilLayer[i].order);
                         if (currentOrder != requestedOrder) fits = false;
                     }
                 }
                 
                 if (fits) {
-                    assignedId = rule.landUseId;
+                    winnerId = rule.landUseId;
                     bestPriority = rule.priority;
                 }
             }
-            landUses.push_back(assignedId);
+            allocation[i] = winnerId;
+        }
+
+        // Ecological Filter (Consistent with evaluate)
+        std::map<std::string, double> minPatchSizes;
+        for (const auto& rule : rules) {
+            if (rule.parameters.count("min_patch_size")) {
+                double val = std::stod(rule.parameters.at("min_patch_size"));
+                minPatchSizes[rule.landUseId] = std::max(minPatchSizes[rule.landUseId], val);
+            }
+        }
+
+        for (auto const& [landUseId, minSize] : minPatchSizes) {
+            if (minSize <= 1.0) continue;
+
+            SpatialPattern::GridData grid;
+            grid.width = territory.getWidth();
+            grid.height = territory.getHeight();
+            grid.values.resize(totalCells, 0.0);
+            for(size_t i=0; i<totalCells; ++i) {
+                if(allocation[i] == landUseId) grid.values[i] = 1.0;
+            }
+
+            auto result = SpatialPattern::AnalyzeGrid(grid, {0.5, false, true});
+
+            for(size_t i=0; i<totalCells; ++i) {
+                uint32_t label = result.labelImage.labels[i];
+                if (label > 0) {
+                    if (result.patches[label - 1].area < minSize) {
+                        allocation[i] = ""; 
+                    }
+                }
+            }
         }
         
-        return landUses;
+        return allocation;
     }
 
 };

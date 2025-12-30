@@ -46,6 +46,9 @@ public:
      */
     const Shared::ValueObjects::CoherenceScore& getCoherenceScore() const { return coherenceScore_; }
 
+    int getWidth() const { return width_; }
+    int getHeight() const { return height_; }
+
     // --- Orchestration Accessors ---
     
     /**
