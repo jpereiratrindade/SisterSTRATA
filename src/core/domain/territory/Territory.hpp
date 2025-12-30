@@ -7,6 +7,7 @@
 #include "core/domain/hydro/HydroGrid.hpp"
 #include "core/domain/soils/SoilSystem.hpp"
 #include "core/domain/shared/value_objects/CoherenceScore.hpp"
+#include "core/domain/territory/TerritorialTrajectory.hpp"
 
 namespace Core::Domain::Territory {
 
@@ -75,12 +76,48 @@ public:
     }
 
     /**
+     * @brief Provides read-access to the Slope map (in degrees).
+     */
+    const std::vector<float>& getSlopeLayer() const { return slopeLayer_; }
+
+    /**
+     * @brief Updates the slope layer state.
+     */
+    void updateSlopeLayer(std::vector<float> slopes) {
+        slopeLayer_ = std::move(slopes);
+    }
+
+    /**
      * @brief Updates the calculated coherence score.
      * Should be called by the TerritorialCoherenceService after analysis.
      */
     void setCoherenceScore(Shared::ValueObjects::CoherenceScore score) {
         coherenceScore_ = std::move(score);
     }
+
+    /**
+     * @brief Commits the current mutable state as an immutable snapshot in the trajectory.
+     * @param hypothesisId Context of the change.
+     * @param landUse The emergent land use configuration resulting from the hypothesis.
+     */
+    void commitState(const std::string& hypothesisId, const std::vector<std::string>& landUse) {
+        // Create snapshot from current fields
+        TerritorySnapshot snapshot(
+            trajectory_.size(), // Event Index
+            std::chrono::system_clock::now(),
+            hypothesisId,
+            hydroLayer_,   // Copy
+            soilLayer_,    // Copy
+            slopeLayer_,   // Copy
+            landUse        // Copy
+        );
+        trajectory_.addSnapshot(std::move(snapshot));
+    }
+
+    /**
+     * @brief Access to the historical trajectory for resilience analysis.
+     */
+    const TerritorialTrajectory& getTrajectory() const { return trajectory_; }
 
 private:
     TerritoryID id_;
@@ -91,9 +128,13 @@ private:
     // Note: These represent the "Snapshot" of the territory state.
     Hydro::HydroGrid hydroLayer_;
     std::vector<Soils::SiBCSClassification> soilLayer_;
+    std::vector<float> slopeLayer_; // New: Slope map in degrees
 
     // Result Metadata
     Shared::ValueObjects::CoherenceScore coherenceScore_{0.0f, "Uninitialized"};
+
+    // Timeline
+    TerritorialTrajectory trajectory_;
 };
 
 } // namespace Core::Domain::Territory

@@ -1,0 +1,170 @@
+===============================================================================
+STRATA – DIRETRIZES DE IMPLEMENTAÇÃO
+RESILIÊNCIA, DINÂMICAS ESPACIAIS E TEMPORAIS
+===============================================================================
+
+VERSÃO: 1.0
+STATUS: DIRETRIZ NORMATIVA (OBRIGATÓRIA)
+APLICAÇÃO: Core Domain / Resilience / Landscape Dynamics
+PÚBLICO: Equipe de Codificação STRATA
+
+Este documento define COMO a resiliência deve ser tratada no STRATA.
+Implementações que violem estas diretrizes devem ser consideradas incorretas.
+
+===============================================================================
+1. DEFINIÇÃO OPERACIONAL (OBRIGATÓRIA)
+===============================================================================
+
+No STRATA:
+
+Resiliência NÃO é estabilidade.
+Resiliência NÃO é retorno ao estado inicial.
+Resiliência NÃO é um índice único.
+
+Resiliência É:
+- a capacidade do sistema manter COERÊNCIA FUNCIONAL
+- enquanto se RECONFIGURA
+- ao longo de uma TRAJETÓRIA ESPAÇO–TEMPORAL
+- diante de PERTURBAÇÕES.
+
+O foco é o PADRÃO e a TRAJETÓRIA, não o estado isolado.
+
+===============================================================================
+2. TEMPO NO STRATA
+===============================================================================
+
+O STRATA NÃO trabalha com séries temporais contínuas densas.
+
+Tempo é tratado como:
+- sequência ordenada de estados
+- eventos discretos
+- ritmo e ordem das perturbações
+
+Forma geral:
+  Estado_0 → Estado_1 → Estado_2 → ... → Estado_n
+
+Requisitos:
+- manter histórico mínimo dos estados analisados
+- permitir comparação entre estados consecutivos
+- NÃO assumir calendário real (anos, meses, etc.)
+
+===============================================================================
+3. ESPAÇO NO STRATA
+===============================================================================
+
+A dimensão espacial da resiliência está na RECONFIGURAÇÃO dos patches.
+
+Reconfiguração espacial pode ocorrer sem mudança de regime.
+
+A implementação DEVE:
+- comparar configurações espaciais entre estados consecutivos
+- avaliar mudanças de posição, forma e conectividade
+- NÃO assumir que mudança espacial = ruptura
+
+===============================================================================
+4. MÉTRICAS ESPAÇO–TEMPORAIS OBRIGATÓRIAS
+===============================================================================
+
+A avaliação de resiliência DEVE incluir:
+
+---------------------------------------------------------------------------
+4.1 Sobreposição espacial
+---------------------------------------------------------------------------
+
+Medir persistência funcional entre estados consecutivos:
+
+  Overlap = Area(Patch(t) ∩ Patch(t+1)) / Area(Patch(t))
+
+Aplicável a:
+- mesma classe
+- classes funcionalmente equivalentes
+
+Altos valores:
+- continuidade / reorganização resiliente
+
+Baixos valores:
+- ruptura ou transição crítica
+
+---------------------------------------------------------------------------
+4.2 Contraste entre manchas
+---------------------------------------------------------------------------
+
+Medir diferença funcional entre patches adjacentes ao longo do tempo:
+
+- contraste de borda
+- mudança abrupta vs transição gradual
+- intensificação de bordas críticas
+
+Contraste elevado indica:
+- estresse espacial
+- proximidade de limiar
+
+---------------------------------------------------------------------------
+4.3 Persistência de núcleos
+---------------------------------------------------------------------------
+
+Sistemas resilientes podem perder bordas, mas mantêm núcleos.
+
+Implementação DEVE:
+- identificar áreas núcleo
+- medir persistência dessas áreas ao longo da trajetória
+
+===============================================================================
+5. MAPA DE COERÊNCIA ESPAÇO–TEMPORAL
+===============================================================================
+
+O sistema DEVE ser capaz de gerar um MAPA DE COERÊNCIA.
+
+Cada célula ou patch deve expressar:
+- alta coerência (reorganização resiliente)
+- coerência intermediária (zona de transição)
+- baixa coerência (ruptura de regime)
+
+Este mapa:
+- NÃO representa estabilidade
+- NÃO representa probabilidade
+- representa CAPACIDADE DE MANUTENÇÃO DO PADRÃO FUNCIONAL
+
+===============================================================================
+6. RESILIENCE ANALYSER – RESPONSABILIDADES
+===============================================================================
+
+O ResilienceAnalyser DEVE:
+
+- trabalhar sobre TRAJETÓRIAS (não estados isolados)
+- analisar sequências de reconfiguração
+- detectar ONDE e QUANDO a coerência se perde
+- identificar limiares espaciais e temporais
+
+O ResilienceAnalyser NÃO DEVE:
+- decidir uso da terra
+- conter regras biofísicas diretas
+- depender de UI ou renderização
+
+===============================================================================
+7. DIRETRIZES DE ARQUITETURA (OBRIGATÓRIAS)
+===============================================================================
+
+1. Todos os componentes de resiliência pertencem ao CORE DOMAIN
+2. Espaço e tempo devem ser tratados explicitamente
+3. Resultados devem ser auditáveis e reproduzíveis
+4. Resiliência NÃO deve ser reduzida a um único valor escalar
+5. O sistema deve permitir múltiplas trajetórias coerentes
+6. Mudança ≠ falha automaticamente
+
+===============================================================================
+8. PRINCÍPIO FINAL (NÃO NEGOCIÁVEL)
+===============================================================================
+
+No STRATA:
+
+O mapa pode mudar.
+Os patches podem se mover.
+As bordas podem se reorganizar.
+
+Enquanto o PADRÃO FUNCIONAL permanecer coerente,
+o sistema é considerado RESILIENTE.
+
+===============================================================================
+FIM DO DOCUMENTO
+===============================================================================

@@ -2,16 +2,22 @@
 
 All notable changes to the SisterPEC project will be documented in this file.
 
-## [1.5.0] - 2025-12-30
+## [1.6.0] - 2025-12-30
 ### Added
-- **Core Domain Structure**: Implemented strict DDD architecture with `Territory`, `SpatialPattern`, and `LandUse` contexts.
-- **Territory Aggregate**: New orchestrator class managing bio-physical and spatial coherence.
-- **Value Objects**: Added `CoherenceScore` and `PatchMetrics` for semantic analysis results.
+- **Resilience Analysis**: New `ResilienceAnalyser` for spatio-temporal coherence evaluation.
+- **Trajectory Management**: Added `TerritorialTrajectory` and `TerritorySnapshot` for historical state tracking.
+- **Land Use Guidelines**: Integrated `SISTERSTRATA_Diretrizes_Uso_da_Terra_Vetores_Processo_v1.0.txt` as normative architectural guideline.
+- **Spatio-Temporal Guidelines**: Integrated `STRATA_Diretrizes_Resiliencia_Espaco_Tempo_v1.0.txt` for resilience modelling.
+- **Hypothesis Schema**: formalized `TerritorialHypothesis` with explicit bio-physical, ecological, and socio-economic vectors.
 
 ### Changed
-- **Refactoring**: Renamed `analysis` namespace to `spatial_pattern` to reflect ontological role.
-- **Robustness**: Hydrology Panel now uses atomic file writes to prevent data corruption.
-- **Architecture**: `Engine.cpp` and `World3D` wrappers updated for consistent error handling (`std::pair` returns).
+- **Async Evaluation**: Territorial Hypothesis evaluation now runs on background threads (async) to prevent UI freezing.
+- **UI Refinement**: Optimized `TerritorialHypothesisPanel` with real-time feedback and priority-based allocation percentages.
+
+### Removed
+- **Legacy Analysis**: Deleted `PatchAnalysis` and `SoilRasterizer` domain services in favor of the new aggregate-based resilience architecture.
+
+## [1.5.0] - 2025-12-30
 
 ## [1.4.0] - 2025-12-29
 ### Added

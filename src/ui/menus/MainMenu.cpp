@@ -74,6 +74,9 @@ void MainMenu::draw() {
                 }
                 ImGui::EndMenu();
             }
+            if (ImGui::MenuItem("Territorial Hypothesis")) {
+                showHypothesisInspector = true;
+            }
             ImGui::EndMenu();
         }
         

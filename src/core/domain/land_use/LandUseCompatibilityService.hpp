@@ -51,7 +51,7 @@ public:
             if (slopeDegrees > 15.0f) {
                 return {CompatibilityStatus::Incoherent, "Slope too steep for intensive machinery (>15 deg)."};
             }
-            if (soil.Order == Soils::SoilOrder::Neossolos && soil.SubOrder == Soils::SoilSubOrder::Litolicos) {
+            if (soil.order == Soils::SiBCSOrder::Neossolo && soil.suborder == Soils::SiBCSSuborder::Litoc) {
                 return {CompatibilityStatus::Incoherent, "Soil too shallow (Neossolo Litolico)."};
             }
         }

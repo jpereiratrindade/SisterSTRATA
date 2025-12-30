@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <glm/glm.hpp>
 
 namespace Core::Domain::LandUse {
 
@@ -16,11 +17,12 @@ class LandUsePotential {
 public:
     using ID = std::string;
 
-    LandUsePotential(ID id, std::string name, std::string description = "")
-        : id_(std::move(id)), name_(std::move(name)), description_(std::move(description)) {}
+    LandUsePotential(ID id, std::string name, glm::vec3 color = glm::vec3(0.5f), std::string description = "")
+        : id_(std::move(id)), name_(std::move(name)), color_(color), description_(std::move(description)) {}
 
     const ID& getId() const { return id_; }
     const std::string& getName() const { return name_; }
+    const glm::vec3& getColor() const { return color_; }
     const std::string& getDescription() const { return description_; }
 
     // Equality for VOs
@@ -31,6 +33,7 @@ public:
 private:
     ID id_;
     std::string name_;
+    glm::vec3 color_;
     std::string description_;
     
     // Future: BioPhysicalConstraints constraints_;

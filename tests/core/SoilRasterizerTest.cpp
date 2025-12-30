@@ -2,11 +2,11 @@
 #include <vector>
 #include <cassert>
 #include <cmath>
-#include "core/domain/analysis/SoilRasterizer.hpp"
+#include "core/domain/spatial_pattern/SoilRasterizer.hpp"
 #include "core/domain/soils/SiBCS.hpp"
 #include "world3d/rendering/Vertex.hpp"
 
-using namespace Core::Domain::Analysis;
+using namespace Core::Domain::SpatialPattern;
 using namespace Core::Domain::Soils;
 
 void test_simple_grid() {

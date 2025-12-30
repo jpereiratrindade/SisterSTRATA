@@ -102,8 +102,8 @@ void HydrologyPanel::draw(bool* open) {
         if (showReportDialog_) {
             std::string path;
             if (reportFileSelector_.draw(&showReportDialog_, path, ".txt", true)) {
-                bool ok = World3D::generateHydrologyReport(path, streamThreshold_);
-                statusMessage_ = ok ? "Hydrology report saved." : "Failed to save hydrology report.";
+                auto result = World3D::generateHydrologyReport(path, streamThreshold_);
+                statusMessage_ = result.second;
                 showReportDialog_ = false;
             }
         }
@@ -112,8 +112,8 @@ void HydrologyPanel::draw(bool* open) {
             std::string path;
             if (basinFileSelector_.draw(&showBasinDialog_, path, ".csv", true)) {
                 World3D::setPointSize(boundaryPointSize_);
-                bool ok = World3D::exportBasinBoundariesCsv(path);
-                statusMessage_ = ok ? "Basin boundaries saved." : "Failed to save basin boundaries.";
+                auto result = World3D::exportBasinBoundariesCsv(path);
+                statusMessage_ = result.second;
                 showBasinDialog_ = false;
             }
         }

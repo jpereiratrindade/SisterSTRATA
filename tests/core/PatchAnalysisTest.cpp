@@ -2,7 +2,7 @@
 #include <cassert>
 #include <vector>
 #include <cmath>
-#include "core/domain/analysis/PatchAnalysis.hpp"
+#include "core/domain/spatial_pattern/PatchAnalysis.hpp"
 
 // Simple helper to create a 3x3 + shape
 //   . X .
@@ -21,7 +21,7 @@
 // Let's assume 4-connectivity is used (PatchAnalysis.cpp uses dirs[4][2]).
 
 void test_cross_shape() {
-    using namespace Core::Domain::Analysis;
+    using namespace Core::Domain::SpatialPattern;
 
     // Grid 3x3
     // 0 1 0
@@ -68,7 +68,7 @@ void test_cross_shape() {
 }
 
 void test_disconnected_shapes() {
-    using namespace Core::Domain::Analysis;
+    using namespace Core::Domain::SpatialPattern;
 
     // Grid 3x3
     // 1 0 1
