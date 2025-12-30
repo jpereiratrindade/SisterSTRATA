@@ -79,12 +79,22 @@ void HydrologyPanel::draw(bool* open) {
             showReportDialog_ = true;
             reportFileSelector_.Open("hydrology_report.txt");
         }
+        ImGui::SameLine();
+        if (ImGui::Button("Save Basin Boundaries...")) {
+            showBasinDialog_ = true;
+            basinFileSelector_.Open("basin_boundaries.csv");
+        }
+        if (ImGui::SliderFloat("Boundary Point Size", &boundaryPointSize_, 1.0f, 12.0f, "%.1f")) {
+            World3D::setPointSize(boundaryPointSize_);
+        }
 
         if (hasHydrologyStats_) {
             ImGui::Text("Basins: %d (largest %.1f%%)", lastHydrologyStats_.basinCount, lastHydrologyStats_.largestBasinPct);
             ImGui::Text("Drainage Density: %.4e m-1", lastHydrologyStats_.drainageDensity);
             ImGui::Text("Max Flow Area: %.2f m2", lastHydrologyStats_.maxFlowAccumulation);
             ImGui::Text("Mean Slope: %.4f (%.1f%%)", lastHydrologyStats_.avgSlope, lastHydrologyStats_.avgSlope * 100.0f);
+            ImGui::Text("TWI: min %.2f | mean %.2f | max %.2f",
+                        lastHydrologyStats_.minTWI, lastHydrologyStats_.avgTWI, lastHydrologyStats_.maxTWI);
         } else {
             ImGui::TextDisabled("Hydrology stats not computed.");
         }
@@ -95,6 +105,16 @@ void HydrologyPanel::draw(bool* open) {
                 bool ok = World3D::generateHydrologyReport(path, streamThreshold_);
                 statusMessage_ = ok ? "Hydrology report saved." : "Failed to save hydrology report.";
                 showReportDialog_ = false;
+            }
+        }
+
+        if (showBasinDialog_) {
+            std::string path;
+            if (basinFileSelector_.draw(&showBasinDialog_, path, ".csv", true)) {
+                World3D::setPointSize(boundaryPointSize_);
+                bool ok = World3D::exportBasinBoundariesCsv(path);
+                statusMessage_ = ok ? "Basin boundaries saved." : "Failed to save basin boundaries.";
+                showBasinDialog_ = false;
             }
         }
     }

@@ -6,13 +6,22 @@
 
 namespace UI::Panels {
 
+/**
+ * @brief Hydrology controls and reporting UI.
+ */
 class HydrologyPanel {
 public:
+    /**
+     * @brief Render the hydrology panel.
+     */
     void draw(bool* open);
 
 private:
     UI::Components::FileSelector reportFileSelector_{"Hydrology Report"};
+    UI::Components::FileSelector basinFileSelector_{"Basin Boundaries"};
     bool showReportDialog_ = false;
+    bool showBasinDialog_ = false;
+    float boundaryPointSize_ = 4.0f;
 
     bool showDrainage_ = false;
     bool showWatersheds_ = false;

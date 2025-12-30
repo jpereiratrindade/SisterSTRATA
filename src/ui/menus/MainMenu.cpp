@@ -55,29 +55,6 @@ void MainMenu::draw() {
                 World3D::applySlopeAnalysis(); // Call logic directly as before
                 showAnalysisReport = true;
             }
-            if (ImGui::MenuItem("Analyze Drainage")) {
-                World3D::DrainageStats stats = World3D::applyDrainageSimulation();
-                drainageResultMsg = stats.message.empty() ? "Success" : stats.message;
-                
-                // Format detailed report
-                if (stats.message.empty()) {
-                    char buf[512];
-                    snprintf(buf, sizeof(buf), 
-                        "Drainage Analysis Complete.\n\n"
-                        "Statistics:\n"
-                        "- Max Accumulation: %d cells\n"
-                        "- Mean Accumulation: %.2f cells\n"
-                        "- River Cells (>50): %d\n\n"
-                        "Visualization:\n"
-                        "- Blue: Flow Accumulation\n"
-                        "- Gradient: Elevation Depth", 
-                        stats.maxAccumulation, stats.meanAccumulation, stats.riverCells);
-                    drainageResultMsg = std::string(buf);
-                    World3D::setDrainageVisualization(true, false, false, 0.2f);
-                }
-                openDrainagePopup = true;
-            }
-
             if (ImGui::MenuItem("Hydrology Inspector")) {
                 showHydrologyPanel = true;
             }
@@ -101,19 +78,6 @@ void MainMenu::draw() {
         }
         
         ImGui::EndMainMenuBar();
-    }
-
-    // Drainage Popup - Moved outside menu scope to ensure it renders
-    if (openDrainagePopup) {
-        ImGui::OpenPopup("Drainage Result");
-        openDrainagePopup = false;
-    }
-
-    if (ImGui::BeginPopupModal("Drainage Result", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("%s", drainageResultMsg.c_str());
-        ImGui::Separator();
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::EndPopup();
     }
 
     drawOpenFileDialog();

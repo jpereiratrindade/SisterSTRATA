@@ -22,4 +22,26 @@ docs/doxygen/
 
 # Generated Assets
 assets/data/generated_*.obj
+assets/data/generated_*.csv
+assets/data/terrain_sample.obj
+assets/data/patch*.csv
+assets/data/soil_*.csv
 assets/data/slope_report.txt
+
+# Local reports/logs
+/slope_report.txt
+/build_log_retry.txt
+
+# Local-only folders
+/external/
+/sisterapp-test/
+
+# Local snippets
+/tests/core/CMakeLists.txt.snippet
+
+# Local docs
+/docs/LLM_INTEGRATION_ANALYSIS.md
+
+# Empty-dir placeholders (local)
+/src/core/services/.gitkeep
+/src/ui/docking/.gitkeep

@@ -11,11 +11,20 @@ namespace World3D::Loader {
 
 class ObjLoader {
 public:
-    static bool load(const std::string& path, std::vector<Rendering::Vertex>& vertices) {
+    /**
+     * @brief Load an OBJ file, supporting faces and point-only geometry.
+     * @param path File path.
+     * @param vertices Output vertex buffer.
+     * @param isPointCloud Optional flag set to true when geometry is point-only.
+     * @return true if any vertices were loaded.
+     */
+    static bool load(const std::string& path, std::vector<Rendering::Vertex>& vertices, bool* isPointCloud = nullptr) {
         std::vector<glm::vec3> temp_positions;
         std::vector<glm::vec3> temp_normals;
         std::vector<glm::vec2> temp_uvs;
+        std::vector<glm::vec3> temp_colors;
         std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+        std::vector<unsigned int> pointIndices;
 
         std::ifstream file(path);
         if (!file.is_open()) {
@@ -33,6 +42,17 @@ public:
                 glm::vec3 pos;
                 ss >> pos.x >> pos.y >> pos.z;
                 temp_positions.push_back(pos);
+                float r = 0.8f, g = 0.8f, b = 0.8f;
+                if (ss >> r >> g >> b) {
+                    if (r > 1.0f || g > 1.0f || b > 1.0f) {
+                        r /= 255.0f;
+                        g /= 255.0f;
+                        b /= 255.0f;
+                    }
+                    temp_colors.push_back(glm::vec3(r, g, b));
+                } else {
+                    temp_colors.push_back(glm::vec3(0.8f, 0.8f, 0.8f));
+                }
             } else if (prefix == "vn") {
                 glm::vec3 norm;
                 ss >> norm.x >> norm.y >> norm.z;
@@ -78,7 +98,55 @@ public:
                 parseIndex(v1_str);
                 parseIndex(v2_str);
                 parseIndex(v3_str);
+            } else if (prefix == "p") {
+                std::string token;
+                while (ss >> token) {
+                    if (token.empty()) continue;
+                    size_t slash = token.find('/');
+                    if (slash != std::string::npos) {
+                        token = token.substr(0, slash);
+                    }
+                    try {
+                        int vIdx = std::stoi(token);
+                        if (vIdx > 0) {
+                            pointIndices.push_back(static_cast<unsigned int>(vIdx));
+                        }
+                    } catch (...) {
+                        continue;
+                    }
+                }
             }
+        }
+
+        if (vertexIndices.empty() && pointIndices.empty() && !temp_positions.empty()) {
+            pointIndices.reserve(temp_positions.size());
+            for (size_t i = 0; i < temp_positions.size(); ++i) {
+                pointIndices.push_back(static_cast<unsigned int>(i + 1));
+            }
+        }
+
+        const bool pointMode = vertexIndices.empty() && !pointIndices.empty();
+        if (isPointCloud) {
+            *isPointCloud = pointMode;
+        }
+
+        if (pointMode) {
+            for (size_t i = 0; i < pointIndices.size(); ++i) {
+                unsigned int idx = pointIndices[i];
+                if (idx == 0 || idx > temp_positions.size()) continue;
+                Rendering::Vertex vertex;
+                vertex.pos = temp_positions[idx - 1];
+                if (idx - 1 < temp_colors.size()) {
+                    vertex.color = temp_colors[idx - 1];
+                } else {
+                    vertex.color = glm::vec3(0.8f, 0.8f, 0.8f);
+                }
+                vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+                vertex.uv = glm::vec2(0.0f, 0.0f);
+                vertices.push_back(vertex);
+            }
+            std::cout << "Loaded OBJ: " << path << " (" << vertices.size() << " points)" << std::endl;
+            return !vertices.empty();
         }
 
         // Processing indices
@@ -89,7 +157,11 @@ public:
             vertex.pos = temp_positions[vertexIndices[i] - 1];
             
             // Color (White default)
-            vertex.color = glm::vec3(0.8f, 0.8f, 0.8f);
+            if (vertexIndices[i] - 1 < temp_colors.size()) {
+                vertex.color = temp_colors[vertexIndices[i] - 1];
+            } else {
+                vertex.color = glm::vec3(0.8f, 0.8f, 0.8f);
+            }
 
             // Normals
             if (!temp_normals.empty() && i < normalIndices.size()) {
@@ -104,7 +176,7 @@ public:
         }
 
         std::cout << "Loaded OBJ: " << path << " (" << vertices.size() << " vertices)" << std::endl;
-        return true;
+        return !vertices.empty();
     }
 };
 

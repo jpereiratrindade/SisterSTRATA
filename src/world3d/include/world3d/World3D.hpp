@@ -57,6 +57,12 @@ void setLightColor(float r, float g, float b);
 float getAmbientStrength();
 void setAmbientStrength(float strength);
 void setPointSize(float size);
+/**
+ * @brief Apply a color mode to the active point/line object.
+ * @param mode 0 = use original source colors, 1 = override with a single color.
+ * @param color Override color when mode = 1.
+ */
+bool applyPointCloudColorMode(int mode, const glm::vec3& color);
 bool requestScreenshot(const std::string& path);
 
 // Graphics Settings
@@ -77,34 +83,37 @@ struct SlopeStats {
     int total;         ///< Total analyzed vertices
 };
 void applySlopeAnalysis();
-    struct DrainageStats {
-        int maxAccumulation = 0;
-        float meanAccumulation = 0.0f;
-        int riverCells = 0;
-        std::string message;
-    };
+struct DrainageStats {
+    int maxAccumulation = 0;
+    float meanAccumulation = 0.0f;
+    int riverCells = 0;
+    std::string message;
+};
 
-    /**
-     * @brief Runs D8 drainage analysis.
-     * @return Statistics of the run.
-     */
-    DrainageStats applyDrainageSimulation();
-    /**
-     * @brief Toggle drainage and watershed visualization overlays.
-     */
-    bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity);
-    /**
-     * @brief Compute hydrology statistics for the current grid.
-     */
-    HydrologyStats getHydrologyStats(float streamThreshold);
-    /**
-     * @brief Generate a hydrology report to disk.
-     */
-    bool generateHydrologyReport(const std::string& path, float streamThreshold);
-    bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity);
-    using HydrologyStats = ::Core::Domain::Hydro::HydrologyStats;
-    HydrologyStats getHydrologyStats(float streamThreshold);
-    bool generateHydrologyReport(const std::string& path, float streamThreshold);
+using HydrologyStats = ::Core::Domain::Hydro::HydrologyStats;
+
+/**
+ * @brief Runs D8 drainage analysis.
+ * @return Statistics of the run.
+ */
+DrainageStats applyDrainageSimulation();
+/**
+ * @brief Toggle drainage and watershed visualization overlays.
+ */
+bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity);
+/**
+ * @brief Compute hydrology statistics for the current grid.
+ */
+HydrologyStats getHydrologyStats(float streamThreshold);
+/**
+ * @brief Generate a hydrology report to disk.
+ */
+bool generateHydrologyReport(const std::string& path, float streamThreshold);
+/**
+ * @brief Export basin boundary polylines to CSV.
+ * Format: line_id, seq, x, y, z, r, g, b, basin_id.
+ */
+bool exportBasinBoundariesCsv(const std::string& path);
 
 
 /**

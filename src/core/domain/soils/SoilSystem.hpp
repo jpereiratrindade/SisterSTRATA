@@ -22,6 +22,10 @@ public:
      */
     static const std::vector<SiBCSClassification>& getLastDetectedClasses();
     /**
+     * @brief Retrieves the last per-vertex soil classifications.
+     */
+    static const std::vector<SiBCSClassification>& getLastClassMap();
+    /**
      * @brief Clears any cached classes from the last simulation (legend reset).
      */
     static void clearLastDetectedClasses();
@@ -40,6 +44,7 @@ public:
 
 private:
     static std::vector<SiBCSClassification> lastDetectedClasses_;
+    static std::vector<SiBCSClassification> lastClassMap_;
 };
 
 } // namespace Core::Domain::Soils

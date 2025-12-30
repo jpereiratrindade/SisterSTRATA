@@ -1,5 +1,6 @@
 #include "world3d/include/world3d/World3D.hpp"
 #include "world3d/Engine.hpp"
+#include "core/domain/soils/SoilSystem.hpp"
 #include <memory>
 #include <iostream>
 
@@ -111,6 +112,7 @@ void setLightColor(float r, float g, float b) { if (g_Engine) g_Engine->setLight
 float getAmbientStrength() { return g_Engine ? g_Engine->getAmbientStrength() : 0.0f; }
 void setAmbientStrength(float strength) { if (g_Engine) g_Engine->setAmbientStrength(strength); }
 void setPointSize(float size) { if (g_Engine) g_Engine->setPointSize(size); }
+bool applyPointCloudColorMode(int mode, const glm::vec3& color) { return g_Engine ? g_Engine->applyPointCloudColorMode(mode, color) : false; }
 bool requestScreenshot(const std::string& path) { return g_Engine ? g_Engine->requestScreenshot(path) : false; }
 
 void applySlopeAnalysis() { if (g_Engine) g_Engine->applySlopeVisualization(); }
@@ -143,6 +145,11 @@ HydrologyStats getHydrologyStats(float streamThreshold) {
 bool generateHydrologyReport(const std::string& path, float streamThreshold) {
     if (!g_Engine) return false;
     return g_Engine->generateHydrologyReport(path, streamThreshold);
+}
+
+bool exportBasinBoundariesCsv(const std::string& path) {
+    if (!g_Engine) return false;
+    return g_Engine->exportBasinBoundariesCsv(path);
 }
 
 SlopeStats getSlopeAnalysisStats() {
@@ -205,14 +212,7 @@ const std::vector<World3D::Rendering::Vertex>& getVertices() {
 }
 
 const std::vector<Core::Domain::Soils::SiBCSClassification>& getSoilClasses() {
-    static const std::vector<Core::Domain::Soils::SiBCSClassification> empty;
-    // SoilSystem doesn't store per-vertex classes, only legend.
-    // SoilSimPanel should use predict() to reconstruct if needed.
-    // For this accessor, we might just return the legend classes (lastDetected)?
-    // But the name suggests per-vertex.
-    // Let's return empty for now and let SoilSimPanel handle the reconstruction
-    // via SoilSystem::predict which we just made public.
-    return empty; 
+    return Core::Domain::Soils::SoilSystem::getLastClassMap();
 }
 
 } // namespace World3D

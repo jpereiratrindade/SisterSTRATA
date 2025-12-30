@@ -108,4 +108,44 @@ int Watershed::segmentGlobal(HydroGrid& grid) {
     return basinCounter - 1;
 }
 
+std::vector<uint8_t> Watershed::computeBoundaryMask(const HydroGrid& grid) {
+    int w = grid.width;
+    int h = grid.height;
+    int size = w * h;
+    std::vector<uint8_t> mask(static_cast<size_t>(size), 0);
+
+    if (w <= 0 || h <= 0 || grid.watershedMap.size() != static_cast<size_t>(size)) {
+        return mask;
+    }
+
+    const int dx[] = {0, 1, 1, 1, 0, -1, -1, -1};
+    const int dy[] = {-1, -1, 0, 1, 1, 1, 0, -1};
+
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            int idx = y * w + x;
+            int id = grid.watershedMap[idx];
+            if (id <= 0) continue;
+
+            bool edge = false;
+            for (int k = 0; k < 8; ++k) {
+                int nx = x + dx[k];
+                int ny = y + dy[k];
+                if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+                int nIdx = ny * w + nx;
+                int nId = grid.watershedMap[nIdx];
+                if (nId != id) {
+                    edge = true;
+                    break;
+                }
+            }
+            if (edge) {
+                mask[static_cast<size_t>(idx)] = 1;
+            }
+        }
+    }
+
+    return mask;
+}
+
 } // namespace Core::Domain::Hydro

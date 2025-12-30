@@ -59,6 +59,13 @@ public:
     void setLightColor(float r, float g, float b);
     void setAmbientStrength(float strength);
     void setPointSize(float size);
+    /**
+     * @brief Apply a color mode to the active point or line object.
+     * @param mode 0 = use original source colors, 1 = override with a single color.
+     * @param color Override color when mode = 1.
+     * @return true if a compatible active object was updated.
+     */
+    bool applyPointCloudColorMode(int mode, const glm::vec3& color);
     bool requestScreenshot(const std::string& path);
     
     const glm::vec3& getLightDirection() const { return lightDir_; }
@@ -98,9 +105,11 @@ public:
      * @brief Generate a hydrology report to disk.
      */
     bool generateHydrologyReport(const std::string& filepath, float streamThreshold);
-    bool setDrainageVisualization(bool showDrainage, bool showWatersheds, bool showBasinOutlines, float intensity);
-    ::Core::Domain::Hydro::HydrologyStats getHydrologyStats(float streamThreshold);
-    bool generateHydrologyReport(const std::string& filepath, float streamThreshold);
+    /**
+     * @brief Export basin boundary polylines to CSV.
+     * Format: line_id, seq, x, y, z, r, g, b, basin_id.
+     */
+    bool exportBasinBoundariesCsv(const std::string& filepath);
 
     const ::Core::Domain::Hydro::HydroGrid& getHydroGrid() const { return lastHydroGrid_; }
 
@@ -197,6 +206,8 @@ private:
     std::shared_ptr<std::vector<Rendering::Vertex>> activeVertices_;
     std::shared_ptr<Rendering::Buffer> activeVertexBuffer_;
     vk::PrimitiveTopology activeTopology_ = vk::PrimitiveTopology::eTriangleList; // New
+    std::vector<glm::vec3> activeOriginalColors_;
+    std::vector<glm::vec3> activeOriginalColors_;
     std::string currentFilePath_; // New
 
     bool framebufferResized_ = false;

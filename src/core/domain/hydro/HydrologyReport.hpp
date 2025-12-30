@@ -7,6 +7,9 @@
 
 namespace Core::Domain::Hydro {
 
+/**
+ * @brief Aggregated hydrology statistics for a grid or basin.
+ */
 struct HydrologyStats {
     // Structural
     float minElevation = 0.0f;
@@ -33,14 +36,15 @@ struct HydrologyStats {
     int streamCount = 0;
 
     // Basins
-    int basinCount = 0;
-    int largestBasinArea = 0;
-    float largestBasinPct = 0.0f;
+    int basinCount = 0; ///< Number of basins detected.
+    int largestBasinArea = 0; ///< Largest basin area in cells.
+    float largestBasinPct = 0.0f; ///< Largest basin share (0-100%).
 
     // Per-basin detailed data
-    int id = 0;
-    int areaCells = 0;
-    std::vector<HydrologyStats> topBasins;
+    int id = 0; ///< Basin identifier when stats are per-basin.
+    int areaCells = 0; ///< Basin area in cells.
+    std::vector<HydrologyStats> topBasins; ///< Largest basins by area.
+    std::vector<HydrologyStats> allBasins; ///< All basin stats (per-basin).
 
     /**
      * @brief Initialize min/max ranges for aggregation.

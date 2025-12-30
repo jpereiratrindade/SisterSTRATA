@@ -24,6 +24,11 @@ public:
      * @return Number of basins detected.
      */
     static int segmentGlobal(HydroGrid& grid);
+
+    /**
+     * @brief Compute a mask of basin boundaries (1 = boundary, 0 = interior).
+     */
+    static std::vector<uint8_t> computeBoundaryMask(const HydroGrid& grid);
 };
 
 } // namespace Core::Domain::Hydro

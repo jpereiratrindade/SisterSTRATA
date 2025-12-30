@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include "core/domain/analysis/PatchAnalysis.hpp"
 
 namespace Core::Domain::Hydro {
 
@@ -215,6 +216,7 @@ HydrologyStats HydrologyReport::analyze(const ElevationGrid& terrain,
         for (int i = 0; i < keep; ++i) {
             globalStats.topBasins.push_back(allBasins[i]);
         }
+        globalStats.allBasins = allBasins;
     }
 
     return globalStats;
@@ -268,11 +270,16 @@ bool HydrologyReport::generateToFile(const ElevationGrid& terrain,
         out << std::fixed << std::setprecision(2);
         out << "Largest Basin Dominance: " << stats.largestBasinPct << " % of total area\n\n";
 
-        out << "Top Basins\n";
+        out << "All Basins\n";
         out << "-----------------------------------------------------------------\n";
 
         int bIndex = 1;
-        for (const auto& basin : stats.topBasins) {
+        std::vector<HydrologyStats> basins = stats.allBasins;
+        std::sort(basins.begin(), basins.end(), [](const HydrologyStats& a, const HydrologyStats& b) {
+            return a.id < b.id;
+        });
+
+        for (const auto& basin : basins) {
             float bAreaM2 = basin.areaCells * resolution * resolution;
             out << bIndex << ". Basin ID " << basin.id << " (Area: " << bAreaM2 << " m2)\n";
             out << "   - Elevation (Min/Mean/Max): " << basin.minElevation << " / " << basin.avgElevation << " / " << basin.maxElevation << "\n";
@@ -283,6 +290,31 @@ bool HydrologyReport::generateToFile(const ElevationGrid& terrain,
             out << "   - Max Stream Power:         " << basin.maxStreamPower << "\n\n";
             bIndex++;
         }
+    }
+
+    if (grid.watershedMap.size() == static_cast<size_t>(grid.width * grid.height)) {
+        Core::Domain::Analysis::GridData gridData;
+        gridData.width = grid.width;
+        gridData.height = grid.height;
+        gridData.cellWidth = resolution;
+        gridData.cellHeight = resolution;
+        gridData.values.resize(static_cast<size_t>(grid.width * grid.height));
+        for (int i = 0; i < grid.width * grid.height; ++i) {
+            gridData.values[static_cast<size_t>(i)] = static_cast<double>(grid.watershedMap[i]);
+        }
+
+        Core::Domain::Analysis::AnalysisConfig cfg;
+        cfg.byClass = true;
+        Core::Domain::Analysis::AnalysisResult patchResult = Core::Domain::Analysis::AnalyzeGrid(gridData, cfg);
+
+        out << "Patch Analysis (Basins)\n";
+        out << "-----------------------------------------------------------------\n";
+        out << "Patches:                " << patchResult.summary.patchCount << "\n";
+        out << "Mean PAR:               " << patchResult.summary.meanPar << "\n";
+        out << "Mean Shape Index:       " << patchResult.summary.meanShapeIndex << "\n";
+        out << "Mean RCC:               " << patchResult.summary.meanRcc << "\n";
+        out << "S1:                     " << patchResult.summary.s1 << "\n";
+        out << "S2:                     " << patchResult.summary.s2 << "\n\n";
     }
 
     out << "=================================================================\n";

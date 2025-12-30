@@ -30,6 +30,30 @@ void SettingsPanel::draw(bool* open) {
                 World3D::setCameraSpeed(moveSpeed);
             }
         }
+
+        if (ImGui::CollapsingHeader("Basin Boundaries / Point Clouds")) {
+            static float boundaryPointSize = 4.0f;
+            if (ImGui::SliderFloat("Point Size", &boundaryPointSize, 1.0f, 20.0f, "%.1f")) {
+                World3D::setPointSize(boundaryPointSize);
+            }
+
+            static int colorMode = 0;
+            static glm::vec3 boundaryColor(1.0f, 1.0f, 1.0f);
+            const char* modes[] = {"Source (CSV colors)", "Single color"};
+            if (ImGui::Combo("Color Mode", &colorMode, modes, IM_ARRAYSIZE(modes))) {
+                World3D::applyPointCloudColorMode(colorMode, boundaryColor);
+            }
+            if (colorMode == 1) {
+                if (ImGui::ColorEdit3("Boundary Color", &boundaryColor.r)) {
+                    World3D::applyPointCloudColorMode(colorMode, boundaryColor);
+                }
+            }
+            if (ImGui::Button("Apply to Active Point Cloud")) {
+                World3D::applyPointCloudColorMode(colorMode, boundaryColor);
+            }
+            ImGui::TextDisabled("Applies to the active point/line object.");
+            ImGui::TextDisabled("Line width is fixed by the GPU.");
+        }
         
         if (ImGui::CollapsingHeader("Performance")) {
             bool vsync = World3D::getVSync();

@@ -229,6 +229,50 @@ void Engine::setPointSize(float size) {
     }
 }
 
+bool Engine::applyPointCloudColorMode(int mode, const glm::vec3& color) {
+    if (!activeVertices_ || !activeVertexBuffer_) return false;
+    if (activeTopology_ != vk::PrimitiveTopology::ePointList &&
+        activeTopology_ != vk::PrimitiveTopology::eLineList) {
+        return false;
+    }
+    if (activeVertices_->empty()) return false;
+
+    if (activeOriginalColors_.size() != activeVertices_->size()) {
+        activeOriginalColors_.clear();
+        activeOriginalColors_.reserve(activeVertices_->size());
+        for (const auto& v : *activeVertices_) {
+            activeOriginalColors_.push_back(v.color);
+        }
+    }
+
+    if (mode == 0) {
+        for (size_t i = 0; i < activeVertices_->size(); ++i) {
+            (*activeVertices_)[i].color = activeOriginalColors_[i];
+        }
+    } else if (mode == 1) {
+        for (auto& v : *activeVertices_) {
+            v.color = color;
+        }
+    } else {
+        return false;
+    }
+
+    auto verticesPtr = activeVertices_;
+    auto bufferPtr = activeVertexBuffer_;
+    commandQueue_.push([this, verticesPtr, bufferPtr]() {
+        if (!context_ || !renderer_) return;
+        if (!verticesPtr || !bufferPtr) return;
+        if (verticesPtr->empty()) return;
+        vk::DeviceSize size = sizeof(Rendering::Vertex) * verticesPtr->size();
+        Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc,
+                                  vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+        staging.copyTo(verticesPtr->data(), size);
+        renderer_->copyBuffer(staging.getHandle(), bufferPtr->getHandle(), size);
+    });
+
+    return true;
+}
+
 bool Engine::requestScreenshot(const std::string& path) {
     if (!renderer_) return false;
     return renderer_->requestScreenshot(path);
@@ -426,6 +470,60 @@ void Engine::loadFile(const std::string& path) {
         
         // --- CSV / XYZ / TXT (Point Clouds) ---
         if (ext == ".csv" || ext == ".xyz" || ext == ".txt") {
+            auto polyData = Loader::CsvLoader::loadPolylines(path);
+            if (!polyData.points.empty()) {
+                Core::ValueObjects::Vector3 origin(0.0, 0.0, 0.0);
+                double maxVal = 0.0;
+                for (const auto& p : polyData.points) {
+                    maxVal = std::max(maxVal, std::abs(p.x));
+                    maxVal = std::max(maxVal, std::abs(p.y));
+                    if (maxVal > 10000.0) break;
+                }
+                if (maxVal > 10000.0) {
+                    origin = polyData.points.front();
+                    std::cout << "[Engine] Large coordinates detected. Shifting origin to: " << origin.x << ", " << origin.y << std::endl;
+                }
+
+                auto verticesPtr = std::make_shared<std::vector<Rendering::Vertex>>(
+                    ScientificAdapter::convert(polyData.points, origin)
+                );
+                for (size_t i = 0; i < verticesPtr->size(); ++i) {
+                    (*verticesPtr)[i].color = polyData.colors[i];
+                }
+
+                commandQueue_.push([this, verticesPtr, count = polyData.points.size(), path]() {
+                    if (!context_ || !renderer_) return;
+
+                    RenderObject lineObj;
+                    lineObj.topology = vk::PrimitiveTopology::eLineList;
+                    lineObj.vertexCount = static_cast<uint32_t>(verticesPtr->size());
+                    vk::DeviceSize size = sizeof(Rendering::Vertex) * verticesPtr->size();
+
+                    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc,
+                                              vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+                    staging.copyTo(verticesPtr->data(), size);
+
+                    lineObj.vertexBuffer = std::make_shared<Rendering::Buffer>(*context_, size,
+                                                                               vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+                                                                               vk::MemoryPropertyFlagBits::eDeviceLocal);
+                    renderer_->copyBuffer(staging.getHandle(), lineObj.vertexBuffer->getHandle(), size);
+                    scene_.addObject(lineObj);
+
+                    activeVertices_ = verticesPtr;
+                    activeVertexBuffer_ = lineObj.vertexBuffer;
+                    activeTopology_ = vk::PrimitiveTopology::eLineList;
+                    activeOriginalColors_.clear();
+                    activeOriginalColors_.reserve(verticesPtr->size());
+                    for (const auto& v : *verticesPtr) {
+                        activeOriginalColors_.push_back(v.color);
+                    }
+                    currentFilePath_ = path;
+
+                    std::cout << "[Engine] CSV Polyline Loaded: " << count << " vertices." << std::endl;
+                });
+                return;
+            }
+
             auto data = Loader::CsvLoader::load(path);
             if (data.points.empty()) return;
 
@@ -480,6 +578,11 @@ void Engine::loadFile(const std::string& path) {
                 activeVertices_ = verticesPtr;
                 activeVertexBuffer_ = pointsObj.vertexBuffer;
                 activeTopology_ = vk::PrimitiveTopology::ePointList; // Track Topology
+                activeOriginalColors_.clear();
+                activeOriginalColors_.reserve(verticesPtr->size());
+                for (const auto& v : *verticesPtr) {
+                    activeOriginalColors_.push_back(v.color);
+                }
                 currentFilePath_ = path; // Track Path
 
                 std::cout << "[Engine] CSV Loaded: " << count << " points." << std::endl;
@@ -488,9 +591,15 @@ void Engine::loadFile(const std::string& path) {
         // --- OBJ (Mesh) ---
         } else if (ext == ".obj") {
              auto verticesPtr = std::make_shared<std::vector<Rendering::Vertex>>(); // Non-indexed
-             if (Loader::ObjLoader::load(path, *verticesPtr)) {
-                 // --- Auto-Color based on Height (Z) ---
-                 if (!verticesPtr->empty()) {
+             bool isPointCloud = false;
+             if (Loader::ObjLoader::load(path, *verticesPtr, &isPointCloud)) {
+                 if (verticesPtr->empty()) {
+                     std::cerr << "[Engine] OBJ has no vertices: " << path << std::endl;
+                     return;
+                 }
+
+                 if (!isPointCloud) {
+                     // --- Auto-Color based on Height (Z) ---
                      float minZ = 10000.0f;
                      float maxZ = -10000.0f;
                      for (const auto& v : *verticesPtr) {
@@ -513,9 +622,10 @@ void Engine::loadFile(const std::string& path) {
                      }
                  }
                 
-                commandQueue_.push([this, verticesPtr, path]() {
+                commandQueue_.push([this, verticesPtr, path, isPointCloud]() {
                      RenderObject obj;
-                     obj.topology = vk::PrimitiveTopology::eTriangleList; // OBJ is usually triangles
+                     obj.topology = isPointCloud ? vk::PrimitiveTopology::ePointList
+                                                 : vk::PrimitiveTopology::eTriangleList;
                      obj.vertexCount = static_cast<uint32_t>(verticesPtr->size());
                      vk::DeviceSize size = sizeof(Rendering::Vertex) * verticesPtr->size();
 
@@ -530,7 +640,14 @@ void Engine::loadFile(const std::string& path) {
                      // Store references for analysis tools
                      activeVertices_ = verticesPtr;
                      activeVertexBuffer_ = obj.vertexBuffer;
-                     activeTopology_ = vk::PrimitiveTopology::eTriangleList; // Track Topology
+                     activeTopology_ = obj.topology;
+                     activeOriginalColors_.clear();
+                     if (obj.topology == vk::PrimitiveTopology::ePointList) {
+                         activeOriginalColors_.reserve(verticesPtr->size());
+                         for (const auto& v : *verticesPtr) {
+                             activeOriginalColors_.push_back(v.color);
+                         }
+                     }
                      currentFilePath_ = path; // Track Path
                      
                      std::cout << "[Engine] OBJ Loaded." << std::endl;
@@ -582,6 +699,11 @@ void Engine::loadPointCloud(const std::vector<Core::ValueObjects::Vector3>& poin
         activeVertices_ = verticesPtr;
         activeVertexBuffer_ = pointsObj.vertexBuffer;
         activeTopology_ = vk::PrimitiveTopology::ePointList;
+        activeOriginalColors_.clear();
+        activeOriginalColors_.reserve(verticesPtr->size());
+        for (const auto& v : *verticesPtr) {
+            activeOriginalColors_.push_back(v.color);
+        }
         currentFilePath_ = label;
     });
 }
@@ -1081,6 +1203,78 @@ bool Engine::generateHydrologyReport(const std::string& filepath, float streamTh
 
     float spacing = computeGridSpacingXY(*activeVertices_, width, height);
     return Core::Domain::Hydro::HydrologyReport::generateToFile(terrain, lastHydroGrid_, spacing, filepath, streamThreshold);
+}
+
+bool Engine::exportBasinBoundariesCsv(const std::string& filepath) {
+    if (!activeVertices_) return false;
+
+    size_t count = activeVertices_->size();
+    int width = static_cast<int>(std::sqrt(count));
+    int height = width;
+    if (width * height != static_cast<int>(count)) return false;
+
+    if (lastHydroGrid_.flowAccumulationCells.size() != count) {
+        DrainageStats dStats = applyDrainageSimulation();
+        if (!dStats.message.empty()) return false;
+    }
+
+    bool hasBasins = false;
+    if (lastHydroGrid_.watershedMap.size() == count) {
+        for (int id : lastHydroGrid_.watershedMap) {
+            if (id > 0) { hasBasins = true; break; }
+        }
+    }
+    if (!hasBasins) {
+        Core::Domain::Hydro::Watershed::segmentGlobal(lastHydroGrid_);
+    }
+
+    std::vector<uint8_t> boundaryMask = Core::Domain::Hydro::Watershed::computeBoundaryMask(lastHydroGrid_);
+    if (boundaryMask.size() != count) return false;
+
+    std::ofstream out(filepath);
+    if (!out.is_open()) return false;
+
+    out << "line_id,seq,x,y,z,r,g,b,basin_id\n";
+    int lineId = 1;
+    auto idx = [width](int x, int y) { return y * width + x; };
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int i = idx(x, y);
+            if (boundaryMask[i] == 0) continue;
+
+            const auto& v = (*activeVertices_)[i];
+            int basinId = (i < static_cast<int>(lastHydroGrid_.watershedMap.size())) ? lastHydroGrid_.watershedMap[i] : 0;
+            glm::vec3 color = basinColorFromId(basinId);
+
+            auto emitSegment = [&](int x2, int y2) {
+                int j = idx(x2, y2);
+                const auto& v2 = (*activeVertices_)[j];
+                float z1 = v.pos.z + 0.02f;
+                float z2 = v2.pos.z + 0.02f;
+                out << lineId << ",0," << v.pos.x << "," << v.pos.y << "," << z1 << ","
+                    << color.r << "," << color.g << "," << color.b << "," << basinId << "\n";
+                out << lineId << ",1," << v2.pos.x << "," << v2.pos.y << "," << z2 << ","
+                    << color.r << "," << color.g << "," << color.b << "," << basinId << "\n";
+                ++lineId;
+            };
+
+            if (x + 1 < width) {
+                int j = idx(x + 1, y);
+                if (boundaryMask[j] != 0) {
+                    emitSegment(x + 1, y);
+                }
+            }
+            if (y + 1 < height) {
+                int j = idx(x, y + 1);
+                if (boundaryMask[j] != 0) {
+                    emitSegment(x, y + 1);
+                }
+            }
+        }
+    }
+    out.close();
+    return true;
 }
 
 

@@ -6,8 +6,14 @@
 
 namespace UI::Menus {
 
+/**
+ * @brief Main menu bar and top-level tool toggles.
+ */
 class MainMenu {
 public:
+    /**
+     * @brief Render the main menu bar and dialogs.
+     */
     void draw();
 
     // Callbacks to trigger Application/UI actions
@@ -27,10 +33,7 @@ public:
     bool showScorpanWindow = false; // New
     bool showSiBCSWindow = false;   // New
     
-    std::string drainageResultMsg; 
-    bool openDrainagePopup = false; // Trigger flag
 
-private:
 private:
     bool showOpenDialog = false;
     bool showSaveAsDialog = false; 

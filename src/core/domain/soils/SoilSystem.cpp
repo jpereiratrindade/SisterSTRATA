@@ -7,6 +7,7 @@ namespace Core::Domain::Soils {
 
 // Define static member
 std::vector<SiBCSClassification> SoilSystem::lastDetectedClasses_;
+std::vector<SiBCSClassification> SoilSystem::lastClassMap_;
 
 void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, const ScorpanParams& params, int visualizationLevel, const SiBCSFilter& filter) {
     if (vertices.empty()) return;
@@ -24,14 +25,17 @@ void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, cons
 
     // 2. Iterate and Predict
     lastDetectedClasses_.clear(); // Clear previous
+    lastClassMap_.assign(vertices.size(), SiBCSClassification{});
     std::vector<SiBCSClassification> frameClasses; 
 
-    for (auto& v : vertices) {
+    for (size_t i = 0; i < vertices.size(); ++i) {
+        auto& v = vertices[i];
         float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
         float slopeDeg = glm::degrees(std::acos(dot));
         float relElev = (v.pos.z - minZ) / (maxZ - minZ);
 
         auto classification = predict(params, slopeDeg, v.pos.z, relElev);
+        lastClassMap_[i] = classification;
         
         // Filter Check
         if (!SiBCSHelper::matches(classification, filter)) {
@@ -64,8 +68,13 @@ const std::vector<SiBCSClassification>& SoilSystem::getLastDetectedClasses() {
     return lastDetectedClasses_;
 }
 
+const std::vector<SiBCSClassification>& SoilSystem::getLastClassMap() {
+    return lastClassMap_;
+}
+
 void SoilSystem::clearLastDetectedClasses() {
     lastDetectedClasses_.clear();
+    lastClassMap_.clear();
 }
 
 SiBCSClassification SoilSystem::predict(const ScorpanParams& global, float slopeDeg, float elevation, float relElevation) {
