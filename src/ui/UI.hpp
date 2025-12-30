@@ -10,6 +10,7 @@
 #include "ui/panels/PatchAnalysisPanel.hpp"
 #include "ui/panels/SettingsPanel.hpp"
 #include "ui/panels/WelcomePanel.hpp"
+#include "ui/panels/VegetationDeclarationPanel.hpp"
 #include "ui/panels/SoilSimPanel.hpp"
 #include "ui/panels/HydrologyPanel.hpp"
 
@@ -60,6 +61,7 @@ private:
     Panels::PatchAnalysisPanel patchAnalysisPanel_;
     Panels::SettingsPanel settingsPanel_;
     Panels::WelcomePanel welcomePanel_;
+    Panels::VegetationDeclarationPanel vegetationDeclarationPanel_;
     Panels::SoilSimPanel soilSimPanel_;
     Panels::HydrologyPanel hydrologyPanel_;
 };

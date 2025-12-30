@@ -58,6 +58,9 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("Hydrology Inspector")) {
                 showHydrologyPanel = true;
             }
+            if (ImGui::MenuItem("Vegetation Declaration (Original)")) {
+                showVegetation = true;
+            }
 
             if (ImGui::MenuItem("Patch Analysis (CSV)")) {
                 showPatchAnalysis = true;

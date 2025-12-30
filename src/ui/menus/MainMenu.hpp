@@ -28,6 +28,7 @@ public:
     bool showAnalysisReport = false;
     bool showPatchAnalysis = false;
     bool showHydrologyPanel = false;
+    bool showVegetation = false; // New
     bool showWelcome = true; // Default true as per original
     bool showScorpanWindow = false; // New
     bool showSiBCSWindow = false;   // New

@@ -14,6 +14,7 @@ add_library(ui
     panels/SettingsPanel.cpp
     panels/WelcomePanel.cpp
     panels/SoilSimPanel.cpp
+    panels/VegetationDeclarationPanel.cpp
     panels/HydrologyPanel.cpp
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
