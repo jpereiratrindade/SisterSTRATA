@@ -17,15 +17,3 @@ add_executable(soil_rasterizer_tests
 )
 target_link_libraries(soil_rasterizer_tests PRIVATE core)
 add_test(NAME CoreSoilRasterizerTest COMMAND soil_rasterizer_tests)
-
-add_executable(territorial_hypothesis_tests
-    TerritorialHypothesisTest.cpp
-)
-target_link_libraries(territorial_hypothesis_tests PRIVATE core)
-add_test(NAME CoreTerritorialHypothesisTest COMMAND territorial_hypothesis_tests)
-
-add_executable(territorial_coherence_tests
-    TerritorialCoherenceServiceTest.cpp
-)
-target_link_libraries(territorial_coherence_tests PRIVATE core)
-add_test(NAME CoreTerritorialCoherenceServiceTest COMMAND territorial_coherence_tests)

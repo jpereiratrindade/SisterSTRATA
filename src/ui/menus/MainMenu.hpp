@@ -32,9 +32,6 @@ public:
     bool showWelcome = true; // Default true as per original
     bool showScorpanWindow = false; // New
     bool showSiBCSWindow = false;   // New
-    bool showHypothesisInspector = false; // New for Territorial Hypothesis
-    
-
 private:
     bool showOpenDialog = false;
     bool showSaveAsDialog = false; 

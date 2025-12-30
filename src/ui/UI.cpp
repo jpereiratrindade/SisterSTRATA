@@ -233,7 +233,6 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     welcomePanel_.draw(&mainMenu_.showWelcome, data);
     soilSimPanel_.drawScorpan(&mainMenu_.showScorpanWindow);
     soilSimPanel_.drawSiBCS(&mainMenu_.showSiBCSWindow);
-    territorialHypothesisPanel_.draw(&mainMenu_.showHypothesisInspector);
 }
 
 
