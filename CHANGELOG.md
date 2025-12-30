@@ -2,6 +2,17 @@
 
 All notable changes to the SisterPEC project will be documented in this file.
 
+## [1.5.0] - 2025-12-30
+### Added
+- **Core Domain Structure**: Implemented strict DDD architecture with `Territory`, `SpatialPattern`, and `LandUse` contexts.
+- **Territory Aggregate**: New orchestrator class managing bio-physical and spatial coherence.
+- **Value Objects**: Added `CoherenceScore` and `PatchMetrics` for semantic analysis results.
+
+### Changed
+- **Refactoring**: Renamed `analysis` namespace to `spatial_pattern` to reflect ontological role.
+- **Robustness**: Hydrology Panel now uses atomic file writes to prevent data corruption.
+- **Architecture**: `Engine.cpp` and `World3D` wrappers updated for consistent error handling (`std::pair` returns).
+
 ## [1.4.0] - 2025-12-29
 ### Added
 - **Enhanced Drainage Analysis**: New dialog in "Analyze Drainage" with flow statistics (Max/Mean Accumulation, River Cell count) and color ramp legends.

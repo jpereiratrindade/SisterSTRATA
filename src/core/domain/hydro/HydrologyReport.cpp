@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include "core/domain/analysis/PatchAnalysis.hpp"
+#include "core/domain/spatial_pattern/PatchAnalysis.hpp"
 
 namespace Core::Domain::Hydro {
 
@@ -293,7 +293,7 @@ bool HydrologyReport::generateToFile(const ElevationGrid& terrain,
     }
 
     if (grid.watershedMap.size() == static_cast<size_t>(grid.width * grid.height)) {
-        Core::Domain::Analysis::GridData gridData;
+        Core::Domain::SpatialPattern::GridData gridData;
         gridData.width = grid.width;
         gridData.height = grid.height;
         gridData.cellWidth = resolution;
@@ -303,9 +303,9 @@ bool HydrologyReport::generateToFile(const ElevationGrid& terrain,
             gridData.values[static_cast<size_t>(i)] = static_cast<double>(grid.watershedMap[i]);
         }
 
-        Core::Domain::Analysis::AnalysisConfig cfg;
+        Core::Domain::SpatialPattern::AnalysisConfig cfg;
         cfg.byClass = true;
-        Core::Domain::Analysis::AnalysisResult patchResult = Core::Domain::Analysis::AnalyzeGrid(gridData, cfg);
+        Core::Domain::SpatialPattern::AnalysisResult patchResult = Core::Domain::SpatialPattern::AnalyzeGrid(gridData, cfg);
 
         out << "Patch Analysis (Basins)\n";
         out << "-----------------------------------------------------------------\n";

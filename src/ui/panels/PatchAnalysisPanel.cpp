@@ -277,7 +277,7 @@ void PatchAnalysisPanel::draw(bool* open) {
     if (ImGui::Button("Load grid to 3D")) {
         state_.error.clear();
         try {
-            auto grid = Core::Domain::Analysis::LoadGridCsv(state_.inputPath.data());
+            auto grid = Core::Domain::SpatialPattern::LoadGridCsv(state_.inputPath.data());
             
             // Try to load elevation companion file immediately
             if (grid.elevation.empty()) {
@@ -287,7 +287,7 @@ void PatchAnalysisPanel::draw(bool* open) {
                 if (pos != std::string::npos) {
                     std::string base = input.substr(0, pos) + "soil_elevation_" + input.substr(pos + target.length());
                     try {
-                        auto elevGrid = Core::Domain::Analysis::LoadGridCsv(base);
+                        auto elevGrid = Core::Domain::SpatialPattern::LoadGridCsv(base);
                         if (elevGrid.width == grid.width && elevGrid.height == grid.height) {
                             grid.elevation = elevGrid.values;
                         }
@@ -415,20 +415,20 @@ void PatchAnalysisPanel::draw(bool* open) {
     if (ImGui::Button("Run Patch Analysis")) {
         state_.error.clear();
         state_.status.clear();
-        state_.summary = Core::Domain::Analysis::SummaryMetrics{};
+        state_.summary = Core::Domain::SpatialPattern::SummaryMetrics{};
         state_.lastRunSuccess = false;
-        state_.lastLabels = Core::Domain::Analysis::LabelImage{};
+        state_.lastLabels = Core::Domain::SpatialPattern::LabelImage{};
         try {
-            auto grid = Core::Domain::Analysis::LoadGridCsv(state_.inputPath.data());
+            auto grid = Core::Domain::SpatialPattern::LoadGridCsv(state_.inputPath.data());
             grid.cellWidth = state_.cellWidth;
             grid.cellHeight = state_.cellHeight;
 
-            Core::Domain::Analysis::AnalysisConfig cfg;
+            Core::Domain::SpatialPattern::AnalysisConfig cfg;
             cfg.threshold = state_.threshold;
             cfg.byClass = state_.byClass;
             cfg.keepLabels = state_.exportLabels || state_.showPreview;
 
-            auto result = Core::Domain::Analysis::AnalyzeGrid(grid, cfg);
+            auto result = Core::Domain::SpatialPattern::AnalyzeGrid(grid, cfg);
             state_.summary = result.summary;
             if (cfg.keepLabels) {
                 state_.lastLabels = result.labelImage;
@@ -438,13 +438,13 @@ void PatchAnalysisPanel::draw(bool* open) {
                 if (state_.outputCsvPath[0] == '\0') {
                     throw std::runtime_error("Output CSV path is empty.");
                 }
-                Core::Domain::Analysis::WriteCsv(state_.outputCsvPath.data(), result.patches, result.summary, state_.summaryOnly);
+                Core::Domain::SpatialPattern::WriteCsv(state_.outputCsvPath.data(), result.patches, result.summary, state_.summaryOnly);
             }
             if (state_.exportLabels) {
                 if (state_.outputLabelsPath[0] == '\0') {
                     throw std::runtime_error("Label CSV path is empty.");
                 }
-                Core::Domain::Analysis::WriteLabelCsv(state_.outputLabelsPath.data(), result.labelImage);
+                Core::Domain::SpatialPattern::WriteLabelCsv(state_.outputLabelsPath.data(), result.labelImage);
             }
 
             std::ostringstream oss;
@@ -537,9 +537,9 @@ void PatchAnalysisPanel::draw(bool* open) {
 }
 
 void PatchAnalysisPanel::clearResults() {
-    state_.summary = Core::Domain::Analysis::SummaryMetrics{};
+    state_.summary = Core::Domain::SpatialPattern::SummaryMetrics{};
     state_.lastRunSuccess = false;
-    state_.lastLabels = Core::Domain::Analysis::LabelImage{};
+    state_.lastLabels = Core::Domain::SpatialPattern::LabelImage{};
     state_.legendEntries.clear();
     state_.legendLoaded = false;
     state_.status.clear();

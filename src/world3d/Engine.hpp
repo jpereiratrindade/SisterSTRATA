@@ -104,12 +104,12 @@ public:
     /**
      * @brief Generate a hydrology report to disk.
      */
-    bool generateHydrologyReport(const std::string& filepath, float streamThreshold);
+    std::pair<bool, std::string> generateHydrologyReport(const std::string& filepath, float streamThreshold);
     /**
      * @brief Export basin boundary polylines to CSV.
      * Format: line_id, seq, x, y, z, r, g, b, basin_id.
      */
-    bool exportBasinBoundariesCsv(const std::string& filepath);
+    std::pair<bool, std::string> exportBasinBoundariesCsv(const std::string& filepath);
 
     const ::Core::Domain::Hydro::HydroGrid& getHydroGrid() const { return lastHydroGrid_; }
 
@@ -206,7 +206,6 @@ private:
     std::shared_ptr<std::vector<Rendering::Vertex>> activeVertices_;
     std::shared_ptr<Rendering::Buffer> activeVertexBuffer_;
     vk::PrimitiveTopology activeTopology_ = vk::PrimitiveTopology::eTriangleList; // New
-    std::vector<glm::vec3> activeOriginalColors_;
     std::vector<glm::vec3> activeOriginalColors_;
     std::string currentFilePath_; // New
 

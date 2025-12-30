@@ -2,7 +2,7 @@
 #include "world3d/World3D.hpp"
 #include "core/domain/soils/SoilSystem.hpp" // Added
 #include "core/domain/soils/SiBCS.hpp" // Added
-#include "core/domain/analysis/SoilRasterizer.hpp" 
+#include "core/domain/spatial_pattern/SoilRasterizer.hpp" 
 #include "ui/panels/PatchAnalysisPanel.hpp"
 #include <string>
 #include <cstdio>
@@ -304,7 +304,7 @@ void SoilSimPanel::drawSiBCS(bool* open) {
                 }
 
                 // 3. Rasterize
-                auto grid = Core::Domain::Analysis::SoilRasterizer::Rasterize(vertices, classes, (double)rasterCellSize_);
+                auto grid = Core::Domain::SpatialPattern::SoilRasterizer::Rasterize(vertices, classes, (double)rasterCellSize_);
                 
                 // 4. Save to Disk (for PatchAnalysisPanel to load)
                 std::string csvPath = "assets/data/soil_raster_" + std::to_string((int)rasterCellSize_) + "m.csv";
@@ -347,7 +347,7 @@ void SoilSimPanel::drawSiBCS(bool* open) {
 
                     // 5. Save Legend
                     std::string legendPath = "assets/data/soil_legend.csv"; 
-                    Core::Domain::Analysis::SoilRasterizer::SaveLegendCsv(legendPath, uniqueClasses);
+                    Core::Domain::SpatialPattern::SoilRasterizer::SaveLegendCsv(legendPath, uniqueClasses);
 
                     // 6. Trigger Panel
                     patchAnalysisPanel_->SetInputPath(csvPath);

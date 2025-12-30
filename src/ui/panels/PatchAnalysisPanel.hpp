@@ -5,7 +5,7 @@
 #include <vector>
 #include "imgui.h"
 #include <glm/glm.hpp>
-#include "core/domain/analysis/PatchAnalysis.hpp"
+#include "core/domain/spatial_pattern/PatchAnalysis.hpp"
 #include "ui/components/FileSelector.hpp"
 
 namespace UI::Panels {
@@ -56,11 +56,11 @@ private:
         UI::Components::FileSelector fileSelector{"Select Grid CSV"};
         bool showFileSelector = false;
 
-        Core::Domain::Analysis::SummaryMetrics summary;
+        Core::Domain::SpatialPattern::SummaryMetrics summary;
         std::string status;
         std::string error;
         bool lastRunSuccess = false;
-        Core::Domain::Analysis::LabelImage lastLabels;
+        Core::Domain::SpatialPattern::LabelImage lastLabels;
         std::vector<LegendEntry> legendEntries;
     };
 

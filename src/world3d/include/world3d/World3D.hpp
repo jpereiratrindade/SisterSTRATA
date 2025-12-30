@@ -108,12 +108,12 @@ HydrologyStats getHydrologyStats(float streamThreshold);
 /**
  * @brief Generate a hydrology report to disk.
  */
-bool generateHydrologyReport(const std::string& path, float streamThreshold);
+std::pair<bool, std::string> generateHydrologyReport(const std::string& path, float streamThreshold);
 /**
  * @brief Export basin boundary polylines to CSV.
  * Format: line_id, seq, x, y, z, r, g, b, basin_id.
  */
-bool exportBasinBoundariesCsv(const std::string& path);
+std::pair<bool, std::string> exportBasinBoundariesCsv(const std::string& path);
 
 
 /**

@@ -322,29 +322,30 @@ public:
         bool selected = false;
 
         if (openRequested_) {
-            if (!pendingPath_.empty()) {
-                browser_.SetCurrentPath(pendingPath_);
-                setFilenameFromPath(pendingPath_);
+            if (allowCreate) {
+                // In Save mode, we want the Modal to open.
+                // But the browser is secondary.
+                ImGui::OpenPopup(title_.c_str());
+            } else {
+                // In Open mode, we just open the browser directly.
+                if (!pendingPath_.empty()) {
+                    browser_.SetCurrentPath(pendingPath_);
+                    setFilenameFromPath(pendingPath_);
+                }
+                browser_.Open(allowCreate);
             }
-            browser_.Open(allowCreate);
             openRequested_ = false;
         }
 
         if (allowCreate) {
-            std::vector<std::string> chosen;
-            if (browser_.Render(chosen)) {
-                if (!chosen.empty()) {
-                    setDirectory(chosen.front());
-                }
-            }
-
-            ImGui::OpenPopup(title_.c_str());
+            // Save Dialog Logic
             if (ImGui::BeginPopupModal(title_.c_str(), open, ImGuiWindowFlags_AlwaysAutoResize)) {
                 ImGui::Text("Directory:");
                 ImGui::SameLine();
                 ImGui::InputText("##dir", inputDir_.data(), inputDir_.size());
                 ImGui::SameLine();
                 if (ImGui::Button("Browse...")) {
+                    // Open browser to pick directory
                     browser_.Open(true);
                 }
 
@@ -371,9 +372,19 @@ public:
                     *open = false;
                     ImGui::CloseCurrentPopup();
                 }
+                
+                // Handle Browser inside the Save Dialog context
+                std::vector<std::string> chosen;
+                if (browser_.Render(chosen)) {
+                    if (!chosen.empty()) {
+                        setDirectory(chosen.front());
+                    }
+                }
+                
                 ImGui::EndPopup();
             }
         } else {
+            // Open Dialog Logic
             std::vector<std::string> chosen;
             if (browser_.Render(chosen)) {
                 if (!chosen.empty()) {
@@ -381,6 +392,9 @@ public:
                     selected = true;
                     *open = false;
                 }
+            } else if (!browser_.IsOpen()) {
+                // If browser closed without selection (e.g. cancelled), close wrapper
+                *open = false; 
             }
         }
 

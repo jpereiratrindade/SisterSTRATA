@@ -142,13 +142,13 @@ HydrologyStats getHydrologyStats(float streamThreshold) {
     return g_Engine->getHydrologyStats(streamThreshold);
 }
 
-bool generateHydrologyReport(const std::string& path, float streamThreshold) {
-    if (!g_Engine) return false;
+std::pair<bool, std::string> generateHydrologyReport(const std::string& path, float streamThreshold) {
+    if (!g_Engine) return {false, "Engine not initialized"};
     return g_Engine->generateHydrologyReport(path, streamThreshold);
 }
 
-bool exportBasinBoundariesCsv(const std::string& path) {
-    if (!g_Engine) return false;
+std::pair<bool, std::string> exportBasinBoundariesCsv(const std::string& path) {
+    if (!g_Engine) return {false, "Engine not initialized"};
     return g_Engine->exportBasinBoundariesCsv(path);
 }
 

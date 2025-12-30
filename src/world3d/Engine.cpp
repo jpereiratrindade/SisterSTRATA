@@ -1178,17 +1178,17 @@ bool Engine::setDrainageVisualization(bool showDrainage, bool showWatersheds, bo
     return stats;
 }
 
-bool Engine::generateHydrologyReport(const std::string& filepath, float streamThreshold) {
-    if (!activeVertices_) return false;
+std::pair<bool, std::string> Engine::generateHydrologyReport(const std::string& filepath, float streamThreshold) {
+    if (!activeVertices_) return {false, "No active vertices."};
 
     size_t count = activeVertices_->size();
     int width = static_cast<int>(std::sqrt(count));
     int height = width;
-    if (width * height != static_cast<int>(count)) return false;
+    if (width * height != static_cast<int>(count)) return {false, "Vertex count mismatch (not a grid)."};
 
     if (lastHydroGrid_.flowAccumulationCells.size() != count) {
         DrainageStats dStats = applyDrainageSimulation();
-        if (!dStats.message.empty()) return false;
+        if (!dStats.message.empty()) return {false, dStats.message};
     }
 
     Core::Domain::Hydro::Watershed::segmentGlobal(lastHydroGrid_);
@@ -1202,20 +1202,41 @@ bool Engine::generateHydrologyReport(const std::string& filepath, float streamTh
     }
 
     float spacing = computeGridSpacingXY(*activeVertices_, width, height);
-    return Core::Domain::Hydro::HydrologyReport::generateToFile(terrain, lastHydroGrid_, spacing, filepath, streamThreshold);
+
+    // Validation
+    std::filesystem::path p(filepath);
+    if (p.has_parent_path() && !std::filesystem::exists(p.parent_path())) {
+         return {false, "Directory does not exist."};
+    }
+
+    std::string tempPath = filepath + ".tmp";
+    // Core::Domain::Hydro::HydrologyReport::generateToFile likely takes a string path. 
+    // We will verify if it returns bool. Assuming yes based on previous code.
+    bool success = Core::Domain::Hydro::HydrologyReport::generateToFile(terrain, lastHydroGrid_, spacing, tempPath, streamThreshold);
+    
+    if (success) {
+        try {
+            std::filesystem::rename(tempPath, filepath);
+            return {true, "Report saved successfully."};
+        } catch (const std::filesystem::filesystem_error& e) {
+            return {false, std::string("Failed to rename temp file: ") + e.what()};
+        }
+    } else {
+        return {false, "Failed to generate report content."};
+    }
 }
 
-bool Engine::exportBasinBoundariesCsv(const std::string& filepath) {
-    if (!activeVertices_) return false;
+std::pair<bool, std::string> Engine::exportBasinBoundariesCsv(const std::string& filepath) {
+    if (!activeVertices_) return {false, "No active vertices."};
 
     size_t count = activeVertices_->size();
     int width = static_cast<int>(std::sqrt(count));
     int height = width;
-    if (width * height != static_cast<int>(count)) return false;
+    if (width * height != static_cast<int>(count)) return {false, "Vertex count mismatch."};
 
     if (lastHydroGrid_.flowAccumulationCells.size() != count) {
         DrainageStats dStats = applyDrainageSimulation();
-        if (!dStats.message.empty()) return false;
+        if (!dStats.message.empty()) return {false, dStats.message};
     }
 
     bool hasBasins = false;
@@ -1229,10 +1250,17 @@ bool Engine::exportBasinBoundariesCsv(const std::string& filepath) {
     }
 
     std::vector<uint8_t> boundaryMask = Core::Domain::Hydro::Watershed::computeBoundaryMask(lastHydroGrid_);
-    if (boundaryMask.size() != count) return false;
+    if (boundaryMask.size() != count) return {false, "Boundary mask computation failed."};
 
-    std::ofstream out(filepath);
-    if (!out.is_open()) return false;
+    // Validation
+    std::filesystem::path p(filepath);
+    if (p.has_parent_path() && !std::filesystem::exists(p.parent_path())) {
+         return {false, "Target directory does not exist."};
+    }
+
+    std::string tempPath = filepath + ".tmp";
+    std::ofstream out(tempPath);
+    if (!out.is_open()) return {false, "Could not create temporary file."};
 
     out << "line_id,seq,x,y,z,r,g,b,basin_id\n";
     int lineId = 1;
@@ -1274,7 +1302,13 @@ bool Engine::exportBasinBoundariesCsv(const std::string& filepath) {
         }
     }
     out.close();
-    return true;
+
+    try {
+        std::filesystem::rename(tempPath, filepath);
+        return {true, "Basin boundaries saved successfully."};
+    } catch (const std::filesystem::filesystem_error& e) {
+        return {false, std::string("Failed to rename temp file: ") + e.what()};
+    }
 }
 
 
