@@ -10,6 +10,8 @@
 #include "ui/panels/PatchAnalysisPanel.hpp"
 #include "ui/panels/SettingsPanel.hpp"
 #include "ui/panels/WelcomePanel.hpp"
+#include "ui/panels/TerrainGeneratorPanel.hpp"
+#include "ui/panels/TimelinePanel.hpp"
 #include "ui/panels/VegetationDeclarationPanel.hpp"
 #include "ui/panels/SoilSimPanel.hpp"
 #include "ui/panels/HydrologyPanel.hpp"
@@ -31,6 +33,7 @@ struct VulkanInitInfo {
 class UserInterface {
 public:
     void init(SDL_Window* window, const VulkanInitInfo& info);
+    void setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory);
     void shutdown();
 
     // Callbacks
@@ -64,6 +67,8 @@ private:
     Panels::VegetationDeclarationPanel vegetationDeclarationPanel_;
     Panels::SoilSimPanel soilSimPanel_;
     Panels::HydrologyPanel hydrologyPanel_;
+    Panels::TerrainGeneratorPanel terrainGeneratorPanel_;
+    Panels::TimelinePanel timelinePanel_; // New
 };
 
 } // namespace UI

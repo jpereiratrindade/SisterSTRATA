@@ -2,6 +2,14 @@
 
 All notable changes to the SisterPEC project will be documented in this file.
 
+## [1.6.0] - 2025-12-30
+
+### Added
+- **Fourth Dimension System (Resilience)**: New observational layer for temporal landscape analysis.
+- **TimeSlice & Trajectory**: Implementation of immutable state snapshots and resilience trajectories.
+- **Ghost Mode**: Non-destructive historic state visualization with stable semantic coloring.
+- **Timeline UI**: Dedicated panel for state capture and trajectory navigation.
+
 ## [1.5.0] - 2025-12-28
 ### Added
 - **Core Domain**: Initial structure with `Territory` aggregate root.

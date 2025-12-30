@@ -12,6 +12,8 @@
 #include "core/domain/soils/Scorpan.hpp" // New
 #include "core/domain/soils/SiBCS.hpp"
 #include "core/domain/hydro/HydrologyReport.hpp"
+#include "core/domain/hydro/HydroGrid.hpp"
+#include "core/domain/vegetation/VegetationOriginal.hpp"
 
 
 struct SDL_Window;
@@ -124,6 +126,15 @@ std::pair<bool, std::string> exportBasinBoundariesCsv(const std::string& path);
  * @param filter Active filter to show/hide specific classes.
  */
 void applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& params, int visualizationLevel, const ::Core::Domain::Soils::SiBCSFilter& filter);
+void applyClassificationVisualization(const std::vector<int>& semanticMap);
+/**
+ * @brief Applies vegetation color visualization to the current mesh.
+ * @param hypothesis The hypothesis configuration (Vegetation Type, Slope Limits, etc.).
+ * @param mask Pre-calculated coverage mask (true = covered).
+ * @param accumulative If true, does not reset non-matching pixels to base color.
+ */
+void applyVegetationVisualization(const ::Core::Domain::Vegetation::VegetationOriginal& hypothesis, const std::vector<bool>& mask, bool accumulative = false);
+void resetVisualization();
 
 SlopeStats getSlopeAnalysisStats();
 bool saveReport(const std::string& path);
@@ -149,6 +160,7 @@ std::string getGenerationMessage();
 // Analysis Accessors
 const std::vector<World3D::Rendering::Vertex>& getVertices(); // New
 const std::vector<Core::Domain::Soils::SiBCSClassification>& getSoilClasses(); // New
+const Core::Domain::Hydro::HydroGrid& getHydroGrid(); // New
 
 void setCameraSpeed(float speed);
 

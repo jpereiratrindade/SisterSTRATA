@@ -28,10 +28,12 @@ public:
     bool showAnalysisReport = false;
     bool showPatchAnalysis = false;
     bool showHydrologyPanel = false;
+    bool showTerrainGenerator = false; // New
     bool showVegetation = false; // New
     bool showWelcome = true; // Default true as per original
     bool showScorpanWindow = false; // New
     bool showSiBCSWindow = false;   // New
+    bool showTimeline = false;      // New (FourthDimension)
 private:
     bool showOpenDialog = false;
     bool showSaveAsDialog = false; 

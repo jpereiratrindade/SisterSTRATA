@@ -170,8 +170,10 @@ void UserInterface::init(SDL_Window* window, const VulkanInitInfo& info) {
     // but deferred creation in NewFrame is often supported or we might see a stutter.
     // Link Panels
     soilSimPanel_.setPatchAnalysisPanel(&patchAnalysisPanel_);
+}
 
-    // For now, let's proceed. If text is missing, we'll know.
+void UserInterface::setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory) {
+    timelinePanel_.setDependencies(trajectory, &vegetationDeclarationPanel_);
 }
 
 void UserInterface::shutdown() {
@@ -229,10 +231,12 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     patchAnalysisPanel_.draw(&mainMenu_.showPatchAnalysis);
     settingsPanel_.draw(&mainMenu_.showSettings);
     hydrologyPanel_.draw(&mainMenu_.showHydrologyPanel);
+    terrainGeneratorPanel_.draw(&mainMenu_.showTerrainGenerator); // New
     vegetationDeclarationPanel_.draw(&mainMenu_.showVegetation);
     welcomePanel_.draw(&mainMenu_.showWelcome, data);
     soilSimPanel_.drawScorpan(&mainMenu_.showScorpanWindow);
     soilSimPanel_.drawSiBCS(&mainMenu_.showSiBCSWindow);
+    timelinePanel_.draw(&mainMenu_.showTimeline);
 }
 
 

@@ -10,7 +10,11 @@ namespace Core::Domain::Vegetation {
  */
 enum class VegetationCode {
     Campestre,
-    FlorestalNatural
+    FlorestalNatural,
+    /**
+     * @brief Corpos d'água ou áreas alagadas (Azul).
+     */
+    Agua
     // Future expansion
 };
 
@@ -24,6 +28,7 @@ public:
         switch (code_) {
             case VegetationCode::Campestre: return "Campestre";
             case VegetationCode::FlorestalNatural: return "FlorestalNatural";
+            case VegetationCode::Agua: return "Agua";
             default: return "Unknown";
         }
     }

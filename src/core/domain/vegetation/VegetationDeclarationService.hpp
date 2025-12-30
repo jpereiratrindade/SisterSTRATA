@@ -16,6 +16,11 @@ namespace Core::Domain::Vegetation {
  */
 class VegetationDeclarationService {
 public:
+    /**
+     * @brief Factory method to create a valid VegetationOriginal entity.
+     * @param dto Data Transfer Object containing user inputs.
+     * @return Validated VegetationOriginal entity.
+     */
     VegetationOriginal createHypothesis(const DTOs::VegetationDeclarationDTO& dto) {
         
         ReliefCondition cond;

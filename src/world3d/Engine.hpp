@@ -21,6 +21,7 @@
 #include "core/domain/hydro/HydroGrid.hpp" // Added
 #include "core/domain/hydro/HydrologyReport.hpp"
 #include "core/value_objects/Vector3.hpp"
+#include "core/domain/vegetation/VegetationOriginal.hpp"
 
 namespace World3D {
 
@@ -80,7 +81,11 @@ public:
 
     // Analysis
     void applySlopeVisualization();
+    void resetVisualization();
+    void applyClassificationVisualization(const std::vector<int>& semanticMap);
     void applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& params, int visualizationLevel, const ::Core::Domain::Soils::SiBCSFilter& filter);
+
+    void applyVegetationVisualization(const ::Core::Domain::Vegetation::VegetationOriginal& hypothesis, const std::vector<bool>& mask, bool accumulative = false);
     struct DrainageStats {
         int maxAccumulation = 0;
         float meanAccumulation = 0.0f;

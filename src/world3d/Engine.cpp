@@ -824,6 +824,111 @@ bool Engine::saveSlopeStats(const std::string& filepath) {
     return true;
 }
 
+/**
+ * @brief Applies vegetation visualization colors to the active mesh vertices based on the hypothesis criteria.
+ * Supports different colors for Forest, Campestre, and Water.
+ * @param hypothesis The vegetation hypothesis to visualize.
+ */
+void Engine::resetVisualization() {
+    if (!activeVertices_ || !activeVertexBuffer_) return;
+    if (activeOriginalColors_.empty()) {
+        std::cerr << "[Engine] No original colors to restore." << std::endl;
+        return;
+    }
+
+    std::cout << "[Engine] Resetting Visualization to Original." << std::endl;
+    for (size_t i = 0; i < activeVertices_->size(); ++i) {
+        if (i < activeOriginalColors_.size()) {
+             (*activeVertices_)[i].color = activeOriginalColors_[i];
+        }
+    }
+    
+    // Re-upload to GPU
+    vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
+    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+    staging.copyTo(activeVertices_->data(), size);
+    
+    renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
+    renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
+}
+
+void Engine::applyClassificationVisualization(const std::vector<int>& semanticMap) {
+    if (!activeVertices_ || !activeVertexBuffer_) return;
+    if (semanticMap.size() != activeVertices_->size()) {
+         std::cerr << "[Engine] Classification Map Size Mismatch" << std::endl;
+         return;
+    }
+
+    std::cout << "[Engine] Applying Classification Visualization (Ghost Mode)." << std::endl;
+
+    for (size_t i = 0; i < activeVertices_->size(); ++i) {
+        auto& v = (*activeVertices_)[i];
+        int code = semanticMap[i];
+        
+        using namespace Core::Domain::Vegetation;
+        if (code == static_cast<int>(VegetationCode::FlorestalNatural)) {
+             v.color = glm::vec3(0.0f, 0.4f, 0.0f);
+        } else if (code == static_cast<int>(VegetationCode::Agua)) {
+             v.color = glm::vec3(0.0f, 0.4f, 0.8f);
+        } else if (code == static_cast<int>(VegetationCode::Campestre)) {
+             v.color = glm::vec3(0.6f, 0.8f, 0.2f);
+        } else {
+             v.color = glm::vec3(0.5f, 0.4f, 0.3f); // Soil
+        }
+    }
+    
+    // Re-upload
+    vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
+    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+    staging.copyTo(activeVertices_->data(), size);
+    renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
+}
+
+void Engine::applyVegetationVisualization(const ::Core::Domain::Vegetation::VegetationOriginal& hypothesis, const std::vector<bool>& mask, bool accumulative) {
+    if (!activeVertices_ || !activeVertexBuffer_) {
+        std::cerr << "[Engine] No active mesh for vegetation vis." << std::endl;
+        return;
+    }
+
+    if (mask.size() != activeVertices_->size()) {
+        std::cerr << "[Engine] Visualization Mask Mismatch! V=" << activeVertices_->size() << " M=" << mask.size() << std::endl;
+        return;
+    }
+
+    std::cout << "[Engine] Applying Vegetation Visualization (Masked): " << hypothesis.getId().getValue() << std::endl;
+
+    // Process on CPU
+    for (size_t i = 0; i < activeVertices_->size(); ++i) {
+        auto& v = (*activeVertices_)[i];
+        bool fit = mask[i];
+        
+        // Color
+        if (fit) {
+            // Visualize as Green (Vegetation) or Water
+            auto code = hypothesis.getType().getCode();
+            if (code == Core::Domain::Vegetation::VegetationCode::FlorestalNatural) {
+                 v.color = glm::vec3(0.0f, 0.4f, 0.0f); // Dark Green
+            } else if (code == Core::Domain::Vegetation::VegetationCode::Agua) {
+                 v.color = glm::vec3(0.0f, 0.4f, 0.8f); // Blue
+            } else {
+                 v.color = glm::vec3(0.6f, 0.8f, 0.2f); // Light Green (Campestre)
+            }
+        } else {
+            // Visualize as Grey/Brown (No Vegetation) IF NOT ACCUMULATIVE
+            if (!accumulative) {
+                 v.color = glm::vec3(0.5f, 0.4f, 0.3f); 
+            }
+        }
+    }
+
+    // Re-upload to GPU
+    vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
+    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+    staging.copyTo(activeVertices_->data(), size);
+    
+    renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
+}
+
 std::string Engine::getGenerationMessage() const {
     std::lock_guard<std::mutex> lock(generationMutex_);
     return generationMessage_;

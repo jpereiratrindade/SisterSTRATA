@@ -36,6 +36,9 @@ void Application::init() {
     info.minImageCount = World3D::getMinImageCount();
     info.imageCount = World3D::getImageCount();
 
+    // 4. Initialize Session (First, so UI can link to it)
+    session_ = std::make_unique<::Application::Session>();
+
     ui_ = std::make_unique<::UI::UserInterface>();
     
     // Bind UI Callbacks
@@ -46,10 +49,10 @@ void Application::init() {
     ui_->onExit = [this]() { this->running_ = false; };
 
     ui_->init(window_->getNativeWindow(), info);
-
-    // 4. Initialize Session
-    session_ = std::make_unique<::Application::Session>();
     
+    // Link Fourth Dimension System
+    ui_->setupFourthDimension(&session_->getTrajectory());
+
     std::cout << "[Application] Initialization Complete." << std::endl;
 }
 

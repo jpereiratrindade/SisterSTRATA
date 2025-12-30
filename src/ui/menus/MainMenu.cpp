@@ -44,6 +44,10 @@ void MainMenu::draw() {
         
         if (ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Welcome Panel", nullptr, &showWelcome);
+            ImGui::Separator();
+            if (ImGui::MenuItem("Reset Visualization (Original Colors)")) {
+                 World3D::resetVisualization();
+            }
             ImGui::EndMenu();
         }
         
@@ -60,6 +64,12 @@ void MainMenu::draw() {
             }
             if (ImGui::MenuItem("Vegetation Declaration (Original)")) {
                 showVegetation = true;
+            }
+            if (ImGui::MenuItem("Fourth Dimension (Resilience)")) {
+                showTimeline = true;
+            }
+            if (ImGui::MenuItem("Terrain Simulator (Procedural)")) {
+                showTerrainGenerator = true;
             }
 
             if (ImGui::MenuItem("Patch Analysis (CSV)")) {

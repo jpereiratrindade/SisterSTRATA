@@ -121,6 +121,18 @@ void applySoilSimulation(const ::Core::Domain::Soils::ScorpanParams& params, int
     if (g_Engine) g_Engine->applySoilSimulation(params, visualizationLevel, filter); 
 }
 
+void applyClassificationVisualization(const std::vector<int>& semanticMap) {
+    if (g_Engine) g_Engine->applyClassificationVisualization(semanticMap);
+}
+
+void applyVegetationVisualization(const Core::Domain::Vegetation::VegetationOriginal& hypothesis, const std::vector<bool>& mask, bool accumulative) {
+    if (g_Engine) g_Engine->applyVegetationVisualization(hypothesis, mask, accumulative);
+}
+
+void resetVisualization() {
+    if (g_Engine) g_Engine->resetVisualization();
+}
+
 DrainageStats applyDrainageSimulation() {
     if (!g_Engine) return {};
     auto eStats = g_Engine->applyDrainageSimulation();
@@ -213,6 +225,12 @@ const std::vector<World3D::Rendering::Vertex>& getVertices() {
 
 const std::vector<Core::Domain::Soils::SiBCSClassification>& getSoilClasses() {
     return Core::Domain::Soils::SoilSystem::getLastClassMap();
+}
+
+const Core::Domain::Hydro::HydroGrid& getHydroGrid() {
+    // Return a static empty grid if engine not ready, or the engine's grid
+    static Core::Domain::Hydro::HydroGrid empty;
+    return g_Engine ? g_Engine->getHydroGrid() : empty;
 }
 
 } // namespace World3D

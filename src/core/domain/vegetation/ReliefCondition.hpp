@@ -19,6 +19,12 @@ struct ReliefCondition {
     // Proximidade de Drenagem (Hydro Dist)
     std::optional<float> maxDistanceToDrainage;
 
+    /**
+     * @brief Checks if a specific point in the terrain satisfies the relief conditions.
+     * @param slope The local slope in degrees.
+     * @param distToBrainage distance to nearest drainage line (meters).
+     * @return true if consistent with hypothesis.
+     */
     bool satisfies(float slope, float distToBrainage) const {
         if (minSlope.has_value() && slope < minSlope.value()) return false;
         if (maxSlope.has_value() && slope > maxSlope.value()) return false;
