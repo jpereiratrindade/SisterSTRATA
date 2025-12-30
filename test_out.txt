@@ -1,0 +1,35 @@
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA
+total 173592
+drwxr-xr-x. 11 jpereiratrindade jpereiratrindade     4096 dez 30 17:35 .
+drwxr-xr-x. 64 jpereiratrindade jpereiratrindade     4096 dez 29 10:29 ..
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     3707 dez 29 16:36 ARCHITECTURE.md
+drwxr-xr-x.  4 jpereiratrindade jpereiratrindade     4096 dez 26 17:11 assets
+drwxr-xr-x.  8 jpereiratrindade jpereiratrindade     4096 dez 30 17:30 build
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     1260 dez 29 13:45 build_log_retry.txt
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     1131 dez 30 17:27 build_log.txt
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     5129 dez 30 17:33 CHANGELOG.md
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade      796 dez 30 13:49 CMakeLists.txt
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     6762 dez 30 16:46 DDD_Cognitive_Assistance_Qwen_STRATA_v1.0.txt
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     6748 dez 30 16:30 DDD_FourthDimensionSystem.txt
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     7087 dez 30 14:10 DDD_VegetationSystemOriginal_STRATA.txt
+drwxr-xr-x.  4 jpereiratrindade jpereiratrindade     4096 dez 30 17:30 docs
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     1007 dez 30 14:01 Doxyfile
+drwxr-xr-x.  5 jpereiratrindade jpereiratrindade     4096 dez 29 11:17 external
+drwxr-xr-x.  7 jpereiratrindade jpereiratrindade     4096 dez 30 17:35 .git
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade      646 dez 30 08:07 .gitignore
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     1626 dez 30 17:30 imgui.ini
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade    10247 dez 25 20:46 projeto_app_ddd_v10.txt
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade     1439 dez 30 17:31 README.md
+drwxr-xr-x.  2 jpereiratrindade jpereiratrindade     4096 dez 26 18:31 scripts
+drwxr-xr-x.  4 jpereiratrindade jpereiratrindade     4096 dez  2 14:51 sisterapp-test
+drwxr-xr-x.  7 jpereiratrindade jpereiratrindade     4096 dez 25 20:50 src
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade 30459882 dez 30 15:10 terrain_export.csv
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade       59 dez 30 17:35 test_out.txt
+drwxr-xr-x.  5 jpereiratrindade jpereiratrindade     4096 dez 25 21:06 tests
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade 73583405 dez 30 16:23 Vegetacao_original2.obj
+-rw-r--r--.  1 jpereiratrindade jpereiratrindade 73583405 dez 30 16:00 Vegetacao_Original.obj
+commit 1ef989baf30521599eaf1981331611eab063dda0
+Author: José Pedro Trindade <jpereiratrindade@gmail.com>
+Date:   Tue Dec 30 17:33:14 2025 -0300
+
+    feat(cac): implement cognitive assistance context with qwen mock and coherence analysis
