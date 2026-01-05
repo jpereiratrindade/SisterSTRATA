@@ -103,18 +103,26 @@ A vegetação é modelada como um autômato celular complexo, sensível ao nicho
 ### 4.4. DOMÍNIO: QUARTA DIMENSÃO (RESILIÊNCIA)
 A dimensão temporal no SisterSTRATA não é apenas um log, mas uma trajetória interpretável.
 
-*   ** snapshots (TimeSlices):** Captura imutável de todo o estado do sistema em um instante $t$.
-*   **Métrica de Coerência ($I_{coh}$):** Avaliação quantitativa da similaridade entre dois estados, servindo como proxy para integridade e resiliência.
-*   **Trajetória de Patch (v1.1):** Estudo do ciclo de vida de manchas na paisagem (Origem, Persistência, Fusão, Extinção). Inclui métricas avançadas de forma (Dimensão Fractal) e estabilidade estrutural (Índice de Volatilidade) para avaliar a dinâmica de fragmentação.
+*   **snapshots (TimeSlices):** Captura imutável de todo o estado do sistema em um instante $t$.
+*   **Métrica de Coerência ($I_{coh}$):** Avaliação quantitativa da similaridade entre dois estados.
+    $$ I_{coh}(x,y) = w_{type} S_{type} + w_{struct} S_{struct} + w_{edge} S_{edge} $$
+    Onde $S_{struct}$ é derivado da Divergência de Jensen-Shannon ($D_{JS}$) entre histogramas espaciais:
+    $$ S_{struct} = 1 - \frac{D_{JS}(Hist_A, Hist_B)}{\log 2} $$
+*   **Trajetória de Patch (v1.1):** Estudo do ciclo de vida de manchas.
+    *   **Trend de Área ($\Delta A$):** $A_{final} - A_{initial}$
+    *   **Volatilidade de Forma ($V$):** Média das variações do Shape Index ($SI$):
+        $$ V = \frac{1}{n} \sum |SI_i - SI_{i-1}| $$
+    *   **Índice de Estabilidade Estrutural ($S$):** $S = \frac{1}{1 + V}$
 
 ---
 
-## 5. INTERFACE COGNITIVA: CAC (COGNITIVE ASSISTANCE CONTEXT)
-O Contexto de Assistência Cognitiva integra Large Language Models (LLMs) como uma camada de **Hermenêutica Científica**.
+## 5. INTERFACE COGNITIVA E GOVERNANÇA DE DADOS
 
-- **O Papel da IA:** Atuar como um Observador Secundário. A IA não processa os grids brutos, mas sim os **Sumários Semânticos** gerados pelos domínios fundamentais.
-- **Rigor Causal:** A IA nunca altera o estado *Derived*. Ela opera exclusivamente sobre o *Observable*, traduzindo métricas quantitativas (como Coerência e Trajetória) em relatórios qualitativos.
+O Contexto de Assistência Cognitiva (CAC) integra Large Language Models (LLMs) como uma camada de **Hermenêutica Científica**.
+
+- **Hermenêutica Baseada em Fatos:** A IA não "inventa" análises; ela interpreta as variáveis derivas (Seção 4.4).
 - **Isolamento Epistemológico:** Garante que a "opinião" da IA não corrompa a base física do modelo (P&A Architecture).
+- **Rastreabilidade:** Cada afirmação da IA pode ser validada voltando às equações fundamentais descritas neste documento.
 
 ---
 

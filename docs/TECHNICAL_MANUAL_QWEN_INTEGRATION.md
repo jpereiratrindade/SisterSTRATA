@@ -110,26 +110,26 @@ Para que a IA fale a "língua do ecólogo", o sistema utiliza um **`nameResolver
 Para garantir a transparência científica, abaixo estão listados todos os dados quantitativos reais extraídos do STRATA e injetados nos prompts:
 
 ### 1. Contexto de Transição (Hermenêutica Parcial)
-| Variável | Descrição Técnica | Origem |
-| :--- | :--- | :--- |
-| `Metadata` | Timestamp e versão do estado capturado | `TimeSlice::getMetadata()` |
-| `Composição %` | Percentual de área ocupada por cada Hipótese (resolvido por nome) | `TimelinePanel::getClassDistribution` |
-| `SSI` | Índice de Similaridade Estrutural (0.0 a 1.0) | `CoherenceIntensityService` |
+| Variável | Descrição Técnica | Origem | Equação Base |
+| :--- | :--- | :--- | :--- |
+| `Metadata` | Timestamp e versão do estado capturado | `TimeSlice::getMetadata()` | - |
+| `Composição %` | % de área ocupada por cada Hipótese | `TimelinePanel::getClassDistribution` | Histograma Linear |
+| `SSI` | Índice de Similaridade Estrutural (0 a 1) | `CoherenceIntensityService` | $I_{coh}$ (Seção 4.4 Foundation) |
 
 ### 2. Contexto de Trajetória do Patch (Individual)
-| Variável | Descrição Técnica | Origem |
-| :--- | :--- | :--- |
-| `Lifespan` | Número de estados em que o patch foi rastreado | `PatchTrajectory::getLifespan` |
-| `Net Area Trend` | Delta de área entre o primeiro e último estado (Categorizado) | `PatchTrajectory::getNetAreaTrend` |
-| `Structural Stability` | Média da constância da forma (Shape Index) no tempo | `PatchTrajectory::getStructuralStabilityIndex` |
-| `Shape Volatility` | Intensidade das mudanças de borda/perímetro | `PatchTrajectory::getShapeVolatility` |
-| `Adjacency Contrast` | Classes vizinhas e seus percentuais de contato | `PatchState::adjacencyByClass` |
+| Variável | Descrição Técnica | Origem | Equação Base |
+| :--- | :--- | :--- | :--- |
+| `Lifespan` | Numero de estados rastreados | `PatchTrajectory::getLifespan` | $n$ |
+| `Net Area Trend` | Delta de área (Categorizado) | `PatchTrajectory::getNetAreaTrend` | $\Delta A$ (Seção 4.4 Foundation) |
+| `Stability` | Média da constância da forma | `PatchTrajectory::getStructuralStabilityIndex` | $S$ (Seção 4.4 Foundation) |
+| `Volatility` | Intensidade das mudanças de borda | `PatchTrajectory::getShapeVolatility` | $V$ (Seção 4.4 Foundation) |
+| `Adjacency` | Classes vizinhas (%) | `PatchState::adjacencyByClass` | Matriz de Adjacência |
 
 ### 3. Contexto Global (Tático)
-| Variável | Descrição Técnica | Origem |
-| :--- | :--- | :--- |
-| `Timeline Size` | Contagem total de estados na linha do tempo | `Trajectory::getSlices` |
-| `Composition History` | Matriz de composição (%) para todos os estados capturados | `getClassDistribution` (iterativo) |
+| Variável | Descrição Técnica | Origem | Equação Base |
+| :--- | :--- | :--- | :--- |
+| `Timeline Size` | Contagem total de estados | `Trajectory::getSlices` | - |
+| `Composition Hist`| Matriz de composição (%) temporal | `getClassDistribution` | Série Temporal de Histogramas |
 
 ---
-*Versão 1.3 - Jan/2026 (Adicionado Dicionário de Dados)*
+*Versão 1.4 - Jan/2026 (Consolidada com Fundação Científica)*
