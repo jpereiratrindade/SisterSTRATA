@@ -64,5 +64,23 @@ A "personalidade" e o rigor científico da IA são impostos via **System Prompt*
 - **Fallback**: Se o Ollama não responder em `/api/tags` no startup, o sistema desativa as opções de IA na UI ou usa o Mock, prevenindo runtime errors.
 - **Memory Safety**: O adaptador é injetado via `std::unique_ptr` no `Session`, garantindo limpeza correta no shutdown.
 
+## 7. Integridade Epistemológica (Guarda-Rails)
+
+Para garantir que a IA atue como uma ferramenta de apoio e não como uma fonte de autoridade indevida, a implementação segue diretrizes rigorosas:
+
+- **Descrição vs. Prescrição**: O sistema é configurado para ser estritamente descritivo. O modelo deve relatar o que os dados sugerem, nunca prescrever ações de manejo ou políticas ambientais sem base determinística.
+- **Isolamento de Causalidade**: A IA está proibida de inferir causalidade onde o STRATA fornece apenas correlação espacial ou temporal.
+- **Transparência de Incerteza**: Respostas geradas devem conter ressalvas explícitas sobre a natureza interpretativa da análise.
+
+## 8. Roadmap e Evolução (CAC v2)
+
+Propostas para futuras iterações da integração cognitiva:
+
+- **Níveis de Assertividade Gradual**: Implementação de um seletor de modo na UI:
+    - *Modo Analítico*: Focado em fatos e fidelidade extrema aos dados.
+    - *Modo Especulativo*: Permite a formulação de hipóteses ecológicas mais amplas (Hermenêutica Sugestiva).
+- **Tokens de Cancelamento**: Melhoria na infraestrutura assíncrona para permitir o cancelamento imediato de inferências em andamento.
+- **Contexto Multimodal**: Futura integração de metadados de relevo e hidrologia mais granulares no prompt.
+
 ---
-*Versão 1.0 - Jan/2026*
+*Versão 1.1 - Jan/2026 (Revisada com foco em integridade científica)*
