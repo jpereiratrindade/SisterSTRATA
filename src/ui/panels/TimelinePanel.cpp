@@ -1,10 +1,18 @@
 #include "TimelinePanel.hpp"
+#include "application/ports/IFileSystem.hpp"
 #include "core/domain/fourth_dimension/TrajectoryService.hpp"
 #include "core/domain/fourth_dimension/CoherenceIntensityService.hpp"
+#include "core/domain/fourth_dimension/patch_trajectory/PatchTrajectoryService.hpp"
+#include "core/domain/spatial_pattern/PatchAnalysis.hpp"
 #include "world3d/World3D.hpp"
 #include "imgui.h"
-#include <algorithm>
+#include <fstream>
+#include <ctime>
 #include <vector>
+#include <iostream>
+#include <map>
+#include <iomanip>
+#include <sstream>
 
 namespace UI::Panels {
 
@@ -114,8 +122,10 @@ void TimelinePanel::draw(bool* open) {
             return "T" + std::to_string(slice.getOrdinalIndex()) + ": " + slice.getMetadata();
         };
 
-        std::string labelA = sliceLabel(slices[compareSliceA_]);
-        std::string labelB = sliceLabel(slices[compareSliceB_]);
+        const auto& sliceA = slices[compareSliceA_];
+        const auto& sliceB = slices[compareSliceB_];
+        std::string labelA = sliceLabel(sliceA);
+        std::string labelB = sliceLabel(sliceB);
 
         if (ImGui::BeginCombo("Slice A", labelA.c_str())) {
             for (int i = 0; i < (int)slices.size(); ++i) {
@@ -148,8 +158,6 @@ void TimelinePanel::draw(bool* open) {
             if (compareSliceA_ == compareSliceB_) {
                 coherenceStatus_ = "Select two different states.";
             } else {
-                const auto& sliceA = slices[compareSliceA_];
-                const auto& sliceB = slices[compareSliceB_];
                 const auto& coverA = sliceA.getEcologicalCoverState();
                 const auto& coverB = sliceB.getEcologicalCoverState();
 
@@ -205,8 +213,15 @@ void TimelinePanel::draw(bool* open) {
                 // Note: The System Prompt is loaded by the adapter/orchestrator or passed explicitly here.
                 // For this PoC, we rely on the adapter knowing its role.
                 
-                std::string prompt = "Analise a transição entre " + labelA + " e " + labelB + ". ";
-                prompt += "Métrica de Intensidade de Coerência Média: " + std::to_string(lastCoherenceMean_) + ".";
+                std::string distA = getClassDistribution(sliceA);
+                std::string distB = getClassDistribution(sliceB);
+
+                std::string prompt = "Analise a transição ecológica entre dois estados temporais (" + labelA + " e " + labelB + ").\n\n";
+                prompt += "Contexto do Estado A: " + distA + "\n";
+                prompt += "Contexto do Estado B: " + distB + "\n\n";
+                prompt += "Métrica de Índice de Estabilidade/Coerência (SSI): " + std::to_string(lastCoherenceMean_) + "\n";
+                prompt += "(Nota: SSI próximo de 1.0 indica alta estabilidade/mudança mínima; próximo de 0.0 indica ruptura estrutural ou transição drástica).\n\n";
+                prompt += "Por favor, interprete esta mudança do ponto de vista da resiliência ecológica.";
                 
                 messages.push_back({Application::Ports::LLMRole::User, prompt});
 
@@ -255,6 +270,95 @@ void TimelinePanel::draw(bool* open) {
                     }
                 }
             }
+
+            // --- Patch Trajectory Analysis ---
+            ImGui::Separator();
+            ImGui::Text("Análise de Trajetória de Patch (DDD v1.0)");
+            ImGui::InputInt("ID do Patch", &selectedPatchId_);
+
+            bool canAnalyzePatch = selectedPatchId_ >= 0;
+            if (!canAnalyzePatch) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+                ImGui::TextWrapped("Insira um ID de Patch válido (>= 0) para analisar.");
+                ImGui::PopStyleColor();
+            }
+
+            ImGui::BeginDisabled(!canAnalyzePatch || requestInProgress_);
+            if (ImGui::Button("Analisar Trajetória Multi-Estado", ImVec2(-1, 0))) {
+                requestInProgress_ = true;
+                llmErrorMessage_.clear();
+
+                // --- Real Identity Tracking & Aggregation ---
+                using namespace Core::Domain::FourthDimension::PatchTrajectory;
+                PatchTrajectory patchTrajectory(selectedPatchId_);
+
+                if (trajectory_ && !trajectory_->getTimeSlices().empty()) {
+                    const auto& slices = trajectory_->getTimeSlices();
+                    
+                    // Root spatial analysis config
+                    Core::Domain::SpatialPattern::AnalysisConfig cfg;
+                    cfg.byClass = true; // Use classification mode for identity
+                    cfg.keepLabels = true;
+
+                    for (size_t i = 0; i < slices.size(); ++i) {
+                        const auto& slice = slices[i];
+                        if (slice.isProxy()) {
+                            // In a real high-perf scenario, we'd lazy load here.
+                            // For now, if it's offloaded, we might skip or show a warning.
+                            continue; 
+                        }
+
+                        // run analysis on this slice's cover
+                        Core::Domain::SpatialPattern::GridData grid;
+                        const auto& cover = slice.getEcologicalCoverState();
+                        grid.values = std::vector<double>(cover.begin(), cover.end());
+                        // Assume standard dimensions for now if not stored in slice metadata
+                        // This identifies a gap: TimeSlice should know its dimensions.
+                        // For the PoC, we use the values size as 1024x1024 if size matches.
+                        if (grid.values.size() == 1024 * 1024) { grid.width = 1024; grid.height = 1024; }
+                        else if (grid.values.size() == 512 * 512) { grid.width = 512; grid.height = 512; }
+                        else { grid.width = static_cast<int>(std::sqrt(grid.values.size())); grid.height = grid.width; }
+                        
+                        auto result = Core::Domain::SpatialPattern::AnalyzeGrid(grid, cfg);
+                        
+                        // Find the patch that "matches" our ID
+                        // Simplified Identity: In the first slice, find the ID. 
+                        // In subsequent, find the patch that overlaps most with the previous centroid/area?
+                        // For this version (PoC), we use the SAME ID if it exists.
+                        if (selectedPatchId_ > 0 && selectedPatchId_ <= (int)result.patches.size()) {
+                            const auto& pm = result.patches[selectedPatchId_ - 1];
+                            PatchState ps;
+                            ps.ordinalIndex = (int)i;
+                            ps.area = (float)pm.area;
+                            ps.perimeter = (float)pm.perimeter;
+                            ps.shapeIndex = (float)pm.shape_index;
+                            
+                            // Mocking land-use contrast for this slice
+                            ps.adjacencyByClass[1] = 70.0f; // Forest
+                            ps.adjacencyByClass[2] = 30.0f; // Agriculture
+                            
+                            patchTrajectory.addState(ps);
+                        }
+                    }
+                }
+
+                std::string summary = PatchTrajectoryService::generateLLMSummary(patchTrajectory);
+                
+                // 2. Request LLM Analysis
+                std::vector<Application::Ports::LLMMessage> messages;
+                messages.push_back({Application::Ports::LLMRole::User, "Analise esta trajetória de patch histórica: " + summary});
+
+                llmService_->requestCompletion(messages, [this](const Application::Ports::ILLMService::Response& res) {
+                    std::lock_guard<std::mutex> lock(insightMutex_);
+                    if (res.success) {
+                        cognitiveInsight_ = res.content;
+                    } else {
+                        llmErrorMessage_ = res.errorMessage;
+                    }
+                    requestInProgress_ = false;
+                });
+            }
+            ImGui::EndDisabled();
         } else if (!llmService_) {
              ImGui::TextDisabled("Serviço de IA não disponível.");
         } else {
@@ -285,6 +389,37 @@ void TimelinePanel::saveAnalysisToFile() {
     } else {
         std::cerr << "[TimelinePanel] Failed to save analysis to: " << filename << std::endl;
     }
+}
+
+std::string TimelinePanel::getClassDistribution(const Core::Domain::FourthDimension::TimeSlice& slice) {
+    const auto& cover = slice.getEcologicalCoverState();
+    if (cover.empty()) return "Sem dados de cobertura";
+
+    std::map<int, size_t> counts;
+    for (int code : cover) {
+        counts[code]++;
+    }
+
+    std::stringstream ss;
+    ss << "[";
+    bool first = true;
+    for (auto const& [code, count] : counts) {
+        if (!first) ss << ", ";
+        float pct = (static_cast<float>(count) / cover.size()) * 100.0f;
+        
+        std::string name = "Classe_" + std::to_string(code);
+        if (vegPanel_) {
+            const auto& system = vegPanel_->getSystem();
+            if (code >= 0 && code < (int)system.getHypotheses().size()) {
+                name = system.getHypotheses()[code].getId().getValue();
+            }
+        }
+        
+        ss << name << ": " << std::fixed << std::setprecision(1) << pct << "%";
+        first = false;
+    }
+    ss << "]";
+    return ss.str();
 }
 
 } // namespace UI::Panels

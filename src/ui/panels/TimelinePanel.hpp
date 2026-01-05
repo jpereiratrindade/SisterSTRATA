@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/domain/fourth_dimension/Trajectory.hpp"
+#include "core/domain/fourth_dimension/patch_trajectory/PatchTrajectory.hpp"
 #include "ui/panels/VegetationDeclarationPanel.hpp"
 #include "application/ports/ILLMService.hpp"
 #include <string>
@@ -35,10 +36,20 @@ private:
 
     // Cognitive Insight State
     float insightWindowHeight_ = 150.0f;
+    std::string cognitiveInsight_;
+    bool requestInProgress_ = false;
+    std::string llmErrorMessage_;
     std::mutex insightMutex_;
     
     void saveAnalysisToFile();
     
+    // Patch Trajectory State
+    int selectedPatchId_ = -1;
+    std::string patchTrajectorySummary_;
+
+    // Aggregated state summary
+    std::string getClassDistribution(const Core::Domain::FourthDimension::TimeSlice& slice);
+
     // Helper to visualize ghost
     void applyGhostVisualization(const Core::Domain::FourthDimension::TimeSlice& slice);
 };

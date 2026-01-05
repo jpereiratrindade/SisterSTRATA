@@ -25,10 +25,33 @@ public:
     int getOrdinalIndex() const { return ordinalIndex_; } // Ecological Time (Sequence)
     time_t getTimestamp() const { return timestamp_; }    // Metadata Time (System Clock)
 
-    // State Data (Immutable)
+    // State Data (Immutable-ish, can be reloaded)
     const std::vector<int>& getEcologicalCoverState() const { return ecologicalCoverState_; }
     const std::vector<bool>& getWaterMask() const { return waterMask_; }
     const std::string& getMetadata() const { return metadata_; }
+
+    // LOD Temporal Support
+    bool isProxy() const { return isProxy_; }
+    const std::string& getDiskPath() const { return diskPath_; }
+    
+    void setDiskPath(const std::string& path) { 
+        diskPath_ = path; 
+        isProxy_ = !path.empty();
+    }
+
+    void unload() {
+        ecologicalCoverState_.clear();
+        ecologicalCoverState_.shrink_to_fit();
+        waterMask_.clear();
+        waterMask_.shrink_to_fit();
+        isProxy_ = true;
+    }
+
+    void load(const std::vector<int>& cover, const std::vector<bool>& water) {
+        ecologicalCoverState_ = cover;
+        waterMask_ = water;
+        isProxy_ = false;
+    }
 
 private:
     int id_;
@@ -39,6 +62,9 @@ private:
     std::vector<bool> waterMask_;           // Stores Hydrology mask
     
     std::string metadata_;
+
+    bool isProxy_ = false;
+    std::string diskPath_;
 };
 
 } // namespace Core::Domain::FourthDimension

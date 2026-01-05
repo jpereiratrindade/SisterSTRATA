@@ -20,6 +20,11 @@ struct ComponentAccum {
     int minY = 0;
     int maxY = 0;
     double perimeter = 0.0;
+    
+    // Centroid sums
+    double sumX = 0.0;
+    double sumY = 0.0;
+    double sumZ = 0.0;
 };
 
 bool IsNoData(const GridData& data, double value) {
@@ -61,6 +66,12 @@ ComponentAccum FloodFillBinary(const GridData& data,
         int cx = current % data.width;
         int cy = current / data.width;
         ++acc.count;
+        acc.sumX += cx;
+        acc.sumY += cy;
+        if (!data.elevation.empty()) {
+            acc.sumZ += data.elevation[current];
+        }
+
         acc.minX = std::min(acc.minX, cx);
         acc.maxX = std::max(acc.maxX, cx);
         acc.minY = std::min(acc.minY, cy);
@@ -113,6 +124,12 @@ ComponentAccum FloodFillByClass(const GridData& data,
         int cx = current % data.width;
         int cy = current / data.width;
         ++acc.count;
+        acc.sumX += cx;
+        acc.sumY += cy;
+        if (!data.elevation.empty()) {
+            acc.sumZ += data.elevation[current];
+        }
+
         acc.minX = std::min(acc.minX, cx);
         acc.maxX = std::max(acc.maxX, cx);
         acc.minY = std::min(acc.minY, cy);
@@ -172,6 +189,13 @@ LabelImage LabelComponents(const GridData& data, const AnalysisConfig& cfg, std:
             double heightM = (acc.maxY - acc.minY + 1) * data.cellHeight;
             pm.axis = std::max(widthM, heightM);
             pm.perimeter = acc.perimeter;
+            
+            if (acc.count > 0) {
+                pm.centroidX = acc.sumX / static_cast<double>(acc.count);
+                pm.centroidY = acc.sumY / static_cast<double>(acc.count);
+                pm.centroidZ = acc.sumZ / static_cast<double>(acc.count);
+            }
+
             patches.push_back(pm);
         }
     }

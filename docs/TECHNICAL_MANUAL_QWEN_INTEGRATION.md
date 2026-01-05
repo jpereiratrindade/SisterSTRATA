@@ -52,6 +52,7 @@ A "personalidade" e o rigor científico da IA são impostos via **System Prompt*
 
 - **Base de Contexto**: O arquivo `DDD_Cognitive_Assistance_Qwen_STRATA_v1.0.txt` é injetado integralmente como mensagem de sistema em cada nova interação.
 - **Dados Científicos**: O prompt de usuário inclui explicitamente resultados quantitativos do STRATA (ex: `lastCoherenceMean`).
+- **Enriquecimento de Contexto (v1.8)**: Para análises de transição, o sistema agora calcula e injeta a distribuição de classes (Uso da Terra) de **ambos** os estados envolvidos, permitindo que a IA interprete a mudança estrutural real em vez de apenas o índice de estabilidade isolado.
 - **Isolamento**: O modelo nunca recebe pointers, grids reais ou código-fonte, apenas representações semânticas dos dados calculados.
 
 ## 5. Dependências Técnicas

@@ -41,6 +41,7 @@ private:
         float previewCellSize = 8.0f;
         int paletteMode = 0;
         int shapeMode = 0;
+        bool showLabels = true;
         bool useLabelColors = true;
         bool useValueAsHeight = false;
         float heightScale = 1.0f;
@@ -61,6 +62,7 @@ private:
         std::string error;
         bool lastRunSuccess = false;
         Core::Domain::SpatialPattern::LabelImage lastLabels;
+        std::vector<Core::Domain::SpatialPattern::PatchMetrics> lastPatches;
         std::vector<LegendEntry> legendEntries;
     };
 

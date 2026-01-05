@@ -1,8 +1,8 @@
 # SISTERSTRATA: FUNDAÇÃO CIENTÍFICA E ARQUITETURA DE CONHECIMENTO
 
-**Versão do Documento:** 1.0 (Draft)
-**Data:** 29 de Dezembro de 2025
-**Status:** Vivo / Em Construção
+**Versão do Documento:** 1.2
+**Data:** 05 de Janeiro de 2026
+**Status:** Consolidado
 
 ---
 
@@ -99,6 +99,22 @@ A vegetação é modelada como um autômato celular complexo, sensível ao nicho
 
 *   **Vigor ($V_{cell}$):** Cada célula possui um estado de vigor vegetal que responde a disponibilidade de recursos (água, nutrientes do solo) e distúrbios.
 *   **Sucessão Ecológica:** O sistema simula a transição de estados (ex: Solo Exposto $\rightarrow$ Herbáceas $\rightarrow$ Arbustivas $\rightarrow$ Floresta) baseado no tempo e nas condições ambientais.
+
+### 4.4. DOMÍNIO: QUARTA DIMENSÃO (RESILIÊNCIA)
+A dimensão temporal no SisterSTRATA não é apenas um log, mas uma trajetória interpretável.
+
+*   ** snapshots (TimeSlices):** Captura imutável de todo o estado do sistema em um instante $t$.
+*   **Métrica de Coerência ($I_{coh}$):** Avaliação quantitativa da similaridade entre dois estados, servindo como proxy para integridade e resiliência.
+*   **Trajetória de Patch (v1.1):** Estudo do ciclo de vida de manchas na paisagem (Origem, Persistência, Fusão, Extinção). Inclui métricas avançadas de forma (Dimensão Fractal) e estabilidade estrutural (Índice de Volatilidade) para avaliar a dinâmica de fragmentação.
+
+---
+
+## 5. INTERFACE COGNITIVA: CAC (COGNITIVE ASSISTANCE CONTEXT)
+O Contexto de Assistência Cognitiva integra Large Language Models (LLMs) como uma camada de **Hermenêutica Científica**.
+
+- **O Papel da IA:** Atuar como um Observador Secundário. A IA não processa os grids brutos, mas sim os **Sumários Semânticos** gerados pelos domínios fundamentais.
+- **Rigor Causal:** A IA nunca altera o estado *Derived*. Ela opera exclusivamente sobre o *Observable*, traduzindo métricas quantitativas (como Coerência e Trajetória) em relatórios qualitativos.
+- **Isolamento Epistemológico:** Garante que a "opinião" da IA não corrompa a base física do modelo (P&A Architecture).
 
 ---
 

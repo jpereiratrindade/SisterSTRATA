@@ -218,6 +218,7 @@ void PatchAnalysisPanel::draw(bool* open) {
     ImGui::Combo("Palette", &state_.paletteMode, palettes, IM_ARRAYSIZE(palettes));
     const char* shapes[] = {"Square", "Rounded", "Circle"};
     ImGui::Combo("Shape", &state_.shapeMode, shapes, IM_ARRAYSIZE(shapes));
+    ImGui::Checkbox("Show patch labels", &state_.showLabels);
 
     ImGui::Separator();
     ImGui::TextUnformatted("Legend");
@@ -430,6 +431,7 @@ void PatchAnalysisPanel::draw(bool* open) {
 
             auto result = Core::Domain::SpatialPattern::AnalyzeGrid(grid, cfg);
             state_.summary = result.summary;
+            state_.lastPatches = result.patches;
             if (cfg.keepLabels) {
                 state_.lastLabels = result.labelImage;
             }
@@ -500,6 +502,24 @@ void PatchAnalysisPanel::draw(bool* open) {
                     }
                 }
             }
+
+            // --- Draw Labels ---
+            if (state_.showLabels && !state_.lastPatches.empty()) {
+                for (size_t i = 0; i < state_.lastPatches.size(); ++i) {
+                    const auto& p = state_.lastPatches[i];
+                    // Centroid is in grid space (0 to width, 0 to height)
+                    ImVec2 pos = ImVec2(start.x + static_cast<float>(p.centroidX) * cell + cell * 0.5f,
+                                        start.y + static_cast<float>(p.centroidY) * cell + cell * 0.5f);
+                    
+                    std::string labelStr = std::to_string(i + 1);
+                    ImVec2 textSize = ImGui::CalcTextSize(labelStr.c_str());
+                    
+                    // Shadow/Outline for readability
+                    drawList->AddText(ImVec2(pos.x - textSize.x * 0.5f + 1, pos.y - textSize.y * 0.5f + 1), IM_COL32(0, 0, 0, 200), labelStr.c_str());
+                    drawList->AddText(ImVec2(pos.x - textSize.x * 0.5f, pos.y - textSize.y * 0.5f), IM_COL32(255, 255, 255, 255), labelStr.c_str());
+                }
+            }
+
             ImGui::Dummy(ImVec2(width, height));
             ImGui::EndChild();
         }
@@ -540,6 +560,7 @@ void PatchAnalysisPanel::clearResults() {
     state_.summary = Core::Domain::SpatialPattern::SummaryMetrics{};
     state_.lastRunSuccess = false;
     state_.lastLabels = Core::Domain::SpatialPattern::LabelImage{};
+    state_.lastPatches.clear();
     state_.legendEntries.clear();
     state_.legendLoaded = false;
     state_.status.clear();

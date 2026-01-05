@@ -7,11 +7,11 @@
 // Forced rebuild for Vertex struct update
 namespace World3D::Rendering {
 
-Pipeline::Pipeline(VulkanContext& context, vk::RenderPass renderPass, vk::PrimitiveTopology topology) 
+Pipeline::Pipeline(VulkanContext& context, vk::RenderPass renderPass, vk::PrimitiveTopology topology, const Material& material) 
     : context_(context) {
 
-    auto vertShaderCode = readFile("shaders/simple.vert.spv");
-    auto fragShaderCode = readFile("shaders/simple.frag.spv");
+    auto vertShaderCode = readFile(material.vertexShader);
+    auto fragShaderCode = readFile(material.fragmentShader);
 
     vk::ShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     vk::ShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -39,7 +39,7 @@ Pipeline::Pipeline(VulkanContext& context, vk::RenderPass renderPass, vk::Primit
     // Descriptor Set Layout
     vk::DescriptorSetLayoutBinding uboLayoutBinding(
         0, vk::DescriptorType::eUniformBuffer, 1, 
-        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, // NOW SHARED
+        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 
         nullptr
     );
 
@@ -69,13 +69,33 @@ Pipeline::Pipeline(VulkanContext& context, vk::RenderPass renderPass, vk::Primit
         {}, vk::SampleCountFlagBits::e1, VK_FALSE
     );
 
-    // Color Blending
+    // Color Blending (Respect Material)
     vk::PipelineColorBlendAttachmentState colorBlendAttachment;
     colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    colorBlendAttachment.blendEnable = VK_FALSE;
+    
+    if (material.alphaBlending) {
+        colorBlendAttachment.blendEnable = VK_TRUE;
+        colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+        colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+        colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
+        colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+        colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
+        colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
+    } else {
+        colorBlendAttachment.blendEnable = VK_FALSE;
+    }
 
     vk::PipelineColorBlendStateCreateInfo colorBlending(
         {}, VK_FALSE, vk::LogicOp::eCopy, 1, &colorBlendAttachment
+    );
+
+    // Depth Stencil (Respect Material)
+    vk::PipelineDepthStencilStateCreateInfo depthStencil(
+        {}, 
+        material.depthTest ? VK_TRUE : VK_FALSE, 
+        material.depthWrite ? VK_TRUE : VK_FALSE,
+        vk::CompareOp::eLess,
+        VK_FALSE, VK_FALSE, {}, {}
     );
 
     // Dynamic State
@@ -94,7 +114,7 @@ Pipeline::Pipeline(VulkanContext& context, vk::RenderPass renderPass, vk::Primit
     // Pipeline Creation
     vk::GraphicsPipelineCreateInfo pipelineInfo(
         {}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr,
-        &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending,
+        &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending,
         &dynamicState, pipelineLayout_, renderPass, 0, nullptr, -1
     );
 

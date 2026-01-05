@@ -17,3 +17,13 @@ add_executable(soil_rasterizer_tests
 )
 target_link_libraries(soil_rasterizer_tests PRIVATE core)
 add_test(NAME CoreSoilRasterizerTest COMMAND soil_rasterizer_tests)
+
+add_executable(patch_trajectory_test PatchTrajectoryTest.cpp)
+target_link_libraries(patch_trajectory_test PRIVATE core)
+add_test(NAME CorePatchTrajectoryTest COMMAND patch_trajectory_test)
+
+add_executable(trajectory_lod_tests
+    TestTrajectoryLOD.cpp
+)
+target_link_libraries(trajectory_lod_tests PRIVATE core)
+add_test(NAME CoreTrajectoryLODTest COMMAND trajectory_lod_tests)

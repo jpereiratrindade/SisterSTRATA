@@ -12,6 +12,11 @@ struct PatchMetrics {
     double par = 0.0;          // Perimeter-Area Ratio
     double shape_index = 0.0;  // Patton's Shape Index
     double rcc = 0.0;
+    
+    // Centroid in Grid Space
+    double centroidX = 0.0;
+    double centroidY = 0.0;
+    double centroidZ = 0.0; // Mean elevation if available
 };
 
 struct SummaryMetrics {

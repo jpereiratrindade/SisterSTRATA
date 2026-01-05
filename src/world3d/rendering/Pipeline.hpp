@@ -1,6 +1,7 @@
 #pragma once
 
 #include "world3d/rendering/VulkanContext.hpp"
+#include "world3d/rendering/Material.hpp"
 #include <string>
 #include <vector>
 
@@ -8,7 +9,7 @@ namespace World3D::Rendering {
 
 class Pipeline {
 public:
-    Pipeline(VulkanContext& context, vk::RenderPass renderPass, vk::PrimitiveTopology topology);
+    Pipeline(VulkanContext& context, vk::RenderPass renderPass, vk::PrimitiveTopology topology, const Material& material = Material());
     ~Pipeline();
 
     void bind(vk::CommandBuffer commandBuffer);

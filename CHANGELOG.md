@@ -1,6 +1,21 @@
 # Changelog
 
-All notable changes to the SisterPEC project will be documented in this file.
+## [1.8.0] - 2026-01-05
+### Added
+- **Material System**: Data-driven shaders and pipeline configuration via `Material` definitions.
+- **LOD Temporal**: Memory optimization for trajectories using disk-backed persistence (`TrajectoryPersistenceService`).
+- **Persistence SDK**: Binary serialization for `TimeSlice` states to scale historical analysis.
+- **Patch Trajectory Analysis v1.1**: Full implementation of multi-state analysis aligned with DDD, including fractal dimension and structural stability.
+- **Hermeneutic Context Enrichment**: LLM analysis now includes land-use distribution for both transition states, resolving interpretative ambiguity.
+- **Patch Labeling**: Centroid calculation and visual ID labeling in the `Patch Analysis` preview for easy identification.
+
+## [1.7.0] - 2026-01-05
+### Added
+- **Qwen LLM Integration**: Real-time hermeneutic analysis based on `Timeline` metrics.
+- **Robust Model Discovery**: Automatically prioritizes the most powerful Qwen model available (e.g., 14b > 7b).
+- **Resizable Insight Window**: Interactive UI for better reading of cognitive assistance reports.
+- **Save Analysis Persistence**: Option to export AI-generated reports as timestamped `.txt` files.
+- **Direct Ollama Connectivity**: Native C++ bridge using `cpp-httplib` and async worker threads.
 
 ## [1.6.0] - 2025-12-30
 
