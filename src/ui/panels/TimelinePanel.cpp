@@ -198,10 +198,9 @@ void TimelinePanel::draw(bool* open) {
                 std::string distA = getClassDistribution(sA);
                 std::string distB = getClassDistribution(sB);
 
+                hermeneuticContext_ = "Composição A: " + distA + "\n" + "Composição B: " + distB + "\n" + "Métrica SSI: " + std::to_string(lastCoherenceMean_);
                 std::string prompt = "Analise a transição ecológica entre (" + sA.getMetadata() + " e " + sB.getMetadata() + ").\n";
-                prompt += "Composição A: " + distA + "\n";
-                prompt += "Composição B: " + distB + "\n";
-                prompt += "Métrica SSI: " + std::to_string(lastCoherenceMean_) + "\n";
+                prompt += hermeneuticContext_ + "\n";
                 prompt += "Interprete esta mudança do ponto de vista da resiliência ecológica.";
 
                 std::vector<Application::Ports::LLMMessage> messages;
@@ -223,6 +222,10 @@ void TimelinePanel::draw(bool* open) {
             ImGui::BeginChild("HermeneuticOutput", ImVec2(0, 100), true);
             ImGui::TextWrapped("%s", hermeneuticInsight_.c_str());
             ImGui::EndChild();
+            if (ImGui::TreeNode("Dados de Origem (Contexto)")) {
+                ImGui::TextWrapped("%s", hermeneuticContext_.c_str());
+                ImGui::TreePop();
+            }
             if (ImGui::Button("Salvar Análise de Transição")) saveAnalysisToFile(hermeneuticInsight_, "transition");
         }
 
@@ -316,7 +319,7 @@ void TimelinePanel::draw(bool* open) {
                     return "Classe " + std::to_string(code);
                 };
 
-                std::string summary = PatchTrajectoryService::generateLLMSummary(pt, nameResolver);
+                trajectoryContext_ = summary;
                 std::string prompt = "Analise a trajetória histórica do patch ID " + std::to_string(selectedPatchId_) + ".\n" + summary;
                 
                 llmService_->requestCompletion({{Application::Ports::LLMRole::User, prompt}}, [this](const auto& res) {
@@ -332,15 +335,16 @@ void TimelinePanel::draw(bool* open) {
             trajectoryInProgress_ = true;
             trajectoryInsight_.clear();
             
+            std::string context = "Slices: " + std::to_string(slices.size()) + "\n";
+            for (size_t i = 0; i < slices.size(); ++i) {
+                context += "T" + std::to_string(i) + ": " + getClassDistribution(slices[i]) + "\n";
+            }
+            trajectoryContext_ = context;
+
             std::string prompt = "Realize uma análise tática global das trajetórias de manchas neste cenário.\n";
             prompt += "Atualmente existem " + std::to_string(slices.size()) + " estados temporais.\n\n";
-            
-            prompt += "Resumo da Composição da Paisagem por Estado:\n";
-            for (size_t i = 0; i < slices.size(); ++i) {
-                prompt += "Estado " + std::to_string(i) + " (" + slices[i].getMetadata() + "): " + getClassDistribution(slices[i]) + "\n";
-            }
-            
-            prompt += "\nCom base nestas mudanças de composição, identifique tendências de fragmentação, regeneração ou estabilidade pulsátil.";
+            prompt += "Resumo da Composição da Paisagem por Estado:\n" + context + "\n";
+            prompt += "Com base nestas mudanças de composição, identifique tendências de fragmentação, regeneração ou estabilidade pulsátil.";
             prompt += " Analise como a estrutura espacial está evoluindo e se o sistema demonstra resiliência.";
             
             llmService_->requestCompletion({{Application::Ports::LLMRole::User, prompt}}, [this](const auto& res) {
@@ -361,6 +365,11 @@ void TimelinePanel::draw(bool* open) {
             ImGui::PopStyleColor();
             
             if (ImGui::Button("Salvar Resumo de Trajetória")) saveAnalysisToFile(trajectoryInsight_, "trajectory");
+
+            if (ImGui::TreeNode("Dados de Origem (Contexto)")) {
+                ImGui::TextWrapped("%s", trajectoryContext_.c_str());
+                ImGui::TreePop();
+            }
         }
         
         if (!llmErrorMessage_.empty()) ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "[Erro] %s", llmErrorMessage_.c_str());

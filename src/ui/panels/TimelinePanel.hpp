@@ -38,6 +38,8 @@ private:
     float insightWindowHeight_ = 150.0f;
     std::string hermeneuticInsight_;
     std::string trajectoryInsight_;
+    std::string hermeneuticContext_;  // Provenance data
+    std::string trajectoryContext_;   // Provenance data
     bool hermeneuticInProgress_ = false;
     bool trajectoryInProgress_ = false;
     std::string llmErrorMessage_;
