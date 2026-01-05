@@ -2,6 +2,7 @@
 #include "world3d/World3D.hpp"
 #include "application/dtos/UIData.hpp"
 #include "infrastructure/llm/OllamaMockAdapter.hpp"
+#include "infrastructure/llm/OllamaAdapter.hpp"
 #include <iostream>
 #include <SDL2/SDL.h>
 
@@ -39,7 +40,16 @@ void Application::init() {
 
     // 4. Initialize Session (First, so UI can link to it)
     session_ = std::make_unique<::Application::Session>();
-    session_->setLLMService(std::make_unique<::Infrastructure::LLM::OllamaMockAdapter>());
+    
+    // LLM Service setup
+    auto realLLM = std::make_unique<::Infrastructure::LLM::OllamaAdapter>();
+    if (realLLM->isAvailable()) {
+        std::cout << "[Application] Ollama detected. Using Qwen2.5:7b." << std::endl;
+        session_->setLLMService(std::move(realLLM));
+    } else {
+        std::cout << "[Application] Ollama not found. Falling back to Mock LLM." << std::endl;
+        session_->setLLMService(std::make_unique<::Infrastructure::LLM::OllamaMockAdapter>());
+    }
 
     ui_ = std::make_unique<::UI::UserInterface>();
     

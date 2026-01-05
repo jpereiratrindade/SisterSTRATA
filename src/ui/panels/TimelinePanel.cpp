@@ -234,10 +234,25 @@ void TimelinePanel::draw(bool* open) {
                 std::lock_guard<std::mutex> lock(insightMutex_);
                 if (!cognitiveInsight_.empty()) {
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.12f, 0.12f, 0.14f, 1.0f));
-                    ImGui::BeginChild("InsightOutput", ImVec2(0, 150), true);
+                    
+                    // Adjustable height logic
+                    ImGui::BeginChild("InsightOutput", ImVec2(0, insightWindowHeight_), true);
                     ImGui::TextWrapped("%s", cognitiveInsight_.c_str());
                     ImGui::EndChild();
+                    
+                    // Resize Handle (Invisible button that captures drag)
+                    ImGui::Button("###ResizeHandleInsight", ImVec2(-1, 4.0f));
+                    if (ImGui::IsItemActive()) {
+                        insightWindowHeight_ += ImGui::GetIO().MouseDelta.y;
+                        if (insightWindowHeight_ < 50.0f) insightWindowHeight_ = 50.0f;
+                    }
+                    if (ImGui::IsItemHovered()) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+
                     ImGui::PopStyleColor();
+
+                    if (ImGui::Button("Save Hermeneutic Analysis", ImVec2(-1, 0))) {
+                        saveAnalysisToFile();
+                    }
                 }
             }
         } else if (!llmService_) {
@@ -252,6 +267,24 @@ void TimelinePanel::draw(bool* open) {
 
 void TimelinePanel::applyGhostVisualization(const Core::Domain::FourthDimension::TimeSlice& slice) {
     World3D::applyClassificationVisualization(slice.getEcologicalCoverState());
+}
+
+void TimelinePanel::saveAnalysisToFile() {
+    std::string filename = "hermeneutic_analysis_" + std::to_string(std::time(nullptr)) + ".txt";
+    std::ofstream file(filename);
+    if (file.is_open()) {
+        file << "==================================================\n";
+        file << "SISTERSTRATA HERMENEUTIC ANALYSIS\n";
+        file << "==================================================\n\n";
+        file << cognitiveInsight_ << "\n\n";
+        file << "--------------------------------------------------\n";
+        file << "Timestamp: " << std::time(nullptr) << "\n";
+        file << "==================================================\n";
+        file.close();
+        std::cout << "[TimelinePanel] Analysis saved to: " << filename << std::endl;
+    } else {
+        std::cerr << "[TimelinePanel] Failed to save analysis to: " << filename << std::endl;
+    }
 }
 
 } // namespace UI::Panels

@@ -34,10 +34,10 @@ private:
     bool ghostMode_ = false; 
 
     // Cognitive Insight State
-    std::string cognitiveInsight_;
-    bool requestInProgress_ = false;
-    std::string llmErrorMessage_;
+    float insightWindowHeight_ = 150.0f;
     std::mutex insightMutex_;
+    
+    void saveAnalysisToFile();
     
     // Helper to visualize ghost
     void applyGhostVisualization(const Core::Domain::FourthDimension::TimeSlice& slice);
