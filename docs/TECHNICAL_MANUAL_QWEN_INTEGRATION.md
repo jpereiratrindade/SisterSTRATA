@@ -104,4 +104,32 @@ Para que a IA fale a "língua do ecólogo", o sistema utiliza um **`nameResolver
 - O prompt final entregue ao LLM troca "Classe 13" por "Hypothesis_01 (FlorestalNatural)".
 
 ---
-*Versão 1.2 - Jan/2026 (Atualizada com Pipeline de Trajetória e Grounding)*
+
+## Apêndice A: Dicionário de Dados Injetados (Data Dictionary)
+
+Para garantir a transparência científica, abaixo estão listados todos os dados quantitativos reais extraídos do STRATA e injetados nos prompts:
+
+### 1. Contexto de Transição (Hermenêutica Parcial)
+| Variável | Descrição Técnica | Origem |
+| :--- | :--- | :--- |
+| `Metadata` | Timestamp e versão do estado capturado | `TimeSlice::getMetadata()` |
+| `Composição %` | Percentual de área ocupada por cada Hipótese (resolvido por nome) | `TimelinePanel::getClassDistribution` |
+| `SSI` | Índice de Similaridade Estrutural (0.0 a 1.0) | `CoherenceIntensityService` |
+
+### 2. Contexto de Trajetória do Patch (Individual)
+| Variável | Descrição Técnica | Origem |
+| :--- | :--- | :--- |
+| `Lifespan` | Número de estados em que o patch foi rastreado | `PatchTrajectory::getLifespan` |
+| `Net Area Trend` | Delta de área entre o primeiro e último estado (Categorizado) | `PatchTrajectory::getNetAreaTrend` |
+| `Structural Stability` | Média da constância da forma (Shape Index) no tempo | `PatchTrajectory::getStructuralStabilityIndex` |
+| `Shape Volatility` | Intensidade das mudanças de borda/perímetro | `PatchTrajectory::getShapeVolatility` |
+| `Adjacency Contrast` | Classes vizinhas e seus percentuais de contato | `PatchState::adjacencyByClass` |
+
+### 3. Contexto Global (Tático)
+| Variável | Descrição Técnica | Origem |
+| :--- | :--- | :--- |
+| `Timeline Size` | Contagem total de estados na linha do tempo | `Trajectory::getSlices` |
+| `Composition History` | Matriz de composição (%) para todos os estados capturados | `getClassDistribution` (iterativo) |
+
+---
+*Versão 1.3 - Jan/2026 (Adicionado Dicionário de Dados)*
