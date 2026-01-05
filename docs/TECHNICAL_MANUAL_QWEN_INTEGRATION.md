@@ -83,5 +83,25 @@ Propostas para futuras iterações da integração cognitiva:
 - **Tokens de Cancelamento**: Melhoria na infraestrutura assíncrona para permitir o cancelamento imediato de inferências em andamento.
 - **Contexto Multimodal**: Futura integração de metadados de relevo e hidrologia mais granulares no prompt.
 
+## 9. Pipeline de Dados de Trajetória e Grounding Semântico (v1.8.2)
+
+A análise multi-estado introduz um pipeline de extração de dados mais complexo para garantir que a IA tenha contexto espacial e temporal:
+
+### 9.1. Extração de Métricas (Domain Layer)
+- **`PatchAnalysisService`**: Varre o grid de cada `TimeSlice` capturado, calculando Área, Perímetro e Centroide.
+- **`PatchPersistenceService`**: Garante que os dados de manchas históricas sejam persistidos de forma eficiente (LOD) para que a trajetória completa possa ser reconstruída rapidamente.
+
+### 9.2. Abstração Semântica (Service Layer)
+Para evitar o envio de tabelas numéricas cruas (o que consumiria muitos tokens e confundiria a interpretação), o **`PatchTrajectoryService`** realiza uma pré-análise:
+- Converte tendências numéricas em categorias qualitativas ("ganho", "perda", "perda drástica").
+- Calcula índices de estabilidade e volatilidade estrutural.
+- Resume o contraste de adjacência (o que está ao redor da mancha).
+
+### 9.3. Grounding de Hipóteses (UI Layer Integration)
+Para que a IA fale a "língua do ecólogo", o sistema utiliza um **`nameResolver`** (lambda) injetado pelo `TimelinePanel`:
+- O sistema intercepta IDs técnicos (ex: `13`) e consulta o `VegetationSystemOriginal`.
+- Retorna o nome da Hipótese e o Tipo (ex: `FlorestalNatural`).
+- O prompt final entregue ao LLM troca "Classe 13" por "Hypothesis_01 (FlorestalNatural)".
+
 ---
-*Versão 1.1 - Jan/2026 (Revisada com foco em integridade científica)*
+*Versão 1.2 - Jan/2026 (Atualizada com Pipeline de Trajetória e Grounding)*

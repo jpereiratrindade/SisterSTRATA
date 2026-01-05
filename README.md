@@ -11,6 +11,7 @@ Para entender a filosofia, a governança dos modelos e a arquitetura de conhecim
 *   **[Fundação Científica (Scientific Foundation)](docs/SISTERSTRATA_SCIENTIFIC_FOUNDATION.md)**: O documento "constitucional/white paper" que define as leis físicas, o contrato de pipeline e a estruturação dos domínios.
 *   **[Manual Técnico - Integração Qwen](docs/TECHNICAL_MANUAL_QWEN_INTEGRATION.md)**: Detalhes da implementação da assistência cognitiva via Ollama.
 *   **[Análise de Trajetória de Patch (DDD)](DDD_PatchTrajectory_Analysis.txt)**: Definição do modelo multi-estado para patches.
+*   **[Arquitetura Vetorial de Hipóteses](docs/Arquitetura_Vetorial_Hipoteses.md)**: Formalização matemática do espaço vetorial de parâmetros.
 *   **[Fourth Dimension (Resilience)](DDD_FourthDimensionSystem.txt)**: O modelo de resiliência e coerência temporal.
 *   **[Architecture & DDD](projeto_app_ddd_v10.txt)**: Organização do código e princípios de design.
 

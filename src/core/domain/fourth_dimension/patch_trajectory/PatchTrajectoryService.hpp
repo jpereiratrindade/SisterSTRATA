@@ -3,6 +3,7 @@
 #include "PatchTrajectory.hpp"
 #include <string>
 #include <sstream>
+#include <functional>
 
 namespace Core::Domain::FourthDimension::PatchTrajectory {
 
@@ -14,9 +15,11 @@ class PatchTrajectoryService {
 public:
     /**
      * @brief Generates a semantic summary of the trajectory for the LLM.
-     * Follows Section 8 of DDD_PatchTrajectory_Analysis.
+     * @param trajectory The trajectory to summarize.
+     * @param nameResolver Optional function to convert category IDs to names.
      */
-    static std::string generateLLMSummary(const PatchTrajectory& trajectory) {
+    static std::string generateLLMSummary(const PatchTrajectory& trajectory, 
+                                          std::function<std::string(int)> nameResolver = nullptr) {
         std::stringstream ss;
         ss << "PATCH_TRAJECTORY_SUMMARY\n";
         ss << "- lifespan: " << (trajectory.getLifespan() > 5 ? "longo" : "curto") << " (" << trajectory.getLifespan() << " estados)\n";
@@ -38,7 +41,8 @@ public:
                 ss << "desconhecido";
             } else {
                 for (auto const& [cls, val] : last.adjacencyByClass) {
-                    ss << "[Classe " << cls << ": " << val << "%] ";
+                    std::string clsName = nameResolver ? nameResolver(cls) : ("Classe " + std::to_string(cls));
+                    ss << "[" << clsName << ": " << val << "%] ";
                 }
             }
             ss << "\n";

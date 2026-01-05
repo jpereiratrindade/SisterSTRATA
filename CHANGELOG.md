@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.8.2] - 2026-01-05
+### Added
+- **Global Tactical Analysis**: Data-driven scene-wide interpretation of land-use trajectories across all captured states.
+- **Hypothesis Semantic Grounding**: LLM prompts now resolve technical IDs to descriptive names and types (e.g., "FlorestalNatural").
+- **Vector-Based Hypothesis Architecture**: Formalized the n-dimensional parameter space model in `docs/Arquitetura_Vetorial_Hipoteses.md`.
+- **Patch Discovery UI**: Real-time display of available patch counts in the selected slice to guide ID selection.
+
+### Fixed
+- **UI Responsiveness**: Decoupled LLM request buffers for Hermeneutic (Pairwise) vs Trajectory (Global/Patch) to prevent UI deadlocks.
+- **Robust Patch Tracking**: Support for "late-blooming" patches (seeding from any slice where the patch first appears).
+- **Compilation**: Fixed `PatchState` aggregate initialization ambiguity in `TimelinePanel.cpp`.
+
+## [1.8.1] - 2026-01-05
+### Added
+- **Multi-State Persistence**: Integrated `TrajectoryPersistenceService` with the standard `TimelinePanel` flow.
+- **Dynamic Seeding**: Trajectory tracking now starts from the first detection slice instead of forcing T0.
+
 ## [1.8.0] - 2026-01-05
 ### Added
 - **Material System**: Data-driven shaders and pipeline configuration via `Material` definitions.

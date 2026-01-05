@@ -36,15 +36,18 @@ private:
 
     // Cognitive Insight State
     float insightWindowHeight_ = 150.0f;
-    std::string cognitiveInsight_;
-    bool requestInProgress_ = false;
+    std::string hermeneuticInsight_;
+    std::string trajectoryInsight_;
+    bool hermeneuticInProgress_ = false;
+    bool trajectoryInProgress_ = false;
     std::string llmErrorMessage_;
     std::mutex insightMutex_;
     
-    void saveAnalysisToFile();
+    void saveAnalysisToFile(const std::string& content, const std::string& type);
     
     // Patch Trajectory State
     int selectedPatchId_ = -1;
+    int lastPatchCount_ = 0;
     std::string patchTrajectorySummary_;
 
     // Aggregated state summary

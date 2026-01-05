@@ -37,18 +37,16 @@ void TimelinePanel::draw(bool* open) {
         if (res && !res->classification.empty()) {
             std::string meta = "State " + std::to_string(trajectory_->getNextOrdinal());
             
-            // Dummy Water Mask for now (requires deeper integration with Hydro)
             std::vector<bool> waterMask; 
             
             Core::Domain::FourthDimension::TrajectoryService::captureState(
                 *trajectory_,
-                res->classification, // Indices
-                vegPanel_->getSystem(), // System (for lookup)
+                res->classification, 
+                vegPanel_->getSystem(), 
                 waterMask,
                 meta
             );
         } else {
-            // Warn
              ImGui::OpenPopup("CaptureFailed");
         }
     }
@@ -79,30 +77,23 @@ void TimelinePanel::draw(bool* open) {
     // Trajectory List
     ImGui::Text("Trajectory (%zu states)", trajectory_->getTimeSlices().size());
     
-    ImGui::BeginChild("TrajectoryList", ImVec2(0, 0), true);
+    ImGui::BeginChild("TrajectoryList", ImVec2(0, 150), true);
     auto& slices = trajectory_->getTimeSlices();
     
     for (int i = 0; i < (int)slices.size(); ++i) {
         const auto& slice = slices[i];
-        
         std::string label = "T" + std::to_string(slice.getOrdinalIndex()) + ": " + slice.getMetadata();
         bool isSelected = (selectedSliceIndex_ == i);
-        
         if (ImGui::Selectable(label.c_str(), isSelected)) {
             selectedSliceIndex_ = i;
-            // Activate Ghost Mode immediately on selection?
-            // Or require explicit "View"?
-            // Let's do explicit View to avoid flashing.
         }
     }
     ImGui::EndChild();
 
-    // Selected Item Actions
     if (selectedSliceIndex_ >= 0 && selectedSliceIndex_ < (int)slices.size()) {
         const auto& slice = slices[selectedSliceIndex_];
         ImGui::Separator();
         ImGui::Text("Selected: T%d", slice.getOrdinalIndex());
-        
         if (ImGui::Button("View (Ghost)")) {
             ghostMode_ = true;
             applyGhostVisualization(slice);
@@ -131,10 +122,7 @@ void TimelinePanel::draw(bool* open) {
             for (int i = 0; i < (int)slices.size(); ++i) {
                 bool isSelected = (compareSliceA_ == i);
                 std::string label = sliceLabel(slices[i]);
-                if (ImGui::Selectable(label.c_str(), isSelected)) {
-                    compareSliceA_ = i;
-                }
-                if (isSelected) ImGui::SetItemDefaultFocus();
+                if (ImGui::Selectable(label.c_str(), isSelected)) compareSliceA_ = i;
             }
             ImGui::EndCombo();
         }
@@ -143,10 +131,7 @@ void TimelinePanel::draw(bool* open) {
             for (int i = 0; i < (int)slices.size(); ++i) {
                 bool isSelected = (compareSliceB_ == i);
                 std::string label = sliceLabel(slices[i]);
-                if (ImGui::Selectable(label.c_str(), isSelected)) {
-                    compareSliceB_ = i;
-                }
-                if (isSelected) ImGui::SetItemDefaultFocus();
+                if (ImGui::Selectable(label.c_str(), isSelected)) compareSliceB_ = i;
             }
             ImGui::EndCombo();
         }
@@ -166,7 +151,7 @@ void TimelinePanel::draw(bool* open) {
                 } else {
                     Core::Domain::FourthDimension::CoherenceIntensityParams params;
                     const auto& hydro = World3D::getHydroGrid();
-                    if (hydro.isValid() && hydro.flowAccumulationCells.size() == coverA.size()) {
+                    if (hydro.isValid() && (int)hydro.flowAccumulationCells.size() == (int)coverA.size()) {
                         params.width = hydro.width;
                         params.height = hydro.height;
                     }
@@ -175,12 +160,10 @@ void TimelinePanel::draw(bool* open) {
                     params.weightType = 0.45f;
                     params.weightStructure = 0.4f;
                     params.weightEdge = 0.15f;
-                    params.ignoreNoData = true;
-                    params.ignoreWaterMask = true;
 
                     auto map = Core::Domain::FourthDimension::CoherenceIntensityService::compare(sliceA, sliceB, params);
                     if (map.intensity.empty()) {
-                        coherenceStatus_ = "Unable to compute map (grid dimensions missing or invalid).";
+                        coherenceStatus_ = "Unable to compute map.";
                     } else {
                         double sum = 0.0;
                         for (float v : map.intensity) sum += v;
@@ -191,179 +174,199 @@ void TimelinePanel::draw(bool* open) {
             }
         }
 
-        if (!coherenceStatus_.empty()) {
-            ImGui::TextWrapped("%s", coherenceStatus_.c_str());
-        }
-        if (lastCoherenceMean_ >= 0.0f) {
-            ImGui::Text("Mean Intensity: %.3f", lastCoherenceMean_);
-        }
+        if (!coherenceStatus_.empty()) ImGui::TextWrapped("%s", coherenceStatus_.c_str());
+        if (lastCoherenceMean_ >= 0.0f) ImGui::Text("Mean Intensity: %.3f", lastCoherenceMean_);
+    }
 
-        // --- Cognitive Insight (Qwen) ---
+    // --- Cognitive Insight (Qwen) Section ---
+    ImGui::Separator();
+    ImGui::Text("Cognitive Insight (Qwen)");
+
+    if (llmService_) {
+        // --- SEÇÃO 1: Análise de Transição (Hermenêutica Parcial) ---
         ImGui::Separator();
-        ImGui::Text("Cognitive Insight (Qwen)");
-
-        if (llmService_ && lastCoherenceMean_ >= 0.0f) {
-            if (ImGui::Button("Solicitar Análise Hermenêutica", ImVec2(-1, 0)) && !requestInProgress_) {
-                requestInProgress_ = true;
-                cognitiveInsight_.clear();
+        ImGui::Text("Insight Hermenêutico (Transição)");
+        
+        if (lastCoherenceMean_ >= 0.0f) {
+            if (ImGui::Button("Interpretar Transição A-B", ImVec2(-1, 0)) && !hermeneuticInProgress_) {
+                hermeneuticInProgress_ = true;
+                hermeneuticInsight_.clear();
                 llmErrorMessage_.clear();
 
-                // Build Context for LLM
-                std::vector<Application::Ports::LLMMessage> messages;
-                // Note: The System Prompt is loaded by the adapter/orchestrator or passed explicitly here.
-                // For this PoC, we rely on the adapter knowing its role.
-                
-                std::string distA = getClassDistribution(sliceA);
-                std::string distB = getClassDistribution(sliceB);
+                const auto& sA = slices[compareSliceA_];
+                const auto& sB = slices[compareSliceB_];
+                std::string distA = getClassDistribution(sA);
+                std::string distB = getClassDistribution(sB);
 
-                std::string prompt = "Analise a transição ecológica entre dois estados temporais (" + labelA + " e " + labelB + ").\n\n";
-                prompt += "Contexto do Estado A: " + distA + "\n";
-                prompt += "Contexto do Estado B: " + distB + "\n\n";
-                prompt += "Métrica de Índice de Estabilidade/Coerência (SSI): " + std::to_string(lastCoherenceMean_) + "\n";
-                prompt += "(Nota: SSI próximo de 1.0 indica alta estabilidade/mudança mínima; próximo de 0.0 indica ruptura estrutural ou transição drástica).\n\n";
-                prompt += "Por favor, interprete esta mudança do ponto de vista da resiliência ecológica.";
-                
+                std::string prompt = "Analise a transição ecológica entre (" + sA.getMetadata() + " e " + sB.getMetadata() + ").\n";
+                prompt += "Composição A: " + distA + "\n";
+                prompt += "Composição B: " + distB + "\n";
+                prompt += "Métrica SSI: " + std::to_string(lastCoherenceMean_) + "\n";
+                prompt += "Interprete esta mudança do ponto de vista da resiliência ecológica.";
+
+                std::vector<Application::Ports::LLMMessage> messages;
                 messages.push_back({Application::Ports::LLMRole::User, prompt});
 
                 llmService_->requestCompletion(messages, [this](const Application::Ports::ILLMService::Response& res) {
                     std::lock_guard<std::mutex> lock(insightMutex_);
-                    if (res.success) {
-                        cognitiveInsight_ = res.content;
-                    } else {
-                        llmErrorMessage_ = res.errorMessage;
-                    }
-                    requestInProgress_ = false;
+                    if (res.success) hermeneuticInsight_ = res.content;
+                    else llmErrorMessage_ = res.errorMessage;
+                    hermeneuticInProgress_ = false;
                 });
             }
-
-            if (requestInProgress_) {
-                ImGui::TextDisabled("Processando interpretação...");
-                // Add a simple animated spinner or dots if needed.
-            }
-
-            if (!llmErrorMessage_.empty()) {
-                ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Erro: %s", llmErrorMessage_.c_str());
-            }
-
-            {
-                std::lock_guard<std::mutex> lock(insightMutex_);
-                if (!cognitiveInsight_.empty()) {
-                    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.12f, 0.12f, 0.14f, 1.0f));
-                    
-                    // Adjustable height logic
-                    ImGui::BeginChild("InsightOutput", ImVec2(0, insightWindowHeight_), true);
-                    ImGui::TextWrapped("%s", cognitiveInsight_.c_str());
-                    ImGui::EndChild();
-                    
-                    // Resize Handle (Invisible button that captures drag)
-                    ImGui::Button("###ResizeHandleInsight", ImVec2(-1, 4.0f));
-                    if (ImGui::IsItemActive()) {
-                        insightWindowHeight_ += ImGui::GetIO().MouseDelta.y;
-                        if (insightWindowHeight_ < 50.0f) insightWindowHeight_ = 50.0f;
-                    }
-                    if (ImGui::IsItemHovered()) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-
-                    ImGui::PopStyleColor();
-
-                    if (ImGui::Button("Save Hermeneutic Analysis", ImVec2(-1, 0))) {
-                        saveAnalysisToFile();
-                    }
-                }
-            }
-
-            // --- Patch Trajectory Analysis ---
-            ImGui::Separator();
-            ImGui::Text("Análise de Trajetória de Patch (DDD v1.0)");
-            ImGui::InputInt("ID do Patch", &selectedPatchId_);
-
-            bool canAnalyzePatch = selectedPatchId_ >= 0;
-            if (!canAnalyzePatch) {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
-                ImGui::TextWrapped("Insira um ID de Patch válido (>= 0) para analisar.");
-                ImGui::PopStyleColor();
-            }
-
-            ImGui::BeginDisabled(!canAnalyzePatch || requestInProgress_);
-            if (ImGui::Button("Analisar Trajetória Multi-Estado", ImVec2(-1, 0))) {
-                requestInProgress_ = true;
-                llmErrorMessage_.clear();
-
-                // --- Real Identity Tracking & Aggregation ---
-                using namespace Core::Domain::FourthDimension::PatchTrajectory;
-                PatchTrajectory patchTrajectory(selectedPatchId_);
-
-                if (trajectory_ && !trajectory_->getTimeSlices().empty()) {
-                    const auto& slices = trajectory_->getTimeSlices();
-                    
-                    // Root spatial analysis config
-                    Core::Domain::SpatialPattern::AnalysisConfig cfg;
-                    cfg.byClass = true; // Use classification mode for identity
-                    cfg.keepLabels = true;
-
-                    for (size_t i = 0; i < slices.size(); ++i) {
-                        const auto& slice = slices[i];
-                        if (slice.isProxy()) {
-                            // In a real high-perf scenario, we'd lazy load here.
-                            // For now, if it's offloaded, we might skip or show a warning.
-                            continue; 
-                        }
-
-                        // run analysis on this slice's cover
-                        Core::Domain::SpatialPattern::GridData grid;
-                        const auto& cover = slice.getEcologicalCoverState();
-                        grid.values = std::vector<double>(cover.begin(), cover.end());
-                        // Assume standard dimensions for now if not stored in slice metadata
-                        // This identifies a gap: TimeSlice should know its dimensions.
-                        // For the PoC, we use the values size as 1024x1024 if size matches.
-                        if (grid.values.size() == 1024 * 1024) { grid.width = 1024; grid.height = 1024; }
-                        else if (grid.values.size() == 512 * 512) { grid.width = 512; grid.height = 512; }
-                        else { grid.width = static_cast<int>(std::sqrt(grid.values.size())); grid.height = grid.width; }
-                        
-                        auto result = Core::Domain::SpatialPattern::AnalyzeGrid(grid, cfg);
-                        
-                        // Find the patch that "matches" our ID
-                        // Simplified Identity: In the first slice, find the ID. 
-                        // In subsequent, find the patch that overlaps most with the previous centroid/area?
-                        // For this version (PoC), we use the SAME ID if it exists.
-                        if (selectedPatchId_ > 0 && selectedPatchId_ <= (int)result.patches.size()) {
-                            const auto& pm = result.patches[selectedPatchId_ - 1];
-                            PatchState ps;
-                            ps.ordinalIndex = (int)i;
-                            ps.area = (float)pm.area;
-                            ps.perimeter = (float)pm.perimeter;
-                            ps.shapeIndex = (float)pm.shape_index;
-                            
-                            // Mocking land-use contrast for this slice
-                            ps.adjacencyByClass[1] = 70.0f; // Forest
-                            ps.adjacencyByClass[2] = 30.0f; // Agriculture
-                            
-                            patchTrajectory.addState(ps);
-                        }
-                    }
-                }
-
-                std::string summary = PatchTrajectoryService::generateLLMSummary(patchTrajectory);
-                
-                // 2. Request LLM Analysis
-                std::vector<Application::Ports::LLMMessage> messages;
-                messages.push_back({Application::Ports::LLMRole::User, "Analise esta trajetória de patch histórica: " + summary});
-
-                llmService_->requestCompletion(messages, [this](const Application::Ports::ILLMService::Response& res) {
-                    std::lock_guard<std::mutex> lock(insightMutex_);
-                    if (res.success) {
-                        cognitiveInsight_ = res.content;
-                    } else {
-                        llmErrorMessage_ = res.errorMessage;
-                    }
-                    requestInProgress_ = false;
-                });
-            }
-            ImGui::EndDisabled();
-        } else if (!llmService_) {
-             ImGui::TextDisabled("Serviço de IA não disponível.");
         } else {
-             ImGui::TextDisabled("Calcule a coerência para habilitar o Insight.");
+            ImGui::TextDisabled("Calcule o mapa de coerência para habilitar.");
         }
+
+        if (hermeneuticInProgress_) ImGui::TextDisabled("Analisando transição...");
+        if (!hermeneuticInsight_.empty()) {
+            ImGui::BeginChild("HermeneuticOutput", ImVec2(0, 100), true);
+            ImGui::TextWrapped("%s", hermeneuticInsight_.c_str());
+            ImGui::EndChild();
+            if (ImGui::Button("Salvar Análise de Transição")) saveAnalysisToFile(hermeneuticInsight_, "transition");
+        }
+
+        // --- SEÇÃO 2: Análise de Trajetória Multi-Estado ---
+        ImGui::Separator();
+        ImGui::Text("Análise de Trajetória (DDD v1.1)");
+        
+        // Patch Discovery Logic
+        if (selectedSliceIndex_ >= 0) {
+            const auto& slice = slices[selectedSliceIndex_];
+            if (!slice.getEcologicalCoverState().empty()) {
+                 // Simple count discovery if not proxy
+                 if (!slice.isProxy()) {
+                    std::map<int, size_t> counts;
+                    for (int code : slice.getEcologicalCoverState()) if (code > 0) counts[code]++;
+                    lastPatchCount_ = (int)counts.size();
+                 }
+            }
+            ImGui::Text("Patches detectados no estado selecionado: %d", lastPatchCount_);
+        }
+
+        ImGui::InputInt("ID do Patch", &selectedPatchId_);
+        
+        ImGui::BeginDisabled(trajectoryInProgress_);
+        if (ImGui::Button("Analisar Trajetória do Patch", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 0))) {
+            if (selectedPatchId_ < 0) {
+                llmErrorMessage_ = "ID do patch inválido.";
+            } else {
+                trajectoryInProgress_ = true;
+                trajectoryInsight_.clear();
+                
+                using namespace Core::Domain::FourthDimension::PatchTrajectory;
+                PatchTrajectory pt(selectedPatchId_);
+                
+                // Historical aggregation logic
+                auto& slicesRef = trajectory_->getTimeSlices();
+                double refX = -1.0, refY = -1.0;
+                
+                for (size_t i = 0; i < slicesRef.size(); ++i) {
+                    auto& slice = slicesRef[i];
+                    if (slice.isProxy()) Core::Domain::FourthDimension::TrajectoryPersistenceService::loadFromDisk(slice);
+                    
+                    const auto& cover = slice.getEcologicalCoverState();
+                    if (cover.empty()) continue;
+
+                    Core::Domain::SpatialPattern::GridData grid;
+                    grid.values = std::vector<double>(cover.begin(), cover.end());
+                    grid.width = (int)std::sqrt(grid.values.size()); grid.height = grid.width;
+                    
+                    auto result = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.0, true, true});
+                    
+                    int bestPatchIdx = -1;
+                    if (refX < 0) {
+                        if (selectedPatchId_ > 0 && selectedPatchId_ <= (int)result.patches.size()) {
+                            bestPatchIdx = selectedPatchId_ - 1;
+                            refX = result.patches[bestPatchIdx].centroidX;
+                            refY = result.patches[bestPatchIdx].centroidY;
+                        }
+                    } else {
+                        double minVal = 50.0; 
+                        for (int j = 0; j < (int)result.patches.size(); ++j) {
+                            double dist = std::sqrt(std::pow(result.patches[j].centroidX - refX, 2) + std::pow(result.patches[j].centroidY - refY, 2));
+                            if (dist < minVal) { minVal = dist; bestPatchIdx = j; }
+                        }
+                        if (bestPatchIdx >= 0) {
+                            refX = result.patches[bestPatchIdx].centroidX;
+                            refY = result.patches[bestPatchIdx].centroidY;
+                        }
+                    }
+
+                    if (bestPatchIdx >= 0) {
+                        const auto& pm = result.patches[bestPatchIdx];
+                        PatchState ps;
+                        ps.ordinalIndex = (int)i;
+                        ps.area = (float)pm.area;
+                        ps.perimeter = (float)pm.perimeter;
+                        ps.shapeIndex = (float)pm.shape_index;
+                        ps.adjacencyByClass[1] = 50.0f; // Placeholder until full adjacency logic is in
+                        pt.addState(ps);
+                    }
+                }
+
+                auto nameResolver = [this](int code) -> std::string {
+                    if (vegPanel_) {
+                        const auto& system = vegPanel_->getSystem();
+                        if (code >= 0 && code < (int)system.getHypotheses().size()) {
+                            const auto& hyp = system.getHypotheses()[code];
+                            return hyp.getId().getValue() + " (" + hyp.getType().toString() + ")";
+                        }
+                    }
+                    return "Classe " + std::to_string(code);
+                };
+
+                std::string summary = PatchTrajectoryService::generateLLMSummary(pt, nameResolver);
+                std::string prompt = "Analise a trajetória histórica do patch ID " + std::to_string(selectedPatchId_) + ".\n" + summary;
+                
+                llmService_->requestCompletion({{Application::Ports::LLMRole::User, prompt}}, [this](const auto& res) {
+                    std::lock_guard<std::mutex> lock(insightMutex_);
+                    if (res.success) trajectoryInsight_ = res.content;
+                    else llmErrorMessage_ = res.errorMessage;
+                    trajectoryInProgress_ = false;
+                });
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Análise Tática Global", ImVec2(-1, 0))) {
+            trajectoryInProgress_ = true;
+            trajectoryInsight_.clear();
+            
+            std::string prompt = "Realize uma análise tática global das trajetórias de manchas neste cenário.\n";
+            prompt += "Atualmente existem " + std::to_string(slices.size()) + " estados temporais.\n\n";
+            
+            prompt += "Resumo da Composição da Paisagem por Estado:\n";
+            for (size_t i = 0; i < slices.size(); ++i) {
+                prompt += "Estado " + std::to_string(i) + " (" + slices[i].getMetadata() + "): " + getClassDistribution(slices[i]) + "\n";
+            }
+            
+            prompt += "\nCom base nestas mudanças de composição, identifique tendências de fragmentação, regeneração ou estabilidade pulsátil.";
+            prompt += " Analise como a estrutura espacial está evoluindo e se o sistema demonstra resiliência.";
+            
+            llmService_->requestCompletion({{Application::Ports::LLMRole::User, prompt}}, [this](const auto& res) {
+                std::lock_guard<std::mutex> lock(insightMutex_);
+                if (res.success) trajectoryInsight_ = res.content;
+                else llmErrorMessage_ = res.errorMessage;
+                trajectoryInProgress_ = false;
+            });
+        }
+        ImGui::EndDisabled();
+
+        if (trajectoryInProgress_) ImGui::TextDisabled("Calculando trajetórias...");
+        if (!trajectoryInsight_.empty()) {
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.15f, 0.1f, 1.0f));
+            ImGui::BeginChild("TrajectoryOutput", ImVec2(0, insightWindowHeight_), true);
+            ImGui::TextWrapped("%s", trajectoryInsight_.c_str());
+            ImGui::EndChild();
+            ImGui::PopStyleColor();
+            
+            if (ImGui::Button("Salvar Resumo de Trajetória")) saveAnalysisToFile(trajectoryInsight_, "trajectory");
+        }
+        
+        if (!llmErrorMessage_.empty()) ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "[Erro] %s", llmErrorMessage_.c_str());
+
+    } else {
+        ImGui::TextDisabled("Serviço de IA não disponível.");
     }
 
     ImGui::End();
@@ -373,53 +376,42 @@ void TimelinePanel::applyGhostVisualization(const Core::Domain::FourthDimension:
     World3D::applyClassificationVisualization(slice.getEcologicalCoverState());
 }
 
-void TimelinePanel::saveAnalysisToFile() {
-    std::string filename = "hermeneutic_analysis_" + std::to_string(std::time(nullptr)) + ".txt";
+void TimelinePanel::saveAnalysisToFile(const std::string& content, const std::string& type) {
+    std::string filename = "hermeneutic_" + type + "_" + std::to_string(std::time(nullptr)) + ".txt";
     std::ofstream file(filename);
     if (file.is_open()) {
-        file << "==================================================\n";
-        file << "SISTERSTRATA HERMENEUTIC ANALYSIS\n";
-        file << "==================================================\n\n";
-        file << cognitiveInsight_ << "\n\n";
-        file << "--------------------------------------------------\n";
-        file << "Timestamp: " << std::time(nullptr) << "\n";
-        file << "==================================================\n";
+        file << "SISTERSTRATA HERMENEUTIC ANALYSIS (" << type << ")\n";
+        file << "==========================================\n\n";
+        file << content << "\n";
         file.close();
-        std::cout << "[TimelinePanel] Analysis saved to: " << filename << std::endl;
-    } else {
-        std::cerr << "[TimelinePanel] Failed to save analysis to: " << filename << std::endl;
     }
 }
 
 std::string TimelinePanel::getClassDistribution(const Core::Domain::FourthDimension::TimeSlice& slice) {
     const auto& cover = slice.getEcologicalCoverState();
-    if (cover.empty()) return "Sem dados de cobertura";
-
+    if (cover.empty()) return "Sem dados";
     std::map<int, size_t> counts;
-    for (int code : cover) {
-        counts[code]++;
-    }
-
+    for (int code : cover) counts[code]++;
     std::stringstream ss;
     ss << "[";
     bool first = true;
     for (auto const& [code, count] : counts) {
         if (!first) ss << ", ";
         float pct = (static_cast<float>(count) / cover.size()) * 100.0f;
-        
         std::string name = "Classe_" + std::to_string(code);
         if (vegPanel_) {
             const auto& system = vegPanel_->getSystem();
             if (code >= 0 && code < (int)system.getHypotheses().size()) {
-                name = system.getHypotheses()[code].getId().getValue();
+                const auto& hyp = system.getHypotheses()[code];
+                name = hyp.getId().getValue() + " (" + hyp.getType().toString() + ")";
             }
         }
-        
         ss << name << ": " << std::fixed << std::setprecision(1) << pct << "%";
         first = false;
     }
     ss << "]";
     return ss.str();
 }
+
 
 } // namespace UI::Panels
