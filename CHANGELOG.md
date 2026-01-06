@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.9.0] - 2026-01-06
+### Added
+- **Full Project Persistence**: Save and load complete vegetation scenarios and trajectories using custom project names (e.g., `project_name.strata`).
+- **3D Picking & Highlighting**: "Click-to-ID" functionality with robust ray-stepping for terrain relief and magenta visual feedback.
+- **Detailed Landscape Statistics**: UI popup and LLM integration for Area (Mean/Min/Max/StdDev) and Shape Index distributions.
+- **Trajectory Management**: Ability to remove individual time slices dynamically.
+
+### Fixed
+- **NaN Data Display**: Fixed issue where unloaded proxy slices caused NaN values in analysis reports.
+- **Class 0 Detection**: Improved spatial engine to correctly identify patches of Class 0 (Campestre).
+- **Metric Consistency**: Unified all AI-reported area metrics to Hectares (ha).
+
 ## [1.8.2] - 2026-01-05
 ### Added
 - **Global Tactical Analysis**: Data-driven scene-wide interpretation of land-use trajectories across all captured states.
