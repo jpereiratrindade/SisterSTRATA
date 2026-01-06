@@ -1,5 +1,14 @@
 # Changelog
 
+## [v1.9.1] - 2026-01-06
+### Added
+- **Export Grid Recovery**: Smart CSV serialization that dedupes and sorts mesh vertices (OBJ) into valid soil grids for drainage usage.
+- **Enhanced File Browser**: Added "Root" navigation shortcut (`/`) and editable path bar for full system access.
+
+### Fixed
+- **System Stability**: Resolved "Auto-Load" race condition in Terrain Simulator (preventing "System Busy" lockouts).
+- **UX**: Fixed critical visualization bug where loading a project failed to initialize the 3D patch cache, preventing patch selection.
+
 ## [v1.9.0] - 2026-01-06
 ### Added
 - **Full Project Persistence**: Save and load complete vegetation scenarios and trajectories using custom project names (e.g., `project_name.strata`).

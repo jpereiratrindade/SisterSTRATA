@@ -105,6 +105,13 @@ void TimelinePanel::draw(bool* open) {
         auto& mutableSystem = const_cast<Core::Domain::Vegetation::VegetationSystemOriginal&>(vegPanel_->getSystem());
         Core::Domain::Vegetation::VegetationPersistenceService::loadScenarios(mutableSystem, scenariosPath);
         Core::Domain::FourthDimension::TrajectoryPersistenceService::loadTrajectory(*trajectory_, ".", trajPath);
+
+        // Fix: Automatically visualize the last state to ensure patch cache is built
+        if (!trajectory_->getTimeSlices().empty()) {
+            selectedSliceIndex_ = (int)trajectory_->getTimeSlices().size() - 1;
+            applyGhostVisualization(trajectory_->getTimeSlices().back());
+            ghostMode_ = true; // Enter ghost mode to show the loaded data
+        }
     }
 
     if (ImGui::BeginPopup("CaptureFailed")) {

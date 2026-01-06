@@ -986,6 +986,10 @@ bool Engine::generateSampleTerrain(const std::string& filename, int width, int h
                     std::lock_guard<std::mutex> lock(generationMutex_);
                     generationMessage_ = "Queueing Load...";
                 }
+                
+                // Fix: Clear flag so loadFile accepts the request
+                isGenerating_ = false;
+
                  this->loadFile(filename);
             }
         } else {

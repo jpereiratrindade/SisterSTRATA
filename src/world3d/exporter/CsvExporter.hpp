@@ -2,6 +2,8 @@
 #include "world3d/rendering/Vertex.hpp"
 #include <vector>
 #include <string>
+#include <fstream>
+#include <iostream>
 
 namespace World3D {
 namespace Exporter {

@@ -11,6 +11,7 @@
 #include <ctime>
 #include <array>
 #include <cfloat>
+#include <cstring>
 
 namespace UI::Components {
 
@@ -63,6 +64,12 @@ public:
         ImGui::SetNextWindowSize(ImVec2(800, 520), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSizeConstraints(ImVec2(400, 300), ImVec2(FLT_MAX, FLT_MAX));
         if (ImGui::BeginPopupModal("File Browser", &isOpen_, ImGuiWindowFlags_NoSavedSettings)) {
+            // Navigation Buttons
+            if (ImGui::Button("Root (/)")) {
+                currentPathStr_ = "/";
+                Refresh();
+            }
+            ImGui::SameLine();
             if (ImGui::Button("..")) {
                 fs::path parent = fs::path(currentPathStr_).parent_path();
                 if (!parent.empty() && parent.string() != currentPathStr_) {
@@ -71,19 +78,41 @@ public:
                 }
             }
             ImGui::SameLine();
-            ImGui::Text("%s", currentPathStr_.c_str());
+
+            // Editable Path Bar
+            // We use a temporary buffer to allow editing, but strictly we should init it from currentPathStr_ every time 
+            // the path changes externally. However, for a simple implementation, we copy current -> buf each frame 
+            // unless user is editing. 
+            // Better: Just use a local buffer initialized from currentPathStr_, let ID keep state?
+            // Or simpler: InputText with std::string (if using imgui_stdlib.h, but we aren't sure).
+            // We'll use a fixed buffer member for editing.
+            
+            static char pathBuffer[1024];
+            std::strncpy(pathBuffer, currentPathStr_.c_str(), sizeof(pathBuffer));
+            pathBuffer[sizeof(pathBuffer) - 1] = '\0';
+            
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 220); // Reserve space for sort buttons
+            if (ImGui::InputText("##Path", pathBuffer, sizeof(pathBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+                std::string newPath = pathBuffer;
+                // Basic validation
+                std::error_code ec;
+                if (fs::exists(newPath, ec) && fs::is_directory(newPath, ec)) {
+                    currentPathStr_ = newPath;
+                    Refresh();
+                }
+            }
 
             ImGui::Separator();
-            ImGui::TextUnformatted("Ordenar por:");
+            ImGui::TextUnformatted("Sort by:");
             ImGui::SameLine();
             bool byName = !sortByDate_;
-            if (ImGui::RadioButton("Nome", byName)) {
+            if (ImGui::RadioButton("Name", byName)) {
                 sortByDate_ = false;
                 Refresh();
             }
             ImGui::SameLine();
             bool byDate = sortByDate_;
-            if (ImGui::RadioButton("Data", byDate)) {
+            if (ImGui::RadioButton("Date", byDate)) {
                 sortByDate_ = true;
                 Refresh();
             }
@@ -100,6 +129,11 @@ public:
             bool ctrl = ImGui::GetIO().KeyCtrl;
             bool navigateToDir = false;
             std::string nextDir;
+
+            if (entries_.empty()) {
+                ImGui::TextDisabled("Empty directory or access denied.");
+            }
+
             for (const auto& entry : entries_) {
                 const bool isDir = entry.isDir;
                 std::string displayName = DisplayNameFor(entry.pathStr);
