@@ -7,7 +7,7 @@
 
 ### Fixed
 - **System Stability**: Resolved "Auto-Load" race condition in Terrain Simulator (preventing "System Busy" lockouts).
-- **UX**: Fixed critical visualization bug where loading a project failed to initialize the 3D patch cache, preventing patch selection.
+- **UX**: Fixed critical visualization bug where loading a project failed to initialize the 3D patch cache (resolved Proxy loading issue).
 
 ## [v1.9.0] - 2026-01-06
 ### Added

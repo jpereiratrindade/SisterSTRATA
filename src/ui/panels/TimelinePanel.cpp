@@ -517,6 +517,13 @@ void TimelinePanel::draw(bool* open) {
 }
 
 void TimelinePanel::applyGhostVisualization(const Core::Domain::FourthDimension::TimeSlice& slice) {
+    // Fix: Ensure data is loaded from disk if it's a proxy
+    if (slice.isProxy()) {
+        Core::Domain::FourthDimension::TrajectoryPersistenceService::loadFromDisk(
+            const_cast<Core::Domain::FourthDimension::TimeSlice&>(slice)
+        );
+    }
+
     World3D::applyClassificationVisualization(slice.getEcologicalCoverState());
     
     // Cache spatial result for picking
