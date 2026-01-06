@@ -309,15 +309,35 @@ void TimelinePanel::draw(bool* open) {
         // Patch Discovery Logic
         if (selectedSliceIndex_ >= 0) {
             const auto& slice = slices[selectedSliceIndex_];
-            if (!slice.getEcologicalCoverState().empty()) {
-                 // Simple count discovery if not proxy
-                 if (!slice.isProxy()) {
-                    std::map<int, size_t> counts;
-                    for (int code : slice.getEcologicalCoverState()) if (code > 0) counts[code]++;
-                    lastPatchCount_ = (int)counts.size();
-                 }
+            if (!slice.getEcologicalCoverState().empty() && !slice.isProxy()) {
+                 // Calculate if not cached (simple check, ideally we should cache properly)
+                 // But we have lastPatchAnalysis_ which is updated in applyGhostVisualization.
+                 // So we can use it!
             }
             ImGui::Text("Patches detectados no estado selecionado: %d", lastPatchCount_);
+            
+            if (ImGui::Button("Estatísticas da Paisagem")) {
+                ImGui::OpenPopup("LandscapeStatsPopup");
+            }
+            
+            if (ImGui::BeginPopup("LandscapeStatsPopup")) {
+                const auto& s = lastPatchAnalysis_.summary;
+                if (s.patchCount > 0) {
+                    ImGui::Text("Total Patches: %d", s.patchCount);
+                    ImGui::Separator();
+                    ImGui::Text("Área (ha):");
+                    ImGui::BulletText("Total: %.2f", s.areaTotal / 10000.0);
+                    ImGui::BulletText("Média: %.2f +/- %.2f", s.areaMean / 10000.0, s.areaStdDev / 10000.0);
+                    ImGui::BulletText("Min/Max: %.2f / %.2f", s.areaMin / 10000.0, s.areaMax / 10000.0);
+                    ImGui::Separator();
+                    ImGui::Text("Shape Index:");
+                    ImGui::BulletText("Média: %.2f +/- %.2f", s.meanShapeIndex, s.shapeIndexStdDev);
+                    ImGui::BulletText("Min/Max: %.2f / %.2f", s.shapeIndexMin, s.shapeIndexMax);
+                } else {
+                    ImGui::Text("Nenhuma análise disponível para este estado.");
+                }
+                ImGui::EndPopup();
+            }
         }
 
         if (ImGui::InputInt("ID do Patch", &selectedPatchId_)) {
@@ -436,7 +456,18 @@ void TimelinePanel::draw(bool* open) {
             std::string prompt = "Realize uma análise tática global das trajetórias de manchas neste cenário.\n";
             prompt += "Atualmente existem " + std::to_string(slices.size()) + " estados temporais.\n\n";
             prompt += "Resumo da Composição da Paisagem por Estado:\n" + context + "\n";
-            prompt += "Com base nestas mudanças de composição, identifique tendências de fragmentação, regeneração ou estabilidade pulsátil.";
+            
+            // Add detailed stats from the CURRENT (last viewed) state if available
+            if (lastPatchAnalysis_.summary.patchCount > 0) {
+                 const auto& s = lastPatchAnalysis_.summary;
+                 prompt += "Estatísticas Detalhadas do Estado Atual (T" + std::to_string(selectedSliceIndex_) + "):\n";
+                 prompt += "- Total Patches: " + std::to_string(s.patchCount) + "\n";
+                 prompt += "- Área Média: " + std::to_string(s.areaMean/10000.0) + " ha (Desvio: " + std::to_string(s.areaStdDev/10000.0) + ")\n";
+                 prompt += "- Complexidade de Forma (SI) Média: " + std::to_string(s.meanShapeIndex) + " (Desvio: " + std::to_string(s.shapeIndexStdDev) + ")\n";
+                 prompt += "- Variabilidade de Tamanho (Min/Max): " + std::to_string(s.areaMin/10000.0) + " / " + std::to_string(s.areaMax/10000.0) + " ha\n";
+            }
+
+            prompt += "Com base nestas mudanças de composição e nas estatísticas de fragmentação, identifique tendências de fragmentação, regeneração ou estabilidade pulsátil.";
             prompt += " Analise como a estrutura espacial está evoluindo e se o sistema demonstra resiliência.";
             
             llmService_->requestCompletion({{Application::Ports::LLMRole::User, prompt}}, [this](const auto& res) {

@@ -214,6 +214,14 @@ SummaryMetrics ComputeSummary(std::vector<PatchMetrics>& patches) {
     double sumRcc = 0.0;
     double sumP4OverSqrt = 0.0;
 
+    double n = static_cast<double>(summary.patchCount);
+    
+    // Initialize Min/Max
+    summary.areaMin = std::numeric_limits<double>::max();
+    summary.areaMax = std::numeric_limits<double>::lowest();
+    summary.shapeIndexMin = std::numeric_limits<double>::max();
+    summary.shapeIndexMax = std::numeric_limits<double>::lowest();
+
     for (auto& p : patches) {
         if (p.area <= 0.0) continue;
         p.par = p.perimeter / p.area;
@@ -224,14 +232,44 @@ SummaryMetrics ComputeSummary(std::vector<PatchMetrics>& patches) {
         sumShapeIndex += p.shape_index;
         sumRcc += p.rcc;
         sumP4OverSqrt += (p.perimeter / 4.0) / std::sqrt(p.area);
+
+        // Detailed Stats
+        summary.areaTotal += p.area;
+        if (p.area < summary.areaMin) summary.areaMin = p.area;
+        if (p.area > summary.areaMax) summary.areaMax = p.area;
+        
+        if (p.shape_index < summary.shapeIndexMin) summary.shapeIndexMin = p.shape_index;
+        if (p.shape_index > summary.shapeIndexMax) summary.shapeIndexMax = p.shape_index;
     }
 
-    double n = static_cast<double>(summary.patchCount);
-    summary.meanPar = sumPar / n;
-    summary.meanShapeIndex = sumShapeIndex / n;
-    summary.meanRcc = sumRcc / n;
-    summary.s1 = (sumPar == 0.0) ? 0.0 : 1.0 / (n * sumPar);
-    summary.s2 = (sumP4OverSqrt == 0.0) ? 0.0 : 1.0 / (n * sumP4OverSqrt);
+    if (summary.patchCount > 0) {
+        summary.meanPar = sumPar / n;
+        summary.meanShapeIndex = sumShapeIndex / n;
+        summary.meanRcc = sumRcc / n;
+        summary.s1 = (sumPar == 0.0) ? 0.0 : 1.0 / (n * sumPar);
+        summary.s2 = (sumP4OverSqrt == 0.0) ? 0.0 : 1.0 / (n * sumP4OverSqrt);
+        
+        summary.areaMean = summary.areaTotal / n;
+
+        // Second pass for StdDev
+        double sumSqDiffArea = 0.0;
+        double sumSqDiffShape = 0.0;
+        for (const auto& p : patches) {
+             if (p.area <= 0.0) continue;
+             double diffA = p.area - summary.areaMean;
+             sumSqDiffArea += diffA * diffA;
+             
+             double diffS = p.shape_index - summary.meanShapeIndex;
+             sumSqDiffShape += diffS * diffS;
+        }
+        summary.areaStdDev = std::sqrt(sumSqDiffArea / n);
+        summary.shapeIndexStdDev = std::sqrt(sumSqDiffShape / n);
+    } else {
+        summary.areaMin = 0.0;
+        summary.areaMax = 0.0;
+        summary.shapeIndexMin = 0.0;
+        summary.shapeIndexMax = 0.0;
+    }
     return summary;
 }
 

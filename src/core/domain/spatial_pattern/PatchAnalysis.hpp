@@ -26,6 +26,17 @@ struct SummaryMetrics {
     double meanRcc = 0.0;
     double s1 = 0.0;
     double s2 = 0.0;
+
+    // Detailed Statistics
+    double areaTotal = 0.0;
+    double areaMean = 0.0;
+    double areaStdDev = 0.0;
+    double areaMin = 0.0;
+    double areaMax = 0.0;
+
+    double shapeIndexStdDev = 0.0;
+    double shapeIndexMin = 0.0;
+    double shapeIndexMax = 0.0;
 };
 
 struct LabelImage {
