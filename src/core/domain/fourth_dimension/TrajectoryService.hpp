@@ -14,8 +14,31 @@ namespace Core::Domain::FourthDimension {
 class TrajectoryService {
 public:
     /**
-     * @brief Captures the current state and appends it to the trajectory.
-     * Maps transient Hypothesis Indices to persistent Vegetation Codes.
+     * @brief Captures the current state using direct semantic codes.
+     * @param trajectory The trajectory aggregate to add the state to.
+     * @param semanticState The semantic classification map (VegetationCode).
+     * @param waterMask Mask indicating presence of water.
+     * @param metadata Description for the time slice.
+     */
+    static void captureSemanticState(Trajectory& trajectory,
+                                     const std::vector<int>& semanticState,
+                                     const std::vector<bool>& waterMask,
+                                     const std::string& metadata) {
+        int ordinal = trajectory.getNextOrdinal();
+        int id = ordinal; 
+        
+        TimeSlice slice(id, ordinal, semanticState, waterMask, metadata);
+        trajectory.addTimeSlice(slice);
+    }
+
+    /**
+     * @brief Captures the current state from scenario indices.
+     * Legacy/Helper: Maps transient Scenario Indices to persistent Vegetation Codes.
+     * @param trajectory The trajectory aggregate.
+     * @param scenarioIndices Map of scenario indices (from global overlay).
+     * @param system Reference to the vegetation system for mapping.
+     * @param waterMask Mask indicating presence of water.
+     * @param metadata Description for the time slice.
      */
     static void captureState(Trajectory& trajectory, 
                              const std::vector<int>& scenarioIndices,
@@ -23,25 +46,14 @@ public:
                              const std::vector<bool>& waterMask,
                              const std::string& metadata) {
         
-        const auto& hypotheses = system.getHypotheses();
         std::vector<int> semanticState;
         semanticState.reserve(scenarioIndices.size());
         
-        // Map Index -> Code
         for (int idx : scenarioIndices) {
-            if (idx >= 0 && idx < static_cast<int>(hypotheses.size())) {
-                auto code = hypotheses[idx].getType().getCode();
-                semanticState.push_back(static_cast<int>(code));
-            } else {
-                semanticState.push_back(-1); // None/Soil
-            }
+            semanticState.push_back(idx); 
         }
 
-        int ordinal = trajectory.getNextOrdinal();
-        int id = ordinal; 
-        
-        TimeSlice slice(id, ordinal, semanticState, waterMask, metadata);
-        trajectory.addTimeSlice(slice);
+        captureSemanticState(trajectory, semanticState, waterMask, metadata);
     }
 };
 

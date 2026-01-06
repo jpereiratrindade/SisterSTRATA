@@ -145,6 +145,7 @@ public:
 
     struct ScenarioResult {
         std::vector<int> classification; // -1=None, >=0 Hypothesis Index
+        std::vector<int> semanticCodes;  // Semantic VegetationCode for the winner
         std::vector<ScenarioStats> stats;
     };
 
@@ -195,65 +196,127 @@ public:
     // To minimize risk, I will implement calculateScenario using this new helper, and leave calculatePotentialCoverage as is (or refactor it to use helper).
     // Refactoring is cleaner.
     
-    // ... calculatePotentialCoverage ... (Leaving as is to avoid large diff, or refactoring?)
-    // User wants "Scenario". I'll add "calculateScenario".
-    
+    /**
+     * @brief Calculates a global scenario overlay where multiple scenarios compete.
+     * Priority is given based on position in the scenarios vector (Top wins).
+     * 
+     * @param scenarios List of scenarios to overlay.
+     * @param vertices Terrain vertices to classify.
+     * @param hydro Hydrological data for drainage distance calculation.
+     * @param gridSpacing Distance in meters between adjacent grid cells.
+     * @return ScenarioResult A classification map of scenario indices and semantic codes.
+     */
     static ScenarioResult calculateScenario(
-        const std::vector<VegetationOriginal>& hypotheses,
+        const std::vector<EcologicalScenario>& scenarios,
         const std::vector<World3D::Rendering::Vertex>& vertices,
         const Core::Domain::Hydro::HydroGrid& hydro,
         float gridSpacing
     ) {
-         if (vertices.empty()) return {{}, {}};
+         if (vertices.empty()) return {{}, {}, {}};
          
          // Pre-calculate drainage map ONCE
          std::vector<float> drainageMap = calculateDrainageMap(vertices, hydro);
          bool hasDrainage = !drainageMap.empty();
 
-         std::vector<int> classification(vertices.size(), -1);
-         std::vector<ScenarioStats> stats(hypotheses.size(), {0, 0.0f});
+          std::vector<int> classification(vertices.size(), -1);
+          std::vector<int> semanticCodes(vertices.size(), -1);
+          std::vector<ScenarioStats> stats(scenarios.size(), {0, 0.0f});
 
-         for (size_t i = 0; i < vertices.size(); ++i) {
-             const auto& v = vertices[i];
-             
-             // Slope Logic
-             float slopeRad = std::acos(std::clamp(v.normal.z, -1.0f, 1.0f)); 
-             float slopeDeg = glm::degrees(slopeRad);
+          for (size_t i = 0; i < vertices.size(); ++i) {
+              const auto& v = vertices[i];
+              float slopeRad = std::acos(std::clamp(v.normal.z, -1.0f, 1.0f)); 
+              float slopeDeg = glm::degrees(slopeRad);
 
-             // Find first match (Priority: Index 0 wins)
-             for (size_t hIdx = 0; hIdx < hypotheses.size(); ++hIdx) {
-                 const auto& h = hypotheses[hIdx];
-                 const auto& cond = h.getConditions();
-                 
-                 bool fit = true;
-                 if (cond.minSlope.has_value() && slopeDeg < cond.minSlope.value()) fit = false;
-                 if (cond.maxSlope.has_value() && slopeDeg > cond.maxSlope.value()) fit = false;
-                 
-                 if (fit && cond.maxDistanceToDrainage.has_value()) {
-                     if (!hasDrainage) {
-                         // Missing dependency -> Fail or Ignore?
-                         // In individual mode we ignore? Or fail?
-                         // "Safe" approach: if criteria exists but data missing, fail match.
-                         fit = false; 
-                     } else {
-                         float dist = drainageMap[i];
-                         if (dist * gridSpacing > cond.maxDistanceToDrainage.value()) fit = false;
-                     }
-                 }
-                 
-                 if (fit) {
-                     classification[i] = (int)hIdx;
-                     stats[hIdx].realizedVertices++;
-                     break; // Claimed!
-                 }
-             }
-         }
+              // Priority: First scenario in the system list wins for global overlay
+              for (size_t sIdx = 0; sIdx < scenarios.size(); ++sIdx) {
+                  const auto& scenario = scenarios[sIdx];
+                  bool match = false;
+
+                  for (const auto& h : scenario.getComponents()) {
+                      const auto& cond = h.getConditions();
+                      bool fit = true;
+                      if (cond.minSlope.has_value() && slopeDeg < cond.minSlope.value()) fit = false;
+                      if (cond.maxSlope.has_value() && slopeDeg > cond.maxSlope.value()) fit = false;
+                      
+                      if (fit && cond.maxDistanceToDrainage.has_value()) {
+                          if (!hasDrainage) fit = false;
+                          else {
+                              float dist = drainageMap[i];
+                              if (dist * gridSpacing > cond.maxDistanceToDrainage.value()) fit = false;
+                          }
+                      }
+
+                      if (fit) {
+                          classification[i] = (int)sIdx; // For global overlay, we store scenario index
+                          semanticCodes[i] = static_cast<int>(h.getType().getCode());
+                          match = true;
+                          break; 
+                      }
+                  }
+                  if (match) {
+                      stats[sIdx].realizedVertices++;
+                      break;
+                  }
+              }
+          }
 
          for(auto& s : stats) {
              s.realizedPercentage = (static_cast<float>(s.realizedVertices) / vertices.size()) * 100.0f;
          }
 
-         return {classification, stats};
+          return {classification, semanticCodes, stats};
+     }
+
+    /**
+     * @brief Resolves a specific EcologicalScenario into a semantic classification map.
+     * Components within the scenario compete (First that fits wins).
+     * 
+     * @param scenario The scenario to resolve.
+     * @param vertices Terrain vertices to classify.
+     * @param hydro Hydrological data for drainage distance calculation.
+     * @param gridSpacing Distance in meters between adjacent grid cells.
+     * @return std::vector<int> A map containing semantic VegetationCode values.
+     */
+    static std::vector<int> resolveScenarioToCodes(
+        const EcologicalScenario& scenario,
+        const std::vector<World3D::Rendering::Vertex>& vertices,
+        const Core::Domain::Hydro::HydroGrid& hydro,
+        float gridSpacing
+    ) {
+        if (vertices.empty()) return {};
+
+        std::vector<float> drainageMap = calculateDrainageMap(vertices, hydro);
+        bool hasDrainage = !drainageMap.empty();
+
+        std::vector<int> classification(vertices.size(), -1);
+
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& v = vertices[i];
+            float slopeRad = std::acos(std::clamp(v.normal.z, -1.0f, 1.0f)); 
+            float slopeDeg = glm::degrees(slopeRad);
+
+            // Priority: Components within the same scenario (vector) compete
+            for (const auto& h : scenario.getComponents()) {
+                const auto& cond = h.getConditions();
+                bool fit = true;
+                if (cond.minSlope.has_value() && slopeDeg < cond.minSlope.value()) fit = false;
+                if (cond.maxSlope.has_value() && slopeDeg > cond.maxSlope.value()) fit = false;
+                
+                if (fit && cond.maxDistanceToDrainage.has_value()) {
+                    if (!hasDrainage) fit = false;
+                    else {
+                        float dist = drainageMap[i];
+                        if (dist * gridSpacing > cond.maxDistanceToDrainage.value()) fit = false;
+                    }
+                }
+
+                if (fit) {
+                    classification[i] = static_cast<int>(h.getType().getCode());
+                    break; // First component that fits wins
+                }
+            }
+        }
+        return classification;
     }
 };
 

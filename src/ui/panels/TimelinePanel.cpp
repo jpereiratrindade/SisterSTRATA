@@ -33,21 +33,33 @@ void TimelinePanel::draw(bool* open) {
 
     // Capture Controls
     if (ImGui::Button("Capture Current State", ImVec2(-1, 0))) {
-        const auto* res = vegPanel_->getLastScenarioResult();
-        if (res && !res->classification.empty()) {
-            std::string meta = "State " + std::to_string(trajectory_->getNextOrdinal());
-            
-            std::vector<bool> waterMask; 
-            
-            Core::Domain::FourthDimension::TrajectoryService::captureState(
-                *trajectory_,
-                res->classification, 
-                vegPanel_->getSystem(), 
-                waterMask,
-                meta
-            );
+        if (vegPanel_->isSemanticClassificationActive()) {
+            const auto& semantic = vegPanel_->getLastSemanticClassification();
+            if (!semantic.empty()) {
+                std::string meta = "Semantic State " + std::to_string(trajectory_->getNextOrdinal());
+                std::vector<bool> waterMask; 
+                Core::Domain::FourthDimension::TrajectoryService::captureSemanticState(
+                    *trajectory_,
+                    semantic, 
+                    waterMask,
+                    meta
+                );
+            }
         } else {
-             ImGui::OpenPopup("CaptureFailed");
+            const auto* res = vegPanel_->getLastScenarioResult();
+            if (res && !res->classification.empty()) {
+                std::string meta = "State " + std::to_string(trajectory_->getNextOrdinal());
+                std::vector<bool> waterMask; 
+                Core::Domain::FourthDimension::TrajectoryService::captureState(
+                    *trajectory_,
+                    res->classification, 
+                    vegPanel_->getSystem(), 
+                    waterMask,
+                    meta
+                );
+            } else {
+                 ImGui::OpenPopup("CaptureFailed");
+            }
         }
     }
 
@@ -219,11 +231,16 @@ void TimelinePanel::draw(bool* open) {
 
         if (hermeneuticInProgress_) ImGui::TextDisabled("Analisando transição...");
         if (!hermeneuticInsight_.empty()) {
-            ImGui::BeginChild("HermeneuticOutput", ImVec2(0, 100), true);
+            ImGui::SliderFloat("Altura do Insight", &insightWindowHeight_, 100.0f, 600.0f);
+            ImGui::BeginChild("HermeneuticOutput", ImVec2(0, insightWindowHeight_), true);
             ImGui::TextWrapped("%s", hermeneuticInsight_.c_str());
             ImGui::EndChild();
-            if (ImGui::TreeNode("Dados de Origem (Contexto)")) {
+            if (ImGui::TreeNode("Dados de Origem (Contexto Compartilhado com LLM)")) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 1.0f, 1.0f));
+                ImGui::TextWrapped("Prompt Completo / Contexto Selecionado:");
+                ImGui::Separator();
                 ImGui::TextWrapped("%s", hermeneuticContext_.c_str());
+                ImGui::PopStyleColor();
                 ImGui::TreePop();
             }
             if (ImGui::Button("Salvar Análise de Transição")) saveAnalysisToFile(hermeneuticInsight_, "transition");
@@ -311,14 +328,19 @@ void TimelinePanel::draw(bool* open) {
                 auto nameResolver = [this](int code) -> std::string {
                     if (vegPanel_) {
                         const auto& system = vegPanel_->getSystem();
-                        if (code >= 0 && code < (int)system.getHypotheses().size()) {
-                            const auto& hyp = system.getHypotheses()[code];
-                            return hyp.getId().getValue() + " (" + hyp.getType().toString() + ")";
+                        const auto& scenarios = system.getScenarios();
+                        if (code >= 0 && code < (int)scenarios.size()) {
+                            return "Scenario: " + scenarios[code].getId();
+                        }
+                        // Fallback: Check if it's a semantic code
+                        if (code >= 0 && code <= 2) {
+                            return Core::Domain::Vegetation::VegetationType(static_cast<Core::Domain::Vegetation::VegetationCode>(code)).toString();
                         }
                     }
                     return "Classe " + std::to_string(code);
                 };
 
+                std::string summary = PatchTrajectoryService::generateLLMSummary(pt, nameResolver);
                 trajectoryContext_ = summary;
                 std::string prompt = "Analise a trajetória histórica do patch ID " + std::to_string(selectedPatchId_) + ".\n" + summary;
                 
@@ -358,6 +380,7 @@ void TimelinePanel::draw(bool* open) {
 
         if (trajectoryInProgress_) ImGui::TextDisabled("Calculando trajetórias...");
         if (!trajectoryInsight_.empty()) {
+            ImGui::SliderFloat("Altura da Análise", &insightWindowHeight_, 100.0f, 800.0f);
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.15f, 0.1f, 1.0f));
             ImGui::BeginChild("TrajectoryOutput", ImVec2(0, insightWindowHeight_), true);
             ImGui::TextWrapped("%s", trajectoryInsight_.c_str());
@@ -366,8 +389,12 @@ void TimelinePanel::draw(bool* open) {
             
             if (ImGui::Button("Salvar Resumo de Trajetória")) saveAnalysisToFile(trajectoryInsight_, "trajectory");
 
-            if (ImGui::TreeNode("Dados de Origem (Contexto)")) {
+            if (ImGui::TreeNode("Dados de Origem (Contexto Compartilhado com LLM)")) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 1.0f, 1.0f));
+                ImGui::TextWrapped("Contexto Gerado para o Patch/Global:");
+                ImGui::Separator();
                 ImGui::TextWrapped("%s", trajectoryContext_.c_str());
+                ImGui::PopStyleColor();
                 ImGui::TreePop();
             }
         }
@@ -401,21 +428,59 @@ std::string TimelinePanel::getClassDistribution(const Core::Domain::FourthDimens
     if (cover.empty()) return "Sem dados";
     std::map<int, size_t> counts;
     for (int code : cover) counts[code]++;
+    float gridSpacing = 2.0f;
+    if (vegPanel_) {
+        const auto& vertices = World3D::getVertices();
+        if (vertices.size() > 1) {
+            float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
+            if (d > 0.001f) gridSpacing = d;
+        }
+    }
+
+    int w = 0, h = 0;
+    w = static_cast<int>(std::sqrt(cover.size()));
+    h = w;
+
     std::stringstream ss;
     ss << "[";
     bool first = true;
     for (auto const& [code, count] : counts) {
         if (!first) ss << ", ";
         float pct = (static_cast<float>(count) / cover.size()) * 100.0f;
+        float areaHa = (count * gridSpacing * gridSpacing) / 10000.0f;
+
         std::string name = "Classe_" + std::to_string(code);
         if (vegPanel_) {
             const auto& system = vegPanel_->getSystem();
-            if (code >= 0 && code < (int)system.getHypotheses().size()) {
-                const auto& hyp = system.getHypotheses()[code];
-                name = hyp.getId().getValue() + " (" + hyp.getType().toString() + ")";
+            const auto& scenarios = system.getScenarios();
+            if (code >= 0 && code < (int)scenarios.size()) {
+                name = "Scenario: " + scenarios[code].getId();
+            } else if (code >= 0 && code <= 2) {
+                // Semantic fallback
+                name = Core::Domain::Vegetation::VegetationType(static_cast<Core::Domain::Vegetation::VegetationCode>(code)).toString();
             }
         }
-        ss << name << ": " << std::fixed << std::setprecision(1) << pct << "%";
+        
+        // Patch Analysis for this specific class
+        int patchCount = 0;
+        float meanSI = 0.0f;
+        if (w * h == (int)cover.size()) {
+            Core::Domain::SpatialPattern::GridData grid;
+            grid.width = w;
+            grid.height = h;
+            grid.cellWidth = gridSpacing;
+            grid.cellHeight = gridSpacing;
+            grid.values.resize(cover.size());
+            for(size_t i=0; i<cover.size(); ++i) grid.values[i] = (cover[i] == code) ? 1.0 : 0.0;
+            
+            Core::Domain::SpatialPattern::AnalysisConfig cfg;
+            cfg.threshold = 0.5;
+            auto res = Core::Domain::SpatialPattern::AnalyzeGrid(grid, cfg);
+            patchCount = res.summary.patchCount;
+            meanSI = (float)res.summary.meanShapeIndex;
+        }
+
+        ss << name << ": " << std::fixed << std::setprecision(1) << pct << "% (" << areaHa << "ha, " << patchCount << " patches, SI: " << meanSI << ")";
         first = false;
     }
     ss << "]";

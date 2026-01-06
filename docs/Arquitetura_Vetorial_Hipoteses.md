@@ -32,6 +32,16 @@ $$Metricas(Patch) = f(\Delta V_{Hipótese})$$
 Isso permite que o LLM (Qwen) realize interpretações táticas como:
 > *"O incremento de $5m$ no parâmetro de distância ($p_3$) resultou em um ganho de área de $15\%$, indicando que este nicho é altamente sensível à proximidade hídrica nesta topografia específica."*
 
-## 5. Roadmap de Implementação
+## 5. Implementação da Classe `EcologicalScenario`
+A classe `EcologicalScenario` v2.0 formaliza este espaço vetorial ao agrupar múltiplos componentes (`VegetationOriginal`) sob um único identificador. Isso permite que uma "Hipótese" seja, na verdade, um conjunto de condições que juntas definem um estado ecológico completo (ex: Água + Floresta + Campo).
+
+### Métricas de Saída Enriquecidas:
+Além dos percentuais, o sistema agora fornece para cada cenário/classe:
+- **Área Total (ha)**: Extensão espacial absoluta.
+- **Contagem de Patches**: Fragmentação do estado na paisagem.
+- **Índice de Forma Médio (SI)**: Complexidade geométrica dos fragmentos.
+
+## 6. Roadmap de Implementação
 - **v1.8.x**: Grounding Semântico (Nomes de Hipóteses no LLM). [Concluído]
-- **v2.0.0**: Implementação da classe `EcologicalScenario` para agrupar múltiplos vetores e calcular magnitudes de contraste automaticamente.
+- **v2.0.0**: Implementação da classe `EcologicalScenario` e resolução semântica vetorial. [Concluído]
+- **v2.1.0**: Integração de análise de proximidade e conectividade entre cenários.

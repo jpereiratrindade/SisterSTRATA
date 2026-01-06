@@ -20,9 +20,9 @@ public:
      *                 or accept a parallel vector of classifications.
      *                 For now, let's assume we can map the vertex storage or pass the classes explicitly.
      * 
-     * @param soilClasses Parallel vector of soil classifications for each vertex. 
-     *                    If empty, we might try to infer from color (risky).
-     *                    Better: We pass the vertices and the classification list that matches them.
+     * @param classes Parallel vector of soil classifications for each vertex. 
+     *                If empty, we might try to infer from color (risky).
+     *                Better: We pass the vertices and the classification list that matches them.
      * 
      * @param cellSize The size of each grid cell in world units.
      * @return GridData The resulting grid compatible with PatchAnalysis.

@@ -825,9 +825,8 @@ bool Engine::saveSlopeStats(const std::string& filepath) {
 }
 
 /**
- * @brief Applies vegetation visualization colors to the active mesh vertices based on the hypothesis criteria.
- * Supports different colors for Forest, Campestre, and Water.
- * @param hypothesis The vegetation hypothesis to visualize.
+ * @brief Resets the terrain visualization to its original soil-based colors.
+ * Restores the vertex colors from the activeOriginalColors_ buffer.
  */
 void Engine::resetVisualization() {
     if (!activeVertices_ || !activeVertexBuffer_) return;

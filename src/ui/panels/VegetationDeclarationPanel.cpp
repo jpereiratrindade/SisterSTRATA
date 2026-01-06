@@ -65,135 +65,138 @@ void VegetationDeclarationPanel::draw(bool* open) {
         ImGui::Text("Not Covered (Soil/Brown)");
 
         ImGui::Separator();
-        ImGui::Text("Declared Hypotheses & Technical Bases:");
+        ImGui::Text("Declared Hypotheses & Technical Bases (Grouped by Scenario):");
         
-        // Technical Base: Current Terrain Vertices
-        // Accessing this is cheap, iterating is expensive.
         const auto& vertices = World3D::getVertices();
-
-
+        auto& scenarios = system_.getScenarios(); 
         
-        // Use index-based loop to support granular deletion
-        auto& hypotheses = system_.getHypotheses(); 
-        // Note: getHypotheses returns const ref. We modify system via method.
-        
-        for (size_t i = 0; i < hypotheses.size(); ++i) {
-            const auto& h = hypotheses[i];
-            std::string hid = h.getId().getValue();
+        for (size_t i = 0; i < scenarios.size(); ++i) {
+            auto& scenario = scenarios[i];
+            std::string sid = scenario.getId();
             
             // Append index to ID for UI uniqueness to handle duplicate IDs
-            std::string uiId = hid + "##" + std::to_string(i);
+            std::string uiId = sid + "##Scene" + std::to_string(i);
             
-            CachedStats& stats = statsCache_[uiId]; 
-
-            ImGui::PushID(uiId.c_str());
-            ImGui::BulletText("%s: %s", hid.c_str(), h.getType().toString().c_str());
-
-            // Reordering Buttons
-            if (i > 0) {
-                ImGui::SameLine();
-                if (ImGui::Button("Up")) {
-                    system_.swapHypotheses(i, i - 1);
-                    scenarioOutdated_ = true;
-                    ImGui::PopID(); // Clean up current ID stack
-                    break;          // Break loop to refresh
+            if (ImGui::TreeNodeEx(uiId.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+                // Reordering Buttons for Scenarios
+                if (i > 0) {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Up")) {
+                        system_.swapScenarios(i, i - 1);
+                        scenarioOutdated_ = true;
+                        ImGui::TreePop(); 
+                        break;
+                    }
                 }
-            }
-            if (i < hypotheses.size() - 1) {
+                if (i < scenarios.size() - 1) {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Down")) {
+                        system_.swapScenarios(i, i + 1);
+                        scenarioOutdated_ = true;
+                        ImGui::TreePop();
+                        break;
+                    }
+                }
+
                 ImGui::SameLine();
-                if (ImGui::Button("Down")) {
-                    system_.swapHypotheses(i, i + 1);
-                    scenarioOutdated_ = true;
-                    ImGui::PopID();
+                if (ImGui::Button("Resolve This Scenario (Vector)")) {
+                    const auto& hydro = World3D::getHydroGrid();
+                    float spacing = 2.0f; 
+                    if (vertices.size() > 1) {
+                        float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
+                        if (d > 0.001f) spacing = d;
+                    }
+
+                    lastSemanticClassification_ = Core::Domain::Vegetation::VegetationMappingService::resolveScenarioToCodes(
+                        scenario, vertices, hydro, spacing
+                    );
+                    semanticActive_ = true;
+                    scenarioOutdated_ = true; // Mark scenario (indices) as outdated since we switched mode
+                    
+                    World3D::applyClassificationVisualization(lastSemanticClassification_);
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Suprimir Scenario")) {
+                    system_.removeScenarioByIndex(i);
+                    ImGui::TreePop();
                     break;
                 }
-            }
-            
-            ImGui::Indent();
-            ImGui::Text("Criteria: Slope %.1f-%.1f deg, Dist < %.0f m", 
-                h.getConditions().minSlope.value_or(0),
-                h.getConditions().maxSlope.value_or(90),
-                h.getConditions().maxDistanceToDrainage.value_or(9999)
-            );
 
-            if (ImGui::Button("Verify Coverage")) {
-                 const auto& hydro = World3D::getHydroGrid();
-                 float spacing = 2.0f; 
-                 if (vertices.size() > 1) {
-                     float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
-                     if (d > 0.001f) spacing = d;
-                 }
-                 
-                 // Check dependencies
-                 if (h.getConditions().maxDistanceToDrainage.has_value() && (!hydro.isValid() || hydro.flowAccumulationCells.empty())) {
-                     // Warning will be shown in the UI below, but we run anyway (ignoring drainage)
-                 }
+                const auto& components = scenario.getComponents();
+                for (size_t j = 0; j < components.size(); ++j) {
+                    const auto& h = components[j];
+                    std::string compId = h.getType().toString() + "##" + std::to_string(j);
+                    
+                    CachedStats& stats = statsCache_[sid + "_" + compId]; 
 
-                 auto result = Core::Domain::Vegetation::VegetationMappingService::calculatePotentialCoverage(
-                     h, vertices, hydro, spacing
-                 );
-                 stats.matchVertices = result.matchVertices;
-                 stats.coveragePercentage = result.coveragePercentage;
-                 stats.outdated = false;
-            }
+                    ImGui::PushID(compId.c_str());
+                    ImGui::BulletText("%s", h.getType().toString().c_str());
 
-            // Warning for missing dependencies
-            const auto& hydroGrid = World3D::getHydroGrid();
-            if (h.getConditions().maxDistanceToDrainage.has_value() && (!hydroGrid.isValid() || hydroGrid.flowAccumulationCells.empty())) {
-                ImGui::SameLine();
-                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "[!] Run 'Compute Drainage' first!");
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Visualize (Apply)")) {
-                // Determine dependencies
-                 const auto& hydro = World3D::getHydroGrid();
-                 float spacing = 2.0f; 
-                 if (vertices.size() > 1) {
-                     float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
-                     if (d > 0.001f) spacing = d;
-                 }
+                    ImGui::Indent();
+                    ImGui::Text("Criteria: Slope %.1f-%.1f deg, Dist < %.0f m", 
+                        h.getConditions().minSlope.value_or(0),
+                        h.getConditions().maxSlope.value_or(90),
+                        h.getConditions().maxDistanceToDrainage.value_or(9999)
+                    );
 
-                 auto result = Core::Domain::Vegetation::VegetationMappingService::calculatePotentialCoverage(
-                     h, vertices, hydro, spacing
-                 );
-                 
-                 // Update stats too
-                 stats.matchVertices = result.matchVertices;
-                 stats.coveragePercentage = result.coveragePercentage;
-                 stats.outdated = false;
+                    if (ImGui::Button("Verify Coverage")) {
+                        const auto& hydro = World3D::getHydroGrid();
+                        float spacing = 2.0f; 
+                        if (vertices.size() > 1) {
+                            float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
+                            if (d > 0.001f) spacing = d;
+                        }
+                        
+                        auto result = Core::Domain::Vegetation::VegetationMappingService::calculatePotentialCoverage(
+                            h, vertices, hydro, spacing
+                        );
+                        stats.matchVertices = result.matchVertices;
+                        stats.coveragePercentage = result.coveragePercentage;
+                        stats.outdated = false;
+                    }
 
-                World3D::applyVegetationVisualization(h, result.coverageMask);
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Suprimir")) {
-                system_.removeHypothesisByIndex(i);
-                ImGui::Unindent();
-                ImGui::PopID();
-                break; 
-            }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Visualize (Apply)")) {
+                        const auto& hydro = World3D::getHydroGrid();
+                        float spacing = 2.0f; 
+                        if (vertices.size() > 1) {
+                            float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
+                            if (d > 0.001f) spacing = d;
+                        }
 
-            if (!stats.outdated) {
-                if (stats.realizedPercentage >= 0.0f) {
-                     ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), 
-                        "Coverage: Potential %.1f%% | Realized %.1f%% (Exclusive)", 
-                        stats.coveragePercentage, stats.realizedPercentage);
-                } else {
-                     ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), 
-                        "Potential Coverage: %.1f%% (%zu vertices)", 
-                        stats.coveragePercentage, stats.matchVertices);
+                        auto result = Core::Domain::Vegetation::VegetationMappingService::calculatePotentialCoverage(
+                            h, vertices, hydro, spacing
+                        );
+                        
+                        stats.matchVertices = result.matchVertices;
+                        stats.coveragePercentage = result.coveragePercentage;
+                        stats.outdated = false;
+
+                        World3D::applyVegetationVisualization(h, result.coverageMask);
+                        semanticActive_ = false; // Visualization is now mixed/partial
+                    }
+
+                    if (!stats.outdated) {
+                         ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), 
+                            "Potential Coverage: %.1f%% (%zu vertices)", 
+                            stats.coveragePercentage, stats.matchVertices);
+                    } else {
+                        ImGui::TextDisabled("Coverage not verified.");
+                    }
+
+                    ImGui::Unindent();
+                    ImGui::PopID();
                 }
-            } else {
-                ImGui::TextDisabled("Coverage not verified.");
+                ImGui::TreePop();
             }
-            ImGui::Unindent();
-            ImGui::PopID();
         }
 
         ImGui::Separator();
-        ImGui::Text("Global Hypothesis Resolution");
-        ImGui::TextDisabled("Priority: Top of list wins (Types exclude each other)");
+        ImGui::Text("Global Hypothesis Resolution (Overlay Mode)");
+        ImGui::TextDisabled("Priority: Top of list wins (Scenarios exclude each other)");
         
-        if (ImGui::Button("Resolve Scenario (Overlay)")) {
+        if (ImGui::Button("Resolve All scenarios (Overlap)")) {
              const auto& hydro = World3D::getHydroGrid();
              const auto& vertices = World3D::getVertices();
              float spacing = 2.0f; 
@@ -202,38 +205,19 @@ void VegetationDeclarationPanel::draw(bool* open) {
                  if (d > 0.001f) spacing = d;
              }
              
-             auto& hypotheses = system_.getHypotheses();
+             auto& scenarios = system_.getScenarios();
              lastScenario_ = Core::Domain::Vegetation::VegetationMappingService::calculateScenario(
-                 hypotheses, vertices, hydro, spacing
+                 scenarios, vertices, hydro, spacing
              );
              scenarioOutdated_ = false;
-             
-             // Update stats
-             for (size_t i = 0; i < hypotheses.size(); ++i) {
-                 std::string hid = hypotheses[i].getId().getValue();
-                 std::string uiId = hid + "##" + std::to_string(i);
-                 statsCache_[uiId].realizedPercentage = lastScenario_.stats[i].realizedPercentage;
-             }
+             semanticActive_ = false; 
         }
         
         if (!scenarioOutdated_) {
             ImGui::SameLine();
-            if (ImGui::Button("Visualize Resolution (All)")) {
-                 const auto& vertices = World3D::getVertices();
-                 const auto& hypotheses = system_.getHypotheses();
-                 
-                 for (size_t i = 0; i < hypotheses.size(); ++i) {
-                     std::vector<bool> mask(vertices.size(), false);
-                     const auto& cls = lastScenario_.classification;
-                     if (cls.size() != vertices.size()) continue;
-
-                     for(size_t v=0; v<vertices.size(); ++v) {
-                         if (cls[v] == (int)i) mask[v] = true;
-                     }
-                     // First layer should NOT accumulate (clears background)
-                     // Subsequent layers SHOULD accumulate
-                     bool accum = (i > 0);
-                     World3D::applyVegetationVisualization(hypotheses[i], mask, accum); 
+            if (ImGui::Button("Visualize Global Resolution")) {
+                 if (!lastScenario_.semanticCodes.empty()) {
+                     World3D::applyClassificationVisualization(lastScenario_.semanticCodes);
                  }
             }
         }
