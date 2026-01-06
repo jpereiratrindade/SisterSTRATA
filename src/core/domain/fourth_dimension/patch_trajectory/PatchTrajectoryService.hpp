@@ -25,7 +25,8 @@ public:
         ss << "- lifespan: " << (trajectory.getLifespan() > 5 ? "longo" : "curto") << " (" << trajectory.getLifespan() << " estados)\n";
         
         float trend = trajectory.getNetAreaTrend();
-        ss << "- net_area_trend: " << (trend > 10.0f ? "ganho" : (trend < -10.0f ? "perda" : "estável")) << " (" << trend << ")\n";
+        float trendHa = trend / 10000.0f;
+        ss << "- net_area_trend: " << (trend > 10.0f ? "ganho" : (trend < -10.0f ? "perda" : "estável")) << " (" << trendHa << " ha)\n";
         
         float stability = trajectory.getStructuralStabilityIndex();
         ss << "- structural_stability: " << (stability > 0.8f ? "alta" : "baixa") << " (index: " << stability << ")\n";

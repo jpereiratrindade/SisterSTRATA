@@ -162,6 +162,10 @@ const std::vector<World3D::Rendering::Vertex>& getVertices(); // New
 const std::vector<Core::Domain::Soils::SiBCSClassification>& getSoilClasses(); // New
 const Core::Domain::Hydro::HydroGrid& getHydroGrid(); // New
 
+int getPickIndex(float mouseX, float mouseY, int screenWidth, int screenHeight);
+
+void highlightPatch(const std::vector<uint32_t>& labels, int patchId);
+
 void setCameraSpeed(float speed);
 
 } // namespace World3D

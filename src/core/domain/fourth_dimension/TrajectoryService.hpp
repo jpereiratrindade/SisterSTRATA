@@ -14,7 +14,7 @@ namespace Core::Domain::FourthDimension {
 class TrajectoryService {
 public:
     /**
-     * @brief Captures the current state using direct semantic codes.
+     * @brief Captures the current state using direct semantic codes (Campestre, Forest, etc).
      * @param trajectory The trajectory aggregate to add the state to.
      * @param semanticState The semantic classification map (VegetationCode).
      * @param waterMask Mask indicating presence of water.
@@ -27,13 +27,12 @@ public:
         int ordinal = trajectory.getNextOrdinal();
         int id = ordinal; 
         
-        TimeSlice slice(id, ordinal, semanticState, waterMask, metadata);
+        TimeSlice slice(id, ordinal, semanticState, waterMask, metadata, ClassificationType::SemanticCode);
         trajectory.addTimeSlice(slice);
     }
 
     /**
-     * @brief Captures the current state from scenario indices.
-     * Legacy/Helper: Maps transient Scenario Indices to persistent Vegetation Codes.
+     * @brief Captures the current state from scenario indices (Hypothesis_01, etc).
      * @param trajectory The trajectory aggregate.
      * @param scenarioIndices Map of scenario indices (from global overlay).
      * @param system Reference to the vegetation system for mapping.
@@ -46,14 +45,12 @@ public:
                              const std::vector<bool>& waterMask,
                              const std::string& metadata) {
         
-        std::vector<int> semanticState;
-        semanticState.reserve(scenarioIndices.size());
-        
-        for (int idx : scenarioIndices) {
-            semanticState.push_back(idx); 
-        }
+        int ordinal = trajectory.getNextOrdinal();
+        int id = ordinal;
 
-        captureSemanticState(trajectory, semanticState, waterMask, metadata);
+        std::vector<int> scenarioData = scenarioIndices; // Indices are stored directly
+        TimeSlice slice(id, ordinal, scenarioData, waterMask, metadata, ClassificationType::ScenarioIndex);
+        trajectory.addTimeSlice(slice);
     }
 };
 

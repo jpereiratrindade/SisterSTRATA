@@ -1,0 +1,43 @@
+[  2%] Built target Shaders
+[  4%] Building CXX object src/core/CMakeFiles/core.dir/domain/spatial_pattern/PatchAnalysis.cpp.o
+[  5%] Linking CXX static library ../../lib/libcore.a
+[ 15%] Built target core
+[ 18%] Linking CXX executable ../../bin/core_tests
+[ 18%] Linking CXX executable ../../bin/patch_analysis_tests
+[ 20%] Linking CXX executable ../../bin/soil_rasterizer_tests
+[ 21%] Building CXX object src/ui/CMakeFiles/ui.dir/UI.cpp.o
+[ 24%] Built target soil_rasterizer_tests
+[ 24%] Built target core_tests
+[ 25%] Built target patch_analysis_tests
+[ 27%] Building CXX object src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.o
+[ 28%] Linking CXX executable ../../bin/patch_trajectory_test
+[ 30%] Linking CXX executable ../../bin/trajectory_lod_tests
+[ 31%] Built target patch_trajectory_test
+[ 32%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o
+[ 34%] Built target trajectory_lod_tests
+[ 35%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o
+[ 37%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o
+[ 38%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o
+[ 40%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o
+[ 41%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o
+[ 42%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o
+[ 44%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o
+[ 45%] Linking CXX static library ../../lib/libui.a
+[ 55%] Built target ui
+[ 57%] Building CXX object src/world3d/CMakeFiles/world3d.dir/World3D.cpp.o
+[ 58%] Building CXX object src/world3d/CMakeFiles/world3d.dir/Engine.cpp.o
+[ 60%] Linking CXX static library ../../lib/libworld3d.a
+[ 77%] Built target world3d
+[ 78%] Building CXX object src/application/CMakeFiles/application.dir/Application.cpp.o
+[ 80%] Linking CXX static library ../../lib/libapplication.a
+[ 81%] Built target application
+[ 88%] Built target infrastructure
+[ 91%] Linking CXX executable ../../bin/application_tests
+[ 91%] Linking CXX executable ../../bin/infrastructure_tests
+[ 92%] Linking CXX executable ../../bin/veg_vector_tests
+[ 94%] Building CXX object CMakeFiles/SisterSTRATA.dir/src/main.cpp.o
+[ 95%] Built target veg_vector_tests
+[ 97%] Built target application_tests
+[ 98%] Built target infrastructure_tests
+[100%] Linking CXX executable bin/SisterSTRATA
+[100%] Built target SisterSTRATA

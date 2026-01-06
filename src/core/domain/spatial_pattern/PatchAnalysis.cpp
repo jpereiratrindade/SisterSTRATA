@@ -176,7 +176,7 @@ LabelImage LabelComponents(const GridData& data, const AnalysisConfig& cfg, std:
             double val = data.values[pos];
             if (IsNoData(data, val)) continue;
             if (!cfg.byClass && !(val > cfg.threshold)) continue;
-            if (cfg.byClass && static_cast<int32_t>(val) == 0) continue;
+            // if (cfg.byClass && static_cast<int32_t>(val) == 0) continue; // Removed to allow picking class 0
 
             uint32_t labelId = cfg.keepLabels ? static_cast<uint32_t>(patches.size() + 1) : 0u;
             ComponentAccum acc = cfg.byClass

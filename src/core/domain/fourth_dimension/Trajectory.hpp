@@ -4,6 +4,7 @@
 #include "TrajectoryPersistenceService.hpp"
 #include <vector>
 #include <string>
+#include <algorithm>
 #include <iostream>
 
 namespace Core::Domain::FourthDimension {
@@ -65,6 +66,22 @@ public:
     
     void clear() {
         slices_.clear();
+    }
+
+    /**
+     * @brief Removes a slice by its ordinal index.
+     * @param ordinal Index of the slice to remove.
+     * @return true if found and removed.
+     */
+    bool removeTimeSlice(int ordinal) {
+        auto it = std::remove_if(slices_.begin(), slices_.end(),
+            [ordinal](const TimeSlice& s) { return s.getOrdinalIndex() == ordinal; });
+        
+        if (it != slices_.end()) {
+            slices_.erase(it, slices_.end());
+            return true;
+        }
+        return false;
     }
 
 private:

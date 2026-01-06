@@ -6,6 +6,11 @@
 
 namespace Core::Domain::FourthDimension {
 
+enum class ClassificationType {
+    ScenarioIndex,
+    SemanticCode
+};
+
 /**
  * @brief Represents an immutable snapshot of the STRATA landscape state.
  * Captures the realized ecological cover and hydrology at a specific ordinal time.
@@ -13,8 +18,8 @@ namespace Core::Domain::FourthDimension {
  */
 class TimeSlice {
 public:
-    TimeSlice(int id, int ordinal, const std::vector<int>& cover, const std::vector<bool>& water, const std::string& meta)
-        : id_(id), ordinalIndex_(ordinal), ecologicalCoverState_(cover), waterMask_(water), metadata_(meta) {
+    TimeSlice(int id, int ordinal, const std::vector<int>& cover, const std::vector<bool>& water, const std::string& meta, ClassificationType type = ClassificationType::ScenarioIndex)
+        : id_(id), ordinalIndex_(ordinal), ecologicalCoverState_(cover), waterMask_(water), metadata_(meta), type_(type) {
         timestamp_ = std::time(nullptr);
     }
 
@@ -29,6 +34,7 @@ public:
     const std::vector<int>& getEcologicalCoverState() const { return ecologicalCoverState_; }
     const std::vector<bool>& getWaterMask() const { return waterMask_; }
     const std::string& getMetadata() const { return metadata_; }
+    ClassificationType getClassificationType() const { return type_; }
 
     // LOD Temporal Support
     bool isProxy() const { return isProxy_; }
@@ -58,10 +64,11 @@ private:
     int ordinalIndex_;
     time_t timestamp_;
     
-    std::vector<int> ecologicalCoverState_; // Stores VegetationCode values
-    std::vector<bool> waterMask_;           // Stores Hydrology mask
+    std::vector<int> ecologicalCoverState_; 
+    std::vector<bool> waterMask_;           
     
     std::string metadata_;
+    ClassificationType type_ = ClassificationType::ScenarioIndex;
 
     bool isProxy_ = false;
     std::string diskPath_;

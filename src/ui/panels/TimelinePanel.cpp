@@ -3,6 +3,8 @@
 #include "core/domain/fourth_dimension/TrajectoryService.hpp"
 #include "core/domain/fourth_dimension/CoherenceIntensityService.hpp"
 #include "core/domain/fourth_dimension/patch_trajectory/PatchTrajectoryService.hpp"
+#include "core/domain/fourth_dimension/TrajectoryPersistenceService.hpp"
+#include "core/domain/vegetation/VegetationPersistenceService.hpp"
 #include "core/domain/spatial_pattern/PatchAnalysis.hpp"
 #include "world3d/World3D.hpp"
 #include "imgui.h"
@@ -29,6 +31,23 @@ void TimelinePanel::draw(bool* open) {
         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "[!] Missing Dependencies");
         ImGui::End();
         return;
+    }
+
+    // --- Mouse Picking for Patch ID Selection ---
+    if (ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered() && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
+        ImVec2 mousePos = ImGui::GetMousePos();
+        ImVec2 vpSize = ImGui::GetMainViewport()->Size;
+        
+        int vertexIdx = World3D::getPickIndex(mousePos.x, mousePos.y, (int)vpSize.x, (int)vpSize.y);
+        if (vertexIdx != -1 && !lastPatchAnalysis_.labelImage.labels.empty()) {
+            if (vertexIdx < (int)lastPatchAnalysis_.labelImage.labels.size()) {
+                int patchId = lastPatchAnalysis_.labelImage.labels[vertexIdx];
+                if (patchId > 0) {
+                    selectedPatchId_ = patchId;
+                    World3D::highlightPatch(lastPatchAnalysis_.labelImage.labels, patchId);
+                }
+            }
+        }
     }
 
     // Capture Controls
@@ -61,6 +80,31 @@ void TimelinePanel::draw(bool* open) {
                  ImGui::OpenPopup("CaptureFailed");
             }
         }
+
+        // Auto-select and cache analysis for the new state
+        if (!trajectory_->getTimeSlices().empty()) {
+            selectedSliceIndex_ = (int)trajectory_->getTimeSlices().size() - 1;
+            applyGhostVisualization(trajectory_->getTimeSlices().back());
+        }
+    }
+
+    // Project Persistence
+    ImGui::Spacing();
+    ImGui::InputText("Nome do Projeto", projectRootName_, sizeof(projectRootName_));
+    if (ImGui::Button("Save Project", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 0))) {
+        std::string scenariosPath = std::string(projectRootName_) + ".strata";
+        std::string trajPath = std::string(projectRootName_) + "_traj.strata";
+        Core::Domain::Vegetation::VegetationPersistenceService::saveScenarios(vegPanel_->getSystem(), scenariosPath);
+        Core::Domain::FourthDimension::TrajectoryPersistenceService::saveTrajectory(*trajectory_, ".", trajPath);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Load Project", ImVec2(-1, 0))) {
+        std::string scenariosPath = std::string(projectRootName_) + ".strata";
+        std::string trajPath = std::string(projectRootName_) + "_traj.strata";
+        
+        auto& mutableSystem = const_cast<Core::Domain::Vegetation::VegetationSystemOriginal&>(vegPanel_->getSystem());
+        Core::Domain::Vegetation::VegetationPersistenceService::loadScenarios(mutableSystem, scenariosPath);
+        Core::Domain::FourthDimension::TrajectoryPersistenceService::loadTrajectory(*trajectory_, ".", trajPath);
     }
 
     if (ImGui::BeginPopup("CaptureFailed")) {
@@ -95,10 +139,22 @@ void TimelinePanel::draw(bool* open) {
     for (int i = 0; i < (int)slices.size(); ++i) {
         const auto& slice = slices[i];
         std::string label = "T" + std::to_string(slice.getOrdinalIndex()) + ": " + slice.getMetadata();
+        
+        ImGui::PushID(i);
+        // Removal Button
+        if (ImGui::Button("x", ImVec2(20, 20))) {
+            trajectory_->removeTimeSlice(slice.getOrdinalIndex());
+            if (selectedSliceIndex_ == i) selectedSliceIndex_ = -1;
+            ImGui::PopID();
+            break; // Loop must break as vector was modified
+        }
+        ImGui::SameLine();
+
         bool isSelected = (selectedSliceIndex_ == i);
         if (ImGui::Selectable(label.c_str(), isSelected)) {
             selectedSliceIndex_ = i;
         }
+        ImGui::PopID();
     }
     ImGui::EndChild();
 
@@ -264,7 +320,21 @@ void TimelinePanel::draw(bool* open) {
             ImGui::Text("Patches detectados no estado selecionado: %d", lastPatchCount_);
         }
 
-        ImGui::InputInt("ID do Patch", &selectedPatchId_);
+        if (ImGui::InputInt("ID do Patch", &selectedPatchId_)) {
+            if (selectedPatchId_ > 0 && !lastPatchAnalysis_.labelImage.labels.empty()) {
+                World3D::highlightPatch(lastPatchAnalysis_.labelImage.labels, selectedPatchId_);
+            }
+        }
+        if (selectedPatchId_ > 0) {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "[Escolhido: %d]", selectedPatchId_);
+            
+            // Show metrics if available in cache
+            if (selectedPatchId_ <= (int)lastPatchAnalysis_.patches.size()) {
+                const auto& m = lastPatchAnalysis_.patches[selectedPatchId_ - 1];
+                ImGui::BulletText("Área: %.2f ha | SI: %.2f", m.area / 10000.0, m.shape_index);
+            }
+        }
         
         ImGui::BeginDisabled(trajectoryInProgress_);
         if (ImGui::Button("Analisar Trajetória do Patch", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 0))) {
@@ -410,6 +480,15 @@ void TimelinePanel::draw(bool* open) {
 
 void TimelinePanel::applyGhostVisualization(const Core::Domain::FourthDimension::TimeSlice& slice) {
     World3D::applyClassificationVisualization(slice.getEcologicalCoverState());
+    
+    // Cache spatial result for picking
+    const auto& cover = slice.getEcologicalCoverState();
+    if (!cover.empty()) {
+        Core::Domain::SpatialPattern::GridData grid;
+        grid.values = std::vector<double>(cover.begin(), cover.end());
+        grid.width = (int)std::sqrt(grid.values.size()); grid.height = grid.width;
+        lastPatchAnalysis_ = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.0, true, true});
+    }
 }
 
 void TimelinePanel::saveAnalysisToFile(const std::string& content, const std::string& type) {
@@ -424,10 +503,19 @@ void TimelinePanel::saveAnalysisToFile(const std::string& content, const std::st
 }
 
 std::string TimelinePanel::getClassDistribution(const Core::Domain::FourthDimension::TimeSlice& slice) {
+    auto& mutableSlice = const_cast<Core::Domain::FourthDimension::TimeSlice&>(slice);
+    if (mutableSlice.isProxy()) {
+        Core::Domain::FourthDimension::TrajectoryPersistenceService::loadFromDisk(mutableSlice);
+    }
+
     const auto& cover = slice.getEcologicalCoverState();
-    if (cover.empty()) return "Sem dados";
+    if (cover.empty()) return "Nenhum dado capturado";
+
     std::map<int, size_t> counts;
-    for (int code : cover) counts[code]++;
+    for (int code : cover) {
+        if (code != -1) counts[code]++;
+    }
+
     float gridSpacing = 2.0f;
     if (vegPanel_) {
         const auto& vertices = World3D::getVertices();
@@ -437,53 +525,78 @@ std::string TimelinePanel::getClassDistribution(const Core::Domain::FourthDimens
         }
     }
 
-    int w = 0, h = 0;
-    w = static_cast<int>(std::sqrt(cover.size()));
-    h = w;
+    int w = static_cast<int>(std::sqrt(cover.size()));
+    int h = w;
 
     std::stringstream ss;
-    ss << "[";
+    ss << "[" << slice.getMetadata() << "]: ";
     bool first = true;
-    for (auto const& [code, count] : counts) {
-        if (!first) ss << ", ";
-        float pct = (static_cast<float>(count) / cover.size()) * 100.0f;
-        float areaHa = (count * gridSpacing * gridSpacing) / 10000.0f;
 
-        std::string name = "Classe_" + std::to_string(code);
+    auto type = slice.getClassificationType();
+    // Fallback for slices created before the ClassificationType was added
+    if (slice.getMetadata().find("Semantic") != std::string::npos) {
+        type = Core::Domain::FourthDimension::ClassificationType::SemanticCode;
+    }
+
+    if (type == Core::Domain::FourthDimension::ClassificationType::ScenarioIndex) {
+        // SCENARIO MODE: List ALL scenarios in the system to ensure 0% are visible
         if (vegPanel_) {
             const auto& system = vegPanel_->getSystem();
             const auto& scenarios = system.getScenarios();
-            if (code >= 0 && code < (int)scenarios.size()) {
-                name = "Scenario: " + scenarios[code].getId();
-            } else if (code >= 0 && code <= 2) {
-                // Semantic fallback
-                name = Core::Domain::Vegetation::VegetationType(static_cast<Core::Domain::Vegetation::VegetationCode>(code)).toString();
+            for (size_t i = 0; i < scenarios.size(); ++i) {
+                if (!first) ss << ", ";
+                int code = static_cast<int>(i);
+                size_t count = counts.count(code) ? counts[code] : 0;
+                float pct = 0.0f;
+                if (!cover.empty()) pct = (static_cast<float>(count) / cover.size()) * 100.0f;
+                float areaHa = (count * gridSpacing * gridSpacing) / 10000.0f;
+                
+                ss << "Scenario " << scenarios[i].getId() << ": " << std::fixed << std::setprecision(1) << pct << "%";
+                if (count > 0 && w * h == (int)cover.size()) {
+                    // Add spatial metrics only for present classes
+                    Core::Domain::SpatialPattern::GridData grid;
+                    grid.width = w; grid.height = h;
+                    grid.cellWidth = gridSpacing; grid.cellHeight = gridSpacing;
+                    grid.values.assign(cover.size(), 0.0);
+                    for(size_t j=0; j<cover.size(); ++j) if(cover[j] == code) grid.values[j] = 1.0;
+                    auto res = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.5});
+                    ss << " (" << areaHa << "ha, " << res.summary.patchCount << " patches, SI: " << (float)res.summary.meanShapeIndex << ")";
+                } else if (count > 0) {
+                     ss << " (" << areaHa << "ha)";
+                } else {
+                     ss << " (0.0ha)";
+                }
+                first = false;
             }
         }
-        
-        // Patch Analysis for this specific class
-        int patchCount = 0;
-        float meanSI = 0.0f;
-        if (w * h == (int)cover.size()) {
-            Core::Domain::SpatialPattern::GridData grid;
-            grid.width = w;
-            grid.height = h;
-            grid.cellWidth = gridSpacing;
-            grid.cellHeight = gridSpacing;
-            grid.values.resize(cover.size());
-            for(size_t i=0; i<cover.size(); ++i) grid.values[i] = (cover[i] == code) ? 1.0 : 0.0;
+    } else {
+        // SEMANTIC MODE: List classes (0=Campestre, 1=Forest, 2=Water)
+        for (int code = 0; code <= 2; ++code) {
+            if (!first) ss << ", ";
+            size_t count = counts.count(code) ? counts[code] : 0;
+    std::string name = Core::Domain::Vegetation::VegetationType(static_cast<Core::Domain::Vegetation::VegetationCode>(code)).toString();
+            float pct = 0.0f;
+            if (!cover.empty()) {
+                pct = (static_cast<float>(count) / cover.size()) * 100.0f;
+            }
+            float areaHa = (count * gridSpacing * gridSpacing) / 10000.0f;
+            ss << name << ": " << std::fixed << std::setprecision(1) << pct << "%";
             
-            Core::Domain::SpatialPattern::AnalysisConfig cfg;
-            cfg.threshold = 0.5;
-            auto res = Core::Domain::SpatialPattern::AnalyzeGrid(grid, cfg);
-            patchCount = res.summary.patchCount;
-            meanSI = (float)res.summary.meanShapeIndex;
+            if (count > 0 && w * h == (int)cover.size()) {
+                Core::Domain::SpatialPattern::GridData grid;
+                grid.width = w; grid.height = h;
+                grid.cellWidth = gridSpacing; grid.cellHeight = gridSpacing;
+                grid.values.assign(cover.size(), 0.0);
+                for(size_t j=0; j<cover.size(); ++j) if(cover[j] == code) grid.values[j] = 1.0;
+                auto res = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.5});
+                ss << " (" << areaHa << "ha, " << res.summary.patchCount << " patches, SI: " << (float)res.summary.meanShapeIndex << ")";
+            } else if (count > 0) {
+                 ss << " (" << areaHa << "ha)";
+            }
+            first = false;
         }
-
-        ss << name << ": " << std::fixed << std::setprecision(1) << pct << "% (" << areaHa << "ha, " << patchCount << " patches, SI: " << meanSI << ")";
-        first = false;
     }
-    ss << "]";
+
     return ss.str();
 }
 

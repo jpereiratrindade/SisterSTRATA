@@ -2,6 +2,7 @@
 #include "world3d/camera/Camera.hpp"
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 
 namespace World3D {
 
@@ -111,6 +112,30 @@ void Camera::updateVectors() {
     front_ = glm::normalize(newFront);
     right_ = glm::normalize(glm::cross(front_, worldUp_));
     up_    = glm::normalize(glm::cross(right_, front_));
+}
+
+std::pair<glm::vec3, glm::vec3> Camera::getPickRay(glm::vec2 mousePos, glm::vec2 screenSize) const {
+    // NDC: -1 to 1. 
+    // Mouse (0,0) is top-left in SDL/ImGui.
+    // NDC (-1,-1) is bottom-left in standard GL, but Vulkan has Y down.
+    // However, our getProjectionMatrix() already multiplies by [1][-1], 
+    // so we should treat it consistently.
+    
+    float x = (2.0f * mousePos.x) / screenSize.x - 1.0f;
+    float y = (2.0f * mousePos.y) / screenSize.y - 1.0f; // Note: keeping it 0 to 1 -> -1 to 1
+    
+    glm::mat4 invProj = glm::inverse(getProjectionMatrix());
+    glm::mat4 invView = glm::inverse(getViewMatrix());
+    
+    // Near plane ray
+    glm::vec4 rayClip = glm::vec4(x, y, -1.0f, 1.0f);
+    glm::vec4 rayEye = invProj * rayClip;
+    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
+    
+    glm::vec3 rayWorld = glm::vec3(invView * rayEye);
+    rayWorld = glm::normalize(rayWorld);
+    
+    return {position_, rayWorld};
 }
 
 } // namespace World3D

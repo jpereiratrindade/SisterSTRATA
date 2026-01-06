@@ -18,6 +18,11 @@ public:
     [[nodiscard]] glm::mat4 getProjectionMatrix() const;
     [[nodiscard]] glm::vec3 getPosition() const { return position_; }
 
+    /**
+     * @brief Generates a ray in world space from screen coordinates.
+     */
+    [[nodiscard]] std::pair<glm::vec3, glm::vec3> getPickRay(glm::vec2 mousePos, glm::vec2 screenSize) const;
+
 private:
     void updateVectors();
 

@@ -6,6 +6,7 @@ add_library(core
     domain/hydro/DrainageSystem.cpp
     domain/hydro/Watershed.cpp
     domain/hydro/HydrologyReport.cpp
+    domain/fourth_dimension/TrajectoryPersistenceService.cpp
 )
 
 target_include_directories(core PUBLIC

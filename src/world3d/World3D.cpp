@@ -213,6 +213,16 @@ int getTargetFPS() {
     if (g_Engine) return g_Engine->getTargetFPS();
     return 0;
 }
+
+int getPickIndex(float mouseX, float mouseY, int screenWidth, int screenHeight) {
+    if (g_Engine) return g_Engine->getPickIndex(mouseX, mouseY, screenWidth, screenHeight);
+    return -1;
+}
+
+void highlightPatch(const std::vector<uint32_t>& labels, int patchId) {
+    if (g_Engine) g_Engine->highlightPatch(labels, patchId);
+}
+
 void setCameraSpeed(float speed) {
     if (g_Engine) g_Engine->setCameraSpeed(speed);
 }

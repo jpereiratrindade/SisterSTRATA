@@ -178,6 +178,9 @@ public:
         return activeVertices_ ? *activeVertices_ : empty; 
     }
 
+    int getPickIndex(float mouseX, float mouseY, int screenWidth, int screenHeight);
+    void highlightPatch(const std::vector<uint32_t>& labels, int patchId);
+
 private:
     void notifyStatus(const std::string& msg);
     void uploadReferenceGrid();

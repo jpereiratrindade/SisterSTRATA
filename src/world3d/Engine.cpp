@@ -1435,4 +1435,86 @@ void Engine::notifyStatus(const std::string& msg) {
     }
 }
 
+int Engine::getPickIndex(float mouseX, float mouseY, int screenWidth, int screenHeight) {
+    if (!camera_ || !activeVertices_ || activeVertices_->empty()) return -1;
+    
+    auto [origin, direction] = camera_->getPickRay({mouseX, mouseY}, {(float)screenWidth, (float)screenHeight});
+    
+    size_t count = activeVertices_->size();
+    int w = static_cast<int>(std::sqrt(count));
+    if (w * w != (int)count) return -1;
+
+    // Find Grid bounds and spacing
+    float minX = (*activeVertices_)[0].pos.x;
+    float minY = (*activeVertices_)[0].pos.y;
+    float maxX = (*activeVertices_)[count-1].pos.x;
+    float maxY = (*activeVertices_)[count-1].pos.y;
+
+    // Handle potential grid orientation differences
+    if (minX > maxX) std::swap(minX, maxX);
+    if (minY > maxY) std::swap(minY, maxY);
+
+    float spacingX = std::abs((*activeVertices_)[1].pos.x - (*activeVertices_)[0].pos.x);
+    if (spacingX < 0.001f) spacingX = 1.0f; 
+    float spacingY = std::abs((*activeVertices_)[w].pos.y - (*activeVertices_)[0].pos.y);
+    if (spacingY < 0.001f) spacingY = 1.0f;
+
+    // Ray-step intersection
+    float t = 0.1f;
+    float tMax = 10000.0f;
+    float tStep = spacingX * 0.5f;
+
+    // Optimized walk: only check if ray is within grid XY bounds
+    while (t < tMax) {
+        glm::vec3 p = origin + direction * t;
+        
+        // If ray is below a reasonable minimum terrain level or way outside, 
+        // we might stop, but simple grid check is safer first.
+        
+        int col = static_cast<int>(std::round((p.x - (*activeVertices_)[0].pos.x) / spacingX));
+        int row = static_cast<int>(std::round((p.y - (*activeVertices_)[0].pos.y) / spacingY));
+        
+        if (col >= 0 && col < w && row >= 0 && row < w) {
+            int idx = row * w + col;
+            float terrainZ = (*activeVertices_)[idx].pos.z;
+            
+            if (p.z <= terrainZ) {
+                // Approximate hit
+                return idx;
+            }
+        } else {
+             // If we entered and now left the grid, or if we are far away, exit
+             if (t > 1000.0f && (p.x < minX - 100 || p.x > maxX + 100 || p.y < minY - 100 || p.y > maxY + 100)) break;
+        }
+        
+        t += tStep;
+    }
+    
+    return -1;
+}
+
+void Engine::highlightPatch(const std::vector<uint32_t>& labels, int patchId) {
+    if (!activeVertices_ || !activeVertexBuffer_ || labels.empty()) return;
+    if (labels.size() != activeVertices_->size()) return;
+
+    // We don't want to use resetVisualization here because it might clear other analysis colors.
+    // Instead, we just pulse the magenta over current colors if label matches.
+    // But for simplicity, let's just color them bright magenta.
+    
+    bool changed = false;
+    for (size_t i = 0; i < activeVertices_->size(); ++i) {
+        if (labels[i] == static_cast<uint32_t>(patchId)) {
+            (*activeVertices_)[i].color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // Bright Magenta
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
+        Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+        staging.copyTo(activeVertices_->data(), size);
+        renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
+    }
+}
+
 } // namespace World3D

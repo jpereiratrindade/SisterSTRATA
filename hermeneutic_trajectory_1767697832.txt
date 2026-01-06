@@ -1,0 +1,68 @@
+SISTERSTRATA HERMENEUTIC ANALYSIS (trajectory)
+==========================================
+
+### Análise Tática Global das Trajetórias de Manchas
+
+#### Resumo da Composição da Paisagem por Estado Temporal
+
+- **T0**: 79.4% Scenario Hypothesis_01, 5.9% Scenario Hypothesis_02, 14.7% Scenario Hypothesis_03
+- **T1**: 70.1% Scenario Hypothesis_01, 15.2% Scenario Hypothesis_02, 14.7% Scenario Hypothesis_03
+- **T2**: 63.8% Scenario Hypothesis_01, 21.5% Scenario Hypothesis_02, 14.7% Scenario Hypothesis_03
+- **T3**: 54.3% Scenario Hypothesis_01, 31.0% Scenario Hypothesis_02, 14.7% Scenario Hypothesis_03
+
+### Tendências Observadas
+
+#### Fragmentação e Regeneração
+
+**Scenario Hypothesis_01:**
+- **T0**: Maior presença (79.4%), com área de 332.9 ha distribuída em 42 patches, SI = 1.6
+- **T1-T3**: Decréscimo gradual no domínio da paisagem (de 79.4% para 54.3%)
+- **Observações**:
+  - Redução na proporção de área ocupada pelo Scenario Hypothesis_01 sugere uma tendência geral de fragmentação e redução do domínio.
+  - Aumento no número de patches indica maior fragmentação, mas a similaridade espacial (SI) mostra alguma coesão local.
+
+**Scenario Hypothesis_02:**
+- **T0**: Baixa presença (5.9%), com área de 24.7 ha distribuída em 356 patches, SI = 5.4
+- **T1-T3**: Crescimento progressivo na proporção do Scenario Hypothesis_02 (de 5.9% para 31.0%)
+- **Observações**:
+  - Expansão gradual no domínio da paisagem, com aumento significativo em área e número de patches.
+  - Elevada fragmentação inicial que se mantém através dos estados.
+
+**Scenario Hypothesis_03:**
+- **T0-T3**: Consistente presença (14.7%) com área de 61.8 ha distribuída em 361 patches, SI = 1.8
+- **Observações**:
+  - Estabilidade na proporção e no tamanho do domínio ocupado.
+  - Alta fragmentação constante.
+
+#### Estrutura Espacial
+
+- **Scenario Hypothesis_01**: Inicia com alta coesão (SI = 1.6) e se torna mais fragmentada ao longo dos estados, refletindo a tendência de fragmentação observada na área total.
+- **Scenario Hypothesis_02**: Começa altamente fragmentado (SI = 5.4) e mantém-se fragmentado com um aumento no número de patches conforme o tempo passa.
+- **Scenario Hypothesis_03**: Mantém uma alta fragmentação constante ao longo do tempo, indicando estabilidade na estrutura espacial.
+
+### Resiliência
+
+- **Scenario Hypothesis_01**: A redução gradual sugere um sistema menos resiliente à mudança, com maior perda de área e aumento da fragmentação.
+- **Scenario Hypothesis_02**: O crescimento progressivo indica uma capacidade de adaptação a mudanças ambientais ou forças exógenas que facilitam sua expansão e fragmentação.
+- **Scenario Hypothesis_03**: A estabilidade constante sugere um sistema resiliente, capaz de manter suas propriedades estruturais independentemente das condições.
+
+### Conclusões
+
+**Fragmentação:** 
+- **Aumento da Fragmentação:** Scenario Hypothesis_01 e Scenario Hypothesis_02 demonstram maior fragmentação ao longo do tempo.
+- **Evolução Espacial:** Scenario Hypothesis_03 mantém uma alta fragmentação constante, sugerindo estabilidade espacial.
+
+**Regeneração:**
+- **Crescimento Progressivo:** Scenario Hypothesis_02 mostra um aumento progressivo na presença e área ocupada ao longo do tempo.
+- **Decréscimo Gradual:** Scenario Hypothesis_01 demonstra uma redução gradual em sua presença.
+
+**Resiliência:**
+- **Sistema Resiliente:** Scenario Hypothesis_03 mantém-se estável, sugestivo de um sistema resiliente à mudança ambiental.
+- **Redução da Coesão:** Scenario Hypothesis_01 mostra uma tendência de fragmentação e redução do domínio, indicando menor resiliência.
+
+### Recomendações
+
+- Realizar análises detalhadas das forças exógenas que podem estar influenciando o crescimento progressivo do Scenario Hypothesis_02.
+- Investigar as propriedades intrínsecas do Scenario Hypothesis_03 para entender melhor seu mecanismo de manutenção da estrutura espacial.
+
+Essa análise sugere que a evolução espacial observada é complexa e multifacetada, com diferentes cenários mostrando variações significativas em termos de fragmentação, regeneração e resiliência ao longo do tempo.

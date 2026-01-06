@@ -2,6 +2,7 @@
 
 #include "core/domain/fourth_dimension/Trajectory.hpp"
 #include "core/domain/fourth_dimension/patch_trajectory/PatchTrajectory.hpp"
+#include "core/domain/spatial_pattern/PatchAnalysis.hpp"
 #include "ui/panels/VegetationDeclarationPanel.hpp"
 #include "application/ports/ILLMService.hpp"
 #include <string>
@@ -26,6 +27,8 @@ private:
     const VegetationDeclarationPanel* vegPanel_ = nullptr;
     Application::Ports::ILLMService* llmService_ = nullptr;
     
+    char projectRootName_[64] = "projeto_01";
+
     // UI State
     int selectedSliceIndex_ = -1;
     int compareSliceA_ = -1;
@@ -50,6 +53,7 @@ private:
     // Patch Trajectory State
     int selectedPatchId_ = -1;
     int lastPatchCount_ = 0;
+    Core::Domain::SpatialPattern::AnalysisResult lastPatchAnalysis_;
     std::string patchTrajectorySummary_;
 
     // Aggregated state summary
