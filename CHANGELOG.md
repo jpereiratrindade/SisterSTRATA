@@ -1,5 +1,19 @@
 # Changelog
 
+## [v1.9.2] - 2026-01-07
+### Added
+- **Agent Guidance**: Added `AGENTS.md` with guardrails for automated assistants.
+- **Scientific Docs**: New domain documents for Pedosfera, Hidrologia, Vegetação e Quarta Dimensão.
+- **Doc Index**: Added `docs/README.md` for navigation.
+- **Pedosfera Bibliografia**: Added `docs/SCIENTIFIC_PEDOSFERA_BIBLIO.md`.
+
+### Changed
+- **Documentation Links**: Converted references to clickable Markdown links.
+- **Git Ignore**: Ignored local artifacts and refined exceptions for `assets/data`.
+
+### Removed
+- **Local Artifacts**: Removed large local datasets and generated outputs from version control.
+
 ## [v1.9.1] - 2026-01-06
 ### Added
 - **Export Grid Recovery**: Smart CSV serialization that dedupes and sorts mesh vertices (OBJ) into valid soil grids for drainage usage.
