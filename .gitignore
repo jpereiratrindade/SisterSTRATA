@@ -26,6 +26,13 @@ docs/doxygen/
 assets/data/generated_*.obj
 assets/data/generated_*.csv
 
+# Local datasets and outputs
+*.strata
+*.bin
+hermeneutic_trajectory_*.txt
+build_output.txt
+build_final.txt
+
 # Local reports/logs
 /slope_report.txt
 /build_log_retry.txt
