@@ -9,6 +9,11 @@ SisterSTRATA é um instrumento científico digital projetado para a simulação 
 Para entender a filosofia, a governança dos modelos e a arquitetura de conhecimento que rege este projeto, consulte:
 
 *   **[Fundação Científica (Scientific Foundation)](docs/SISTERSTRATA_SCIENTIFIC_FOUNDATION.md)**: O documento "constitucional/white paper" que define as leis físicas, o contrato de pipeline e a estruturação dos domínios.
+*   **[Funcionalidades Científicas](docs/SCIENTIFIC_FUNCTIONALITIES.md)**: Resumo das funcionalidades, aplicações e limitações com links detalhados.
+*   **[Pedosfera (SCORPAN/SiBCS)](docs/SCIENTIFIC_PEDOSFERA.md)**: Detalhamento científico do domínio de solo.
+*   **[Hidrologia](docs/SCIENTIFIC_HIDROLOGIA.md)**: Detalhamento científico do domínio hidrológico.
+*   **[Vegetação](docs/SCIENTIFIC_VEGETACAO.md)**: Detalhamento científico do domínio de vegetação.
+*   **[Quarta Dimensão (Resiliência)](docs/SCIENTIFIC_QUARTA_DIMENSAO.md)**: Detalhamento científico de trajetória e coerência.
 *   **[Manual Técnico - Integração Qwen](docs/TECHNICAL_MANUAL_QWEN_INTEGRATION.md)**: Detalhes da implementação da assistência cognitiva via Ollama.
 *   **[Análise de Trajetória de Patch (DDD)](DDD_PatchTrajectory_Analysis.txt)**: Definição do modelo multi-estado para patches.
 *   **[Arquitetura Vetorial de Hipóteses](docs/Arquitetura_Vetorial_Hipoteses.md)**: Formalização matemática do espaço vetorial de parâmetros.
