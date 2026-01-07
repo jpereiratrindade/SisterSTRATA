@@ -36,8 +36,8 @@ científica.
 - Visualização não altera o estado derivado.
 
 ## 7. Referências do projeto
-- `docs/SISTERSTRATA_SCIENTIFIC_FOUNDATION.md`
-- `DDD_FourthDimensionSystem.txt`
-- `DDD_PatchTrajectory_Analysis.txt`
-- `docs/Arquitetura_Vetorial_Hipoteses.md`
-- `docs/SCIENTIFIC_FUNCTIONALITIES.md`
+- [Fundação Científica](SISTERSTRATA_SCIENTIFIC_FOUNDATION.md)
+- [DDD Quarta Dimensão](../DDD_FourthDimensionSystem.txt)
+- [DDD Trajetória de Patches](../DDD_PatchTrajectory_Analysis.txt)
+- [Arquitetura Vetorial](Arquitetura_Vetorial_Hipoteses.md)
+- [Funcionalidades Científicas](SCIENTIFIC_FUNCTIONALITIES.md)

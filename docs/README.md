@@ -3,15 +3,15 @@
 Indice rapido para os documentos cientificos do SisterSTRATA.
 
 ## Base
-- `docs/SISTERSTRATA_SCIENTIFIC_FOUNDATION.md`
-- `docs/SCIENTIFIC_FUNCTIONALITIES.md`
+- [Fundação Científica](SISTERSTRATA_SCIENTIFIC_FOUNDATION.md)
+- [Funcionalidades Científicas](SCIENTIFIC_FUNCTIONALITIES.md)
 
 ## Dominios detalhados
-- `docs/SCIENTIFIC_PEDOSFERA.md`
-- `docs/SCIENTIFIC_HIDROLOGIA.md`
-- `docs/SCIENTIFIC_VEGETACAO.md`
-- `docs/SCIENTIFIC_QUARTA_DIMENSAO.md`
+- [Pedosfera](SCIENTIFIC_PEDOSFERA.md)
+- [Hidrologia](SCIENTIFIC_HIDROLOGIA.md)
+- [Vegetação](SCIENTIFIC_VEGETACAO.md)
+- [Quarta Dimensão](SCIENTIFIC_QUARTA_DIMENSAO.md)
 
 ## Integracao cognitiva (LLM)
-- `docs/TECHNICAL_MANUAL_QWEN_INTEGRATION.md`
-- `docs/DDD_Cognitive_Assistance_INTEGRATION_PLAN.md`
+- [Manual Técnico Qwen](TECHNICAL_MANUAL_QWEN_INTEGRATION.md)
+- [Plano de Integração CAC](DDD_Cognitive_Assistance_INTEGRATION_PLAN.md)

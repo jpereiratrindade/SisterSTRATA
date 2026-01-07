@@ -38,5 +38,5 @@ Ele amplia a legibilidade do sistema, não sua autoridade científica.
 - Resultados exigem validação científica externa.
 
 ## 7. Referências do projeto
-- `docs/SISTERSTRATA_SCIENTIFIC_FOUNDATION.md`
-- `docs/SCIENTIFIC_FUNCTIONALITIES.md`
+- [Fundação Científica](SISTERSTRATA_SCIENTIFIC_FOUNDATION.md)
+- [Funcionalidades Científicas](SCIENTIFIC_FUNCTIONALITIES.md)
