@@ -103,6 +103,24 @@ public:
         recommendationTrajectory_.addSnapshot(Application::Mappers::Recommendation::toDomain(dto));
     }
 
+    // --- CRUD Wrappers for Discursive System ---
+    void removeDiscursiveSystemDTO(const std::string& id) {
+        discursiveSystemRepository_->removeSystem(id);
+    }
+
+    void updateDiscursiveSystemDTO(const std::string& id, const Application::DTO::DiscursiveSystemDTO& dto) {
+        discursiveSystemRepository_->updateSystem(id, Application::Mappers::Discursive::toDomain(dto));
+    }
+
+    // --- CRUD Wrappers for Narrative Observation ---
+    void removeNarrativeStateDTO(const std::string& id) {
+        narrativeSystem_->removeObservation(id);
+    }
+
+    void updateNarrativeStateDTO(const std::string& id, const Application::DTO::NarrativeStateDTO& dto) {
+        narrativeSystem_->updateObservation(id, Application::Mappers::Narrative::toDomain(dto));
+    }
+
     void loadDiscursiveSystemsFromFile(const std::string& path) {
         discursiveSystemRepository_->deserialize(path);
     }

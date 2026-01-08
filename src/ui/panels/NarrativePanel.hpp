@@ -38,6 +38,10 @@ public:
 private:
     Application::Session* session_ = nullptr;
 
+    // -- Edit State --
+    bool isEditing_ = false;
+    std::string editingId_;
+
     // -- Form State --
     char inputSourceId_[64] = "";
     char inputDate_[64] = "";
@@ -66,6 +70,7 @@ private:
 
     void drawIngestionForm();
     void drawObservationList();
+    void loadIntoForm(const Application::DTO::NarrativeStateDTO& dto);
 };
 
 } // namespace UI::Panels

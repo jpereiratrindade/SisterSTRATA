@@ -92,8 +92,42 @@ public:
         m_history.clear();
     }
 
-    void removeObservation(const std::string&) = delete;
-    void updateObservation(const std::string&, const NarrativeState&) = delete;
+    void removeObservation(const std::string& id) {
+        auto it = std::remove_if(m_history.begin(), m_history.end(),
+            [&](const NarrativeState& obs) {
+                return obs.getId() == id;
+            });
+
+        if (it == m_history.end()) {
+            throw std::runtime_error("Narrative Observation not found: " + id);
+        }
+
+        m_history.erase(it, m_history.end());
+    }
+
+    void updateObservation(const std::string& id, const NarrativeState& newObservation) {
+        auto it = std::find_if(m_history.begin(), m_history.end(),
+            [&](const NarrativeState& obs) {
+                return obs.getId() == id;
+            });
+
+        if (it == m_history.end()) {
+             throw std::runtime_error("Narrative Observation not found: " + id);
+        }
+
+        if (newObservation.getId() != id) {
+             auto itCollision = std::find_if(m_history.begin(), m_history.end(),
+                [&](const NarrativeState& existing) {
+                    return existing.getId() == newObservation.getId() && existing.getId() != id;
+                });
+            
+            if (itCollision != m_history.end()) {
+                 throw std::invalid_argument("Cannot update observation: New ID " + newObservation.getId() + " is already in use.");
+            }
+        }
+
+        *it = newObservation;
+    }
 
 private:
     std::vector<NarrativeState> m_history;

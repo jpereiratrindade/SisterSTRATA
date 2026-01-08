@@ -166,11 +166,30 @@ void NarrativePanel::drawIngestionForm() {
     ImGui::Spacing();
     ImGui::Separator();
 
-    if (ImGui::Button("Register Observation", ImVec2(200, 0))) {
+    if (isEditing_) {
+        ImGui::TextColored(ImVec4(1,1,0,1), "EDITING MODE: %s", editingId_.c_str());
+        if (ImGui::Button("Cancel Edit")) {
+            isEditing_ = false;
+            editingId_.clear();
+            // Clear inputs
+            inputSourceId_[0] = '\0';
+            inputTheme_[0] = '\0';
+            inputTemporalLabel_[0] = '\0';
+            capturedScope_ = std::nullopt;
+        }
+        ImGui::SameLine();
+    }
+
+    if (ImGui::Button(isEditing_ ? "Save Changes" : "Register Observation", ImVec2(200, 0))) {
         Application::DTO::NarrativeStateDTO dto;
-        size_t count = session_->getNarrativeSystem().getHistory().size() + 1;
-        std::string id = "OBS-" + std::to_string(count);
-        dto.id = id;
+        
+        // ID Logic
+        if (isEditing_) {
+            dto.id = editingId_;
+        } else {
+            size_t count = session_->getNarrativeSystem().getHistory().size() + 1;
+            dto.id = "OBS-" + std::to_string(count);
+        }
 
         Application::DTO::SourceReferenceDTO source;
         source.sourceType = SOURCE_TYPE_VALUES[inputSourceType_];
@@ -199,13 +218,20 @@ void NarrativePanel::drawIngestionForm() {
         dto.metadata = {};
         dto.spatialScope = capturedScope_;
 
-        // Try Register
+        // Try Register/Update
         try {
-            session_->registerNarrativeStateDTO(dto);
+            if (isEditing_) {
+                session_->updateNarrativeStateDTO(editingId_, dto);
+                ImGui::OpenPopup("NarrativeUpdateSuccess");
+                isEditing_ = false;
+                editingId_.clear();
+            } else {
+                session_->registerNarrativeStateDTO(dto);
+                ImGui::OpenPopup("Success");
+            }
             // Clear inputs on success
-            // Keep source info for bulk entry
-            capturedScope_ = std::nullopt; // Clear anchor
-            ImGui::OpenPopup("Success");
+            inputSourceId_[0] = '\0'; // Optional: keep for bulk? Let's clear to be safe
+            capturedScope_ = std::nullopt; 
         } catch (const std::exception& e) {
             ImGui::OpenPopup("Error");
         }
@@ -213,6 +239,12 @@ void NarrativePanel::drawIngestionForm() {
 
     if (ImGui::BeginPopupModal("Success", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Observation registered successfully!");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal("NarrativeUpdateSuccess", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Observation updated successfully!");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
@@ -285,7 +317,8 @@ void NarrativePanel::drawIngestionForm() {
 void NarrativePanel::drawObservationList() {
     auto history = session_->getNarrativeStateDTOs();
 
-    if (ImGui::BeginTable("ObservationsTable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+    if (ImGui::BeginTable("ObservationsTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+        ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Source");
         ImGui::TableSetupColumn("Time");
@@ -298,25 +331,36 @@ void NarrativePanel::drawObservationList() {
             ImGui::TableNextRow();
             
             ImGui::TableSetColumnIndex(0);
-            ImGui::Text("%s", obs.id.c_str());
+            ImGui::PushID(obs.id.c_str());
+            if (ImGui::Button("Edit")) {
+                loadIntoForm(obs);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Del")) {
+                session_->removeNarrativeStateDTO(obs.id);
+            }
+            ImGui::PopID();
 
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%s (%s)", obs.source.sourceId.c_str(), obs.source.productionDate.c_str());
+            ImGui::Text("%s", obs.id.c_str());
 
             ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%s", obs.temporalContext.label.c_str());
+            ImGui::Text("%s (%s)", obs.source.sourceId.c_str(), obs.source.productionDate.c_str());
 
             ImGui::TableSetColumnIndex(3);
-            ImGui::Text("%s", intentLabel(obs.intent.intentType));
+            ImGui::Text("%s", obs.temporalContext.label.c_str());
 
             ImGui::TableSetColumnIndex(4);
+            ImGui::Text("%s", intentLabel(obs.intent.intentType));
+
+            ImGui::TableSetColumnIndex(5);
             if (!obs.axes.empty()) {
                 ImGui::Text("%s", obs.axes[0].label.c_str());
             } else {
                 ImGui::Text("-");
             }
             
-            ImGui::TableSetColumnIndex(5);
+            ImGui::TableSetColumnIndex(6);
             if (obs.spatialScope.has_value()) {
                  auto& scope = obs.spatialScope.value();
                  if (scope.type == "PATCH_ID" && scope.patchId.has_value()) {
@@ -330,6 +374,49 @@ void NarrativePanel::drawObservationList() {
         }
         ImGui::EndTable();
     }
+}
+
+void NarrativePanel::loadIntoForm(const Application::DTO::NarrativeStateDTO& dto) {
+    isEditing_ = true;
+    editingId_ = dto.id;
+    
+    // Source
+    strncpy(inputSourceId_, dto.source.sourceId.c_str(), sizeof(inputSourceId_) - 1);
+    strncpy(inputDate_, dto.source.productionDate.c_str(), sizeof(inputDate_) - 1);
+    
+    for (int i = 0; i < IM_ARRAYSIZE(SOURCE_TYPE_VALUES); i++) {
+        if (dto.source.sourceType == SOURCE_TYPE_VALUES[i]) {
+            inputSourceType_ = i;
+            break;
+        }
+    }
+
+    // Time
+    strncpy(inputTemporalLabel_, dto.temporalContext.label.c_str(), sizeof(inputTemporalLabel_) - 1);
+    for (int i = 0; i < IM_ARRAYSIZE(TEMPORAL_VALUES); i++) {
+        if (dto.temporalContext.category == TEMPORAL_VALUES[i]) {
+            inputTemporalCategory_ = i;
+            break;
+        }
+    }
+
+    // Intent
+    for (int i = 0; i < IM_ARRAYSIZE(INTENT_VALUES); i++) {
+        if (dto.intent.intentType == INTENT_VALUES[i]) {
+            inputIntent_ = i;
+            break;
+        }
+    }
+
+    // Theme (Axis 0)
+    if (!dto.axes.empty()) {
+        strncpy(inputTheme_, dto.axes[0].label.c_str(), sizeof(inputTheme_) - 1);
+    } else {
+        inputTheme_[0] = '\0';
+    }
+
+    // Spatial
+    capturedScope_ = dto.spatialScope;
 }
 
 } // namespace UI::Panels

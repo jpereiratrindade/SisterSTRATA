@@ -177,13 +177,30 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::Spacing();
     ImGui::Separator();
 
-    if (ImGui::Button("Register Discursive System", ImVec2(240, 0))) {
+    if (isEditing_) {
+        ImGui::TextColored(ImVec4(1,1,0,1), "EDITING MODE: %s", editingId_.c_str());
+        if (ImGui::Button("Cancel Edit")) {
+            isEditing_ = false;
+            editingId_.clear();
+            // Clear form
+            inputSystemId_[0] = '\0';
+            declaredProblems_.clear();
+            declaredActions_.clear();
+            allegedMechanisms_.clear();
+            expectedEffects_.clear();
+            metadata_.clear();
+            sourceReferences_.clear();
+        }
+        ImGui::SameLine();
+    }
+
+    if (ImGui::Button(isEditing_ ? "Save Changes" : "Register Discursive System", ImVec2(240, 0))) {
         Application::DTO::DiscursiveSystemDTO dto;
 
-        if (strlen(inputSystemId_) > 0) {
-            dto.id = inputSystemId_;
+        if (strlen(inputSystemId_)) {
+             dto.id = inputSystemId_;
         } else {
-            dto.id = "DS-" + std::to_string(session_->getDiscursiveSystemCount() + 1);
+             dto.id = "DS-" + std::to_string(session_->getDiscursiveSystemCount() + 1);
         }
 
         dto.declaredProblems = declaredProblems_;
@@ -197,6 +214,7 @@ void DiscursiveSystemPanel::drawIngestionForm() {
         dto.interpretationMetadata = metadata_;
 
         dto.sourceReferences = sourceReferences_;
+        // Add current source input if valid and list empty (helper)
         if (dto.sourceReferences.empty() && strlen(inputSourceId_) > 0) {
             Application::DTO::SourceReferenceDTO source;
             source.sourceType = DISC_SOURCE_VALUES[inputSourceType_];
@@ -209,21 +227,37 @@ void DiscursiveSystemPanel::drawIngestionForm() {
         }
 
         try {
-            session_->registerDiscursiveSystemDTO(dto);
-            ImGui::OpenPopup("DiscursiveSuccess");
+            if (isEditing_) {
+                session_->updateDiscursiveSystemDTO(editingId_, dto);
+                ImGui::OpenPopup("DiscursiveUpdateSuccess");
+                isEditing_ = false;
+                editingId_.clear();
+            } else {
+                session_->registerDiscursiveSystemDTO(dto);
+                ImGui::OpenPopup("DiscursiveSuccess");
+            }
+            // Clear form
             declaredProblems_.clear();
             declaredActions_.clear();
             allegedMechanisms_.clear();
             expectedEffects_.clear();
             metadata_.clear();
             inputSystemId_[0] = '\0';
-        } catch (const std::exception&) {
+            sourceReferences_.clear(); 
+        } catch (const std::exception& e) {
+            // Store error?
             ImGui::OpenPopup("DiscursiveError");
         }
     }
 
     if (ImGui::BeginPopupModal("DiscursiveSuccess", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Discursive system registered successfully.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal("DiscursiveUpdateSuccess", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Discursive system updated successfully.");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
@@ -307,7 +341,8 @@ void DiscursiveSystemPanel::drawSystemList() {
         return;
     }
 
-    if (ImGui::BeginTable("DiscursiveSystemsTable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+    if (ImGui::BeginTable("DiscursiveSystemsTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+        ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Sources");
         ImGui::TableSetupColumn("Time");
@@ -320,25 +355,70 @@ void DiscursiveSystemPanel::drawSystemList() {
             ImGui::TableNextRow();
 
             ImGui::TableSetColumnIndex(0);
-            ImGui::Text("%s", system.id.c_str());
+            ImGui::PushID(system.id.c_str());
+            if (ImGui::Button("Edit")) {
+                loadIntoForm(system);
+                // Hint user to switch tab
+                // In a more complex UI we would programmatically switch tabs
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Del")) {
+                session_->removeDiscursiveSystemDTO(system.id);
+            }
+            ImGui::PopID();
 
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%zu", system.sourceReferences.size());
+            ImGui::Text("%s", system.id.c_str());
 
             ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%s", system.temporalContext.label.c_str());
+            ImGui::Text("%zu", system.sourceReferences.size());
 
             ImGui::TableSetColumnIndex(3);
-            ImGui::Text("%zu", system.declaredProblems.size());
+            ImGui::Text("%s", system.temporalContext.label.c_str());
 
             ImGui::TableSetColumnIndex(4);
-            ImGui::Text("%zu", system.declaredActions.size());
+            ImGui::Text("%zu", system.declaredProblems.size());
 
             ImGui::TableSetColumnIndex(5);
+            ImGui::Text("%zu", system.declaredActions.size());
+
+            ImGui::TableSetColumnIndex(6);
             ImGui::Text("%zu", system.expectedEffects.size());
         }
         ImGui::EndTable();
     }
+}
+
+void DiscursiveSystemPanel::loadIntoForm(const Application::DTO::DiscursiveSystemDTO& dto) {
+    isEditing_ = true;
+    editingId_ = dto.id;
+    
+    // Copy ID
+    strncpy(inputSystemId_, dto.id.c_str(), sizeof(inputSystemId_) - 1);
+
+    // Copy Vector fields
+    declaredProblems_ = dto.declaredProblems;
+    declaredActions_ = dto.declaredActions;
+    allegedMechanisms_ = dto.allegedMechanisms;
+    expectedEffects_ = dto.expectedEffects;
+    metadata_ = dto.interpretationMetadata;
+    sourceReferences_ = dto.sourceReferences;
+
+    // Time
+    strncpy(inputTemporalLabel_, dto.temporalContext.label.c_str(), sizeof(inputTemporalLabel_) - 1);
+    
+    // Find category index if possible (simple matching)
+    for (int i = 0; i < IM_ARRAYSIZE(TEMPORAL_VALUES); i++) {
+        if (dto.temporalContext.category == TEMPORAL_VALUES[i]) {
+            inputTemporalCategory_ = i;
+            break;
+        }
+    }
+
+    // Sources Input (optional, maybe clear or load first one)
+    inputSourceId_[0] = '\0';
+    inputSourceDate_[0] = '\0';
+    inputSourceAuthor_[0] = '\0';
 }
 
 } // namespace UI::Panels

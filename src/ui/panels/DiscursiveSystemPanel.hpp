@@ -21,6 +21,10 @@ public:
 private:
     Application::Session* session_ = nullptr;
 
+    // Edit State
+    bool isEditing_ = false;
+    std::string editingId_;
+
     // Form state
     char inputSystemId_[64] = "";
 
@@ -56,6 +60,7 @@ private:
 
     void drawIngestionForm();
     void drawSystemList();
+    void loadIntoForm(const Application::DTO::DiscursiveSystemDTO& dto);
 };
 
 } // namespace UI::Panels
