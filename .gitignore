@@ -36,6 +36,9 @@ build_final.txt
 # Local reports/logs
 /slope_report.txt
 /build_log_retry.txt
+build_phase*.log
+test_run*.log
+status.txt
 
 # Local-only folders
 /external/
