@@ -18,11 +18,18 @@ namespace Application {
 
 class Session {
 public:
+    // Persistence Config
+    inline static const std::string DISCURSIVE_DB_PATH = "assets/data/user_db/discursive_systems.json";
+    inline static const std::string NARRATIVE_DB_PATH = "assets/data/user_db/narrative_history.json";
+    inline static const std::string RECOMMENDATION_DB_PATH = "assets/data/user_db/recommendation_trajectory.json";
+
     Session() 
         : workspace_(std::make_unique<Core::Domain::Workspace>()),
           narrativeSystem_(std::make_unique<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem>()),
           discursiveSystemRepository_(std::make_unique<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository>())
-    {}
+    {
+        initializePersistence();
+    }
 
     [[nodiscard]] Core::Domain::Workspace& getWorkspace() const {
         return *workspace_;
@@ -55,10 +62,12 @@ public:
 
     void registerNarrativeStateDTO(const Application::DTO::NarrativeStateDTO& dto) {
         narrativeSystem_->registerObservation(Application::Mappers::Narrative::toDomain(dto));
+        autoSaveNarrative();
     }
 
     void loadNarrativeFromFile(const std::string& path) {
         narrativeSystem_->deserialize(path);
+        autoSaveNarrative();
     }
 
     void saveNarrativeToFile(const std::string& path) const {
@@ -87,6 +96,7 @@ public:
 
     void registerDiscursiveSystemDTO(const Application::DTO::DiscursiveSystemDTO& dto) {
         discursiveSystemRepository_->registerSystem(Application::Mappers::Discursive::toDomain(dto));
+        autoSaveDiscursive();
     }
 
     void setRecommendationTrajectoryDTO(const Application::DTO::RecommendationTrajectoryDTO& dto) {
@@ -101,28 +111,45 @@ public:
             );
         }
         recommendationTrajectory_.addSnapshot(Application::Mappers::Recommendation::toDomain(dto));
+        autoSaveRecommendation();
+    }
+
+    // --- CRUD Wrappers for Recommendation Snapshot ---
+    void removeRecommendationSnapshotDTO(const std::string& id) {
+        recommendationTrajectory_.removeSnapshot(id);
+        autoSaveRecommendation();
+    }
+
+    void updateRecommendationSnapshotDTO(const std::string& id, const Application::DTO::RecommendationSnapshotDTO& dto) {
+        recommendationTrajectory_.updateSnapshot(id, Application::Mappers::Recommendation::toDomain(dto));
+        autoSaveRecommendation();
     }
 
     // --- CRUD Wrappers for Discursive System ---
     void removeDiscursiveSystemDTO(const std::string& id) {
         discursiveSystemRepository_->removeSystem(id);
+        autoSaveDiscursive();
     }
 
     void updateDiscursiveSystemDTO(const std::string& id, const Application::DTO::DiscursiveSystemDTO& dto) {
         discursiveSystemRepository_->updateSystem(id, Application::Mappers::Discursive::toDomain(dto));
+        autoSaveDiscursive();
     }
 
     // --- CRUD Wrappers for Narrative Observation ---
     void removeNarrativeStateDTO(const std::string& id) {
         narrativeSystem_->removeObservation(id);
+        autoSaveNarrative();
     }
 
     void updateNarrativeStateDTO(const std::string& id, const Application::DTO::NarrativeStateDTO& dto) {
         narrativeSystem_->updateObservation(id, Application::Mappers::Narrative::toDomain(dto));
+        autoSaveNarrative();
     }
 
     void loadDiscursiveSystemsFromFile(const std::string& path) {
         discursiveSystemRepository_->deserialize(path);
+        autoSaveDiscursive();
     }
 
     void saveDiscursiveSystemsToFile(const std::string& path) const {
@@ -131,6 +158,7 @@ public:
 
     void loadRecommendationTrajectoryFromFile(const std::string& path) {
         recommendationTrajectory_.deserialize(path);
+        autoSaveRecommendation();
     }
 
     void saveRecommendationTrajectoryToFile(const std::string& path) const {
@@ -160,6 +188,47 @@ private:
     SisterSTRATA::Observational::Recommendation::RecommendationTrajectory recommendationTrajectory_;
     Core::Domain::FourthDimension::Trajectory trajectory_;
     std::unique_ptr<Ports::ILLMService> llmService_;
+
+    // Persistence Helpers
+    void initializePersistence() {
+        if (std::filesystem::exists(DISCURSIVE_DB_PATH)) {
+            try {
+                discursiveSystemRepository_->deserialize(DISCURSIVE_DB_PATH);
+            } catch (...) {
+                // Ignore load errors on init, start fresh or log
+            }
+        }
+        if (std::filesystem::exists(NARRATIVE_DB_PATH)) {
+            try {
+                narrativeSystem_->deserialize(NARRATIVE_DB_PATH);
+            } catch (...) {
+                // Ignore load errors on init
+            }
+        }
+        if (std::filesystem::exists(RECOMMENDATION_DB_PATH)) {
+            try {
+                recommendationTrajectory_.deserialize(RECOMMENDATION_DB_PATH);
+            } catch (...) {}
+        }
+    }
+
+    void autoSaveDiscursive() {
+        try {
+            discursiveSystemRepository_->serialize(DISCURSIVE_DB_PATH);
+        } catch (...) {}
+    }
+
+    void autoSaveNarrative() {
+         try {
+            narrativeSystem_->serialize(NARRATIVE_DB_PATH);
+        } catch (...) {}
+    }
+
+    void autoSaveRecommendation() {
+        try {
+            recommendationTrajectory_.serialize(RECOMMENDATION_DB_PATH);
+        } catch (...) {}
+    }
 };
 
 } // namespace Application

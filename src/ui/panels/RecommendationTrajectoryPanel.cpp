@@ -166,7 +166,22 @@ void RecommendationTrajectoryPanel::drawSnapshotForm() {
     ImGui::Spacing();
     ImGui::Separator();
 
-    if (ImGui::Button("Add Snapshot", ImVec2(200, 0))) {
+    if (isEditing_) {
+        ImGui::TextColored(ImVec4(1,1,0,1), "EDITING MODE: %s", editingId_.c_str());
+        if (ImGui::Button("Cancel Edit")) {
+            isEditing_ = false;
+            editingId_.clear();
+            // Clear inputs
+            contextConditions_.clear();
+            inputSnapshotId_[0] = '\0';
+            inputRecommendationText_[0] = '\0';
+            inputIntendedAction_[0] = '\0';
+            inputExpectedOutcome_[0] = '\0';
+        }
+        ImGui::SameLine();
+    }
+
+    if (ImGui::Button(isEditing_ ? "Save Changes" : "Add Snapshot", ImVec2(200, 0))) {
         Application::DTO::RecommendationSnapshotDTO dto;
         if (strlen(inputSnapshotId_) > 0) {
             dto.id = inputSnapshotId_;
@@ -174,7 +189,10 @@ void RecommendationTrajectoryPanel::drawSnapshotForm() {
             dto.id = "REC-" + std::to_string(session_->getRecommendationSnapshotCount() + 1);
         }
         dto.recommendationText = inputRecommendationText_;
-        dto.contextConditions = contextConditions_;
+        dto.contextConditions = contextConditions_; // Auto-add? Ideally yes, but sticking to button for now or user request.
+        // User pattern from DISC: Check buffers.
+        if (strlen(inputContextCondition_) > 0) dto.contextConditions.push_back(inputContextCondition_);
+        
         dto.intendedAction = inputIntendedAction_;
         dto.expectedOutcome = inputExpectedOutcome_;
         dto.sourceReference.sourceType = REC_SOURCE_VALUES[inputSourceType_];
@@ -189,13 +207,21 @@ void RecommendationTrajectoryPanel::drawSnapshotForm() {
         };
 
         try {
-            session_->addRecommendationSnapshotDTO(dto);
-            ImGui::OpenPopup("SnapshotSuccess");
+            if (isEditing_) {
+                session_->updateRecommendationSnapshotDTO(editingId_, dto);
+                ImGui::OpenPopup("SnapshotUpdateSuccess");
+                isEditing_ = false;
+                editingId_.clear();
+            } else {
+                session_->addRecommendationSnapshotDTO(dto);
+                ImGui::OpenPopup("SnapshotSuccess");
+            }
             contextConditions_.clear();
             inputSnapshotId_[0] = '\0';
             inputRecommendationText_[0] = '\0';
             inputIntendedAction_[0] = '\0';
             inputExpectedOutcome_[0] = '\0';
+            inputContextCondition_[0] = '\0'; // Clear buffer
         } catch (const std::exception&) {
             ImGui::OpenPopup("SnapshotError");
         }
@@ -203,6 +229,12 @@ void RecommendationTrajectoryPanel::drawSnapshotForm() {
 
     if (ImGui::BeginPopupModal("SnapshotSuccess", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Snapshot registered successfully.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal("SnapshotUpdateSuccess", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Snapshot updated successfully.");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
@@ -285,7 +317,8 @@ void RecommendationTrajectoryPanel::drawSnapshotList() {
         return;
     }
 
-    if (ImGui::BeginTable("RecommendationSnapshotsTable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+    if (ImGui::BeginTable("RecommendationSnapshotsTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+        ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Source");
         ImGui::TableSetupColumn("Time");
@@ -298,6 +331,17 @@ void RecommendationTrajectoryPanel::drawSnapshotList() {
             ImGui::TableNextRow();
 
             ImGui::TableSetColumnIndex(0);
+            ImGui::PushID(snapshot.id.c_str());
+            if (ImGui::Button("Edit")) {
+                loadIntoForm(snapshot);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Del")) {
+                session_->removeRecommendationSnapshotDTO(snapshot.id);
+            }
+            ImGui::PopID();
+
+            ImGui::TableSetColumnIndex(1);
             ImGui::Text("%s", snapshot.id.c_str());
 
             ImGui::TableSetColumnIndex(1);
@@ -306,16 +350,48 @@ void RecommendationTrajectoryPanel::drawSnapshotList() {
             ImGui::TableSetColumnIndex(2);
             ImGui::Text("%s", snapshot.temporalContext.label.c_str());
 
-            ImGui::TableSetColumnIndex(3);
+            ImGui::TableSetColumnIndex(4);
             ImGui::Text("%s", snapshot.intendedAction.c_str());
 
-            ImGui::TableSetColumnIndex(4);
+            ImGui::TableSetColumnIndex(5);
             ImGui::Text("%s", snapshot.expectedOutcome.c_str());
 
-            ImGui::TableSetColumnIndex(5);
+            ImGui::TableSetColumnIndex(6);
             ImGui::Text("%zu", snapshot.contextConditions.size());
         }
         ImGui::EndTable();
+    }
+}
+
+void RecommendationTrajectoryPanel::loadIntoForm(const Application::DTO::RecommendationSnapshotDTO& dto) {
+    isEditing_ = true;
+    editingId_ = dto.id;
+
+    strncpy(inputSnapshotId_, dto.id.c_str(), sizeof(inputSnapshotId_) - 1);
+    strncpy(inputRecommendationText_, dto.recommendationText.c_str(), sizeof(inputRecommendationText_) - 1);
+    strncpy(inputIntendedAction_, dto.intendedAction.c_str(), sizeof(inputIntendedAction_) - 1);
+    strncpy(inputExpectedOutcome_, dto.expectedOutcome.c_str(), sizeof(inputExpectedOutcome_) - 1);
+    
+    contextConditions_ = dto.contextConditions;
+    
+    // Source
+    strncpy(inputSourceId_, dto.sourceReference.sourceId.c_str(), sizeof(inputSourceId_) - 1);
+    strncpy(inputSourceDate_, dto.sourceReference.productionDate.c_str(), sizeof(inputSourceDate_) - 1);
+     // Find source enum... simple loop
+    for (int i = 0; i < IM_ARRAYSIZE(REC_SOURCE_VALUES); i++) {
+        if (dto.sourceReference.sourceType == REC_SOURCE_VALUES[i]) {
+            inputSourceType_ = i;
+            break;
+        }
+    }
+
+    // Time
+    strncpy(inputTemporalLabel_, dto.temporalContext.label.c_str(), sizeof(inputTemporalLabel_) - 1);
+    for (int i = 0; i < IM_ARRAYSIZE(TEMPORAL_VALUES); i++) {
+        if (dto.temporalContext.category == TEMPORAL_VALUES[i]) {
+            inputTemporalCategory_ = i;
+            break;
+        }
     }
 }
 

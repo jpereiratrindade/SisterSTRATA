@@ -203,50 +203,72 @@ void DiscursiveSystemPanel::drawIngestionForm() {
              dto.id = "DS-" + std::to_string(session_->getDiscursiveSystemCount() + 1);
         }
 
+        // Copy lists
         dto.declaredProblems = declaredProblems_;
         dto.declaredActions = declaredActions_;
         dto.allegedMechanisms = allegedMechanisms_;
         dto.expectedEffects = expectedEffects_;
-        dto.temporalContext = Application::DTO::TemporalContextDTO{
-            TEMPORAL_VALUES[inputTemporalCategory_],
-            inputTemporalLabel_
-        };
-        dto.interpretationMetadata = metadata_;
+        
+        // --- Helper: Auto-add pending text in buffers ---
+        if (strlen(inputProblem_) > 0) dto.declaredProblems.push_back(inputProblem_);
+        if (strlen(inputAction_) > 0) dto.declaredActions.push_back(inputAction_);
+        if (strlen(inputMechanism_) > 0) dto.allegedMechanisms.push_back(inputMechanism_);
+        if (strlen(inputEffect_) > 0) dto.expectedEffects.push_back(inputEffect_);
 
-        dto.sourceReferences = sourceReferences_;
-        // Add current source input if valid and list empty (helper)
-        if (dto.sourceReferences.empty() && strlen(inputSourceId_) > 0) {
-            Application::DTO::SourceReferenceDTO source;
-            source.sourceType = DISC_SOURCE_VALUES[inputSourceType_];
-            source.sourceId = inputSourceId_;
-            source.productionDate = inputSourceDate_;
-            if (strlen(inputSourceAuthor_) > 0) {
-                source.author = std::string(inputSourceAuthor_);
-            }
-            dto.sourceReferences.push_back(source);
-        }
+        // Validation: Prevent empty records
+        bool hasContent = !dto.declaredProblems.empty() || 
+                          !dto.declaredActions.empty() || 
+                          !dto.allegedMechanisms.empty() || 
+                          !dto.expectedEffects.empty();
 
-        try {
-            if (isEditing_) {
-                session_->updateDiscursiveSystemDTO(editingId_, dto);
-                ImGui::OpenPopup("DiscursiveUpdateSuccess");
-                isEditing_ = false;
-                editingId_.clear();
-            } else {
-                session_->registerDiscursiveSystemDTO(dto);
-                ImGui::OpenPopup("DiscursiveSuccess");
+        if (!hasContent && !isEditing_) { // Allow editing to clear stuff? Maybe not. Let's block both for now context-wise.
+             ImGui::OpenPopup("DiscursiveEmptyError");
+        } 
+        else {
+            dto.temporalContext = Application::DTO::TemporalContextDTO{
+                TEMPORAL_VALUES[inputTemporalCategory_],
+                inputTemporalLabel_
+            };
+            dto.interpretationMetadata = metadata_; // Metadata is strictly optional
+
+            dto.sourceReferences = sourceReferences_;
+            if (dto.sourceReferences.empty() && strlen(inputSourceId_) > 0) {
+                Application::DTO::SourceReferenceDTO source;
+                source.sourceType = DISC_SOURCE_VALUES[inputSourceType_];
+                source.sourceId = inputSourceId_;
+                source.productionDate = inputSourceDate_;
+                if (strlen(inputSourceAuthor_) > 0) {
+                    source.author = std::string(inputSourceAuthor_);
+                }
+                dto.sourceReferences.push_back(source);
             }
-            // Clear form
-            declaredProblems_.clear();
-            declaredActions_.clear();
-            allegedMechanisms_.clear();
-            expectedEffects_.clear();
-            metadata_.clear();
-            inputSystemId_[0] = '\0';
-            sourceReferences_.clear(); 
-        } catch (const std::exception& e) {
-            // Store error?
-            ImGui::OpenPopup("DiscursiveError");
+
+            try {
+                if (isEditing_) {
+                    session_->updateDiscursiveSystemDTO(editingId_, dto);
+                    ImGui::OpenPopup("DiscursiveUpdateSuccess");
+                    isEditing_ = false;
+                    editingId_.clear();
+                } else {
+                    session_->registerDiscursiveSystemDTO(dto);
+                    ImGui::OpenPopup("DiscursiveSuccess");
+                }
+                // Clear form
+                declaredProblems_.clear();
+                declaredActions_.clear();
+                allegedMechanisms_.clear();
+                expectedEffects_.clear();
+                metadata_.clear();
+                inputSystemId_[0] = '\0';
+                sourceReferences_.clear();
+                // Clear buffers too if we auto-added them
+                inputProblem_[0] = '\0'; 
+                inputAction_[0] = '\0';
+                inputMechanism_[0] = '\0';
+                inputEffect_[0] = '\0';
+            } catch (const std::exception& e) {
+                ImGui::OpenPopup("DiscursiveError");
+            }
         }
     }
 
@@ -258,6 +280,13 @@ void DiscursiveSystemPanel::drawIngestionForm() {
 
     if (ImGui::BeginPopupModal("DiscursiveUpdateSuccess", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Discursive system updated successfully.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal("DiscursiveEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Cannot register empty system!");
+        ImGui::Text("Please add at least one Problem, Action, Mechanism, or Effect.");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }

@@ -54,6 +54,11 @@ private:
     void drawTrajectoryConfig();
     void drawSnapshotForm();
     void drawSnapshotList();
+    void loadIntoForm(const Application::DTO::RecommendationSnapshotDTO& dto);
+
+    // Edit State
+    bool isEditing_ = false;
+    std::string editingId_;
 };
 
 } // namespace UI::Panels

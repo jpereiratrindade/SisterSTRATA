@@ -82,8 +82,33 @@ public:
         m_id.clear();
     }
 
-    void removeSnapshot(const std::string&) = delete;
-    void updateSnapshot(const std::string&, const RecommendationSnapshot&) = delete;
+    void removeSnapshot(const std::string& id) {
+        auto it = std::remove_if(m_snapshots.begin(), m_snapshots.end(),
+            [&](const RecommendationSnapshot& s) { return s.getId() == id; });
+        
+        if (it != m_snapshots.end()) {
+            m_snapshots.erase(it, m_snapshots.end());
+        }
+    }
+
+    void updateSnapshot(const std::string& id, const RecommendationSnapshot& newSnapshot) {
+        auto it = std::find_if(m_snapshots.begin(), m_snapshots.end(),
+            [&](const RecommendationSnapshot& s) { return s.getId() == id; });
+
+        if (it != m_snapshots.end()) {
+            // Check if ID changed and conflicts
+            if (newSnapshot.getId() != id) {
+                 auto collision = std::find_if(m_snapshots.begin(), m_snapshots.end(),
+                    [&](const RecommendationSnapshot& s) { return s.getId() == newSnapshot.getId(); });
+                 if (collision != m_snapshots.end()) {
+                     throw std::invalid_argument("Cannot update: New ID already exists.");
+                 }
+            }
+            *it = newSnapshot;
+        } else {
+             throw std::invalid_argument("Snapshot not found: " + id);
+        }
+    }
 
 private:
     RecommendationTrajectoryID m_id;
