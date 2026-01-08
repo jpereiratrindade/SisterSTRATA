@@ -64,6 +64,18 @@ void Application::init() {
         } catch (const std::exception& e) {
             std::cerr << "[Application] Warning: Could not load narrative data: " << e.what() << std::endl;
         }
+        try {
+            this->session_->getDiscursiveSystemRepository().deserialize(path + ".discursive.json");
+            std::cout << "[Application] Discursive data loaded from " << path << ".discursive.json" << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "[Application] Warning: Could not load discursive data: " << e.what() << std::endl;
+        }
+        try {
+            this->session_->getRecommendationTrajectory().deserialize(path + ".recommendation.json");
+            std::cout << "[Application] Recommendation data loaded from " << path << ".recommendation.json" << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "[Application] Warning: Could not load recommendation data: " << e.what() << std::endl;
+        }
     };
     ui_->onSaveFile = [this](std::string path) { 
         if (World3D::saveFile(path)) {
@@ -74,11 +86,25 @@ void Application::init() {
             } catch (const std::exception& e) {
                 std::cerr << "[Application] Error saving narrative data: " << e.what() << std::endl;
             }
+            try {
+                this->session_->getDiscursiveSystemRepository().serialize(path + ".discursive.json");
+                std::cout << "[Application] Discursive data saved to " << path << ".discursive.json" << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "[Application] Error saving discursive data: " << e.what() << std::endl;
+            }
+            try {
+                this->session_->getRecommendationTrajectory().serialize(path + ".recommendation.json");
+                std::cout << "[Application] Recommendation data saved to " << path << ".recommendation.json" << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "[Application] Error saving recommendation data: " << e.what() << std::endl;
+            }
         }
     }; 
     ui_->onCloseFile = [this]() { 
         World3D::clear(); 
         this->session_->getNarrativeSystem().clear();
+        this->session_->getDiscursiveSystemRepository().clear();
+        this->session_->getRecommendationTrajectory().clear();
     }; 
     ui_->onExit = [this]() { this->running_ = false; };
 

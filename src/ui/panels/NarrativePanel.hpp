@@ -1,9 +1,10 @@
 #pragma once
 
 #include "application/Session.hpp"
+#include "application/dtos/NarrativeDTOs.hpp"
+#include "ui/components/FileSelector.hpp"
 #include <string>
 #include <optional>
-#include "src/observational/narrative/value_objects/SpatialScope.hpp"
 
 namespace UI::Panels {
 
@@ -54,7 +55,14 @@ private:
 
     // -- Spatial State --
     bool pickingMode_ = false;
-    std::optional<SisterSTRATA::Observational::Narrative::SpatialScope> capturedScope_;
+    std::optional<Application::DTO::SpatialScopeDTO> capturedScope_;
+
+    UI::Components::FileSelector importSelector_{"Import Narrative JSON"};
+    UI::Components::FileSelector exportSelector_{"Export Narrative JSON"};
+    bool showImportDialog_ = false;
+    bool showExportDialog_ = false;
+    std::string lastImportPath_ = "assets/data/";
+    std::string lastExportPath_ = "assets/data/";
 
     void drawIngestionForm();
     void drawObservationList();

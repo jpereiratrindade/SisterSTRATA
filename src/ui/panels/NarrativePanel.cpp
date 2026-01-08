@@ -2,6 +2,8 @@
 #include "imgui.h"
 #include <vector>
 #include <map>
+#include <cstring>
+#include <filesystem>
 #include "world3d/World3D.hpp" // Trusted include path
 
 // Map Enums to Strings for UI
@@ -9,14 +11,32 @@ static const char* SOURCE_TYPES[] = {
     "Interview", "Technical Report", "Historical Record", "Scientific Article", 
     "Institutional Document", "Media Article", "Field Note", "Other" 
 };
+static const char* SOURCE_TYPE_VALUES[] = {
+    "INTERVIEW", "TECHNICAL_REPORT", "HISTORICAL_RECORD", "SCIENTIFIC_ARTICLE",
+    "INSTITUTIONAL_DOCUMENT", "MEDIA_ARTICLE", "FIELD_NOTE", "OTHER"
+};
 
 static const char* TEMPORAL_CATEGORIES[] = {
     "Ancestral", "Past", "Recent Past", "Contemporary", "Future Vision", "Timeless", "Indeterminate"
+};
+static const char* TEMPORAL_VALUES[] = {
+    "ANCESTRAL", "PAST", "RECENT_PAST", "CONTEMPORARY", "FUTURE_VISION", "TIMELESS", "INDETERMINATE"
 };
 
 static const char* INTENTS[] = {
     "Descriptive Record", "Exploratory Hypothesis", "Contextualization", "Methodological Note"
 };
+static const char* INTENT_VALUES[] = {
+    "DESCRIPTIVE_RECORD", "EXPLORATORY_HYPOTHESIS", "CONTEXTUALIZATION", "METHODOLOGICAL_NOTE"
+};
+
+static const char* intentLabel(const std::string& token) {
+    if (token == "DESCRIPTIVE_RECORD") return "Descriptive Record";
+    if (token == "EXPLORATORY_HYPOTHESIS") return "Exploratory Hypothesis";
+    if (token == "CONTEXTUALIZATION") return "Contextualization";
+    if (token == "METHODOLOGICAL_NOTE") return "Methodological Note";
+    return token.c_str();
+}
 
 namespace UI::Panels {
 
@@ -43,7 +63,10 @@ void NarrativePanel::draw(bool* open) {
                 int patchId = World3D::getPickIndex(mousePos.x, mousePos.y, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
                 
                 if (patchId > 0) { // Assuming 0 is invalid/background
-                    capturedScope_ = SisterSTRATA::Observational::Narrative::SpatialScope(patchId);
+                    Application::DTO::SpatialScopeDTO scope;
+                    scope.type = "PATCH_ID";
+                    scope.patchId = patchId;
+                    capturedScope_ = scope;
                     pickingMode_ = false; // Auto-exit
                 }
             }
@@ -117,8 +140,8 @@ void NarrativePanel::drawIngestionForm() {
     ImGui::Text("Spatial Anchor");
     if (capturedScope_.has_value()) {
         auto& scope = capturedScope_.value();
-        if (scope.getType() == SisterSTRATA::Observational::Narrative::SpatialScope::ScopeType::PATCH_ID) {
-            ImGui::TextColored(ImVec4(0,1,0,1), "Anchored to Patch: %d", scope.getPatchId().value_or(-1));
+        if (scope.type == "PATCH_ID" && scope.patchId.has_value()) {
+            ImGui::TextColored(ImVec4(0,1,0,1), "Anchored to Patch: %d", scope.patchId.value());
         } else {
              ImGui::TextColored(ImVec4(0,1,0,1), "Anchored (Other)");
         }
@@ -144,37 +167,41 @@ void NarrativePanel::drawIngestionForm() {
     ImGui::Separator();
 
     if (ImGui::Button("Register Observation", ImVec2(200, 0))) {
-        // Construct Domain Objects
-        using namespace SisterSTRATA::Observational::Narrative;
-
-        // Source
-        auto type = static_cast<SourceReference::SourceType>(inputSourceType_);
-        SourceReference source(type, inputSourceId_, inputDate_);
-
-        // Time
-        auto timeCat = static_cast<TemporalContext::RelativeTiming>(inputTemporalCategory_);
-        TemporalContext time(timeCat, inputTemporalLabel_);
-
-        // Intent
-        auto intentType = static_cast<ObservationIntent::IntentType>(inputIntent_);
-        ObservationIntent intent(intentType);
-
-        // Axis (Theme)
-        std::vector<SemanticAxis> axes;
-        if (strlen(inputTheme_) > 0) {
-            axes.push_back(SemanticAxis(inputTheme_, inputTheme_, SemanticAxis::AbstractionLevel::LOCAL));
-        }
-
-        // Create State
-        // Generate a simple ID (e.g. OBS-<Count>)
+        Application::DTO::NarrativeStateDTO dto;
         size_t count = session_->getNarrativeSystem().getHistory().size() + 1;
         std::string id = "OBS-" + std::to_string(count);
+        dto.id = id;
 
-        NarrativeState state(id, source, time, intent, axes, {}, capturedScope_);
+        Application::DTO::SourceReferenceDTO source;
+        source.sourceType = SOURCE_TYPE_VALUES[inputSourceType_];
+        source.sourceId = inputSourceId_;
+        source.productionDate = inputDate_;
+        dto.source = source;
+
+        dto.temporalContext = Application::DTO::TemporalContextDTO{
+            TEMPORAL_VALUES[inputTemporalCategory_],
+            inputTemporalLabel_
+        };
+
+        dto.intent = Application::DTO::ObservationIntentDTO{
+            INTENT_VALUES[inputIntent_]
+        };
+
+        std::vector<Application::DTO::SemanticAxisDTO> axes;
+        if (strlen(inputTheme_) > 0) {
+            axes.push_back(Application::DTO::SemanticAxisDTO{
+                inputTheme_,
+                inputTheme_,
+                "LOCAL"
+            });
+        }
+        dto.axes = axes;
+        dto.metadata = {};
+        dto.spatialScope = capturedScope_;
 
         // Try Register
         try {
-            session_->getNarrativeSystem().registerObservation(state);
+            session_->registerNarrativeStateDTO(dto);
             // Clear inputs on success
             // Keep source info for bulk entry
             capturedScope_ = std::nullopt; // Clear anchor
@@ -189,10 +216,74 @@ void NarrativePanel::drawIngestionForm() {
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::TextDisabled("Import / Export");
+    if (ImGui::Button("Import JSON")) {
+        showImportDialog_ = true;
+        importSelector_.Open(lastImportPath_);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Export JSON")) {
+        showExportDialog_ = true;
+        exportSelector_.Open(lastExportPath_);
+    }
+
+    std::string importResult;
+    if (importSelector_.draw(&showImportDialog_, importResult, ".json")) {
+        try {
+            session_->loadNarrativeFromFile(importResult);
+            std::filesystem::path selected(importResult);
+            if (selected.has_parent_path()) {
+                lastImportPath_ = selected.parent_path().string();
+            }
+            ImGui::OpenPopup("NarrativeImportSuccess");
+        } catch (const std::exception&) {
+            ImGui::OpenPopup("NarrativeImportError");
+        }
+        showImportDialog_ = false;
+    }
+
+    std::string exportResult;
+    if (exportSelector_.draw(&showExportDialog_, exportResult, ".json", true)) {
+        try {
+            session_->saveNarrativeToFile(exportResult);
+            std::filesystem::path selected(exportResult);
+            if (selected.has_parent_path()) {
+                lastExportPath_ = selected.parent_path().string();
+            }
+            ImGui::OpenPopup("NarrativeExportSuccess");
+        } catch (const std::exception&) {
+            ImGui::OpenPopup("NarrativeExportError");
+        }
+        showExportDialog_ = false;
+    }
+
+    if (ImGui::BeginPopupModal("NarrativeImportSuccess", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Narrative observations imported successfully.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("NarrativeImportError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Failed to import narrative observations.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("NarrativeExportSuccess", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Narrative observations exported successfully.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("NarrativeExportError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Failed to export narrative observations.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
 }
 
 void NarrativePanel::drawObservationList() {
-    auto& history = session_->getNarrativeSystem().getHistory();
+    auto history = session_->getNarrativeStateDTOs();
 
     if (ImGui::BeginTable("ObservationsTable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
         ImGui::TableSetupColumn("ID");
@@ -207,29 +298,29 @@ void NarrativePanel::drawObservationList() {
             ImGui::TableNextRow();
             
             ImGui::TableSetColumnIndex(0);
-            ImGui::Text("%s", obs.getId().c_str());
+            ImGui::Text("%s", obs.id.c_str());
 
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%s (%s)", obs.getSource().getSourceId().c_str(), obs.getSource().getProductionDate().c_str());
+            ImGui::Text("%s (%s)", obs.source.sourceId.c_str(), obs.source.productionDate.c_str());
 
             ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%s", obs.getTemporalContext().getLabel().c_str());
+            ImGui::Text("%s", obs.temporalContext.label.c_str());
 
             ImGui::TableSetColumnIndex(3);
-            ImGui::Text("%s", obs.getIntent().toString().c_str());
+            ImGui::Text("%s", intentLabel(obs.intent.intentType));
 
             ImGui::TableSetColumnIndex(4);
-            if (!obs.getAxes().empty()) {
-                ImGui::Text("%s", obs.getAxes()[0].getLabel().c_str());
+            if (!obs.axes.empty()) {
+                ImGui::Text("%s", obs.axes[0].label.c_str());
             } else {
                 ImGui::Text("-");
             }
             
             ImGui::TableSetColumnIndex(5);
-            if (obs.getSpatialScope().has_value()) {
-                 auto& scope = obs.getSpatialScope().value();
-                 if (scope.getType() == SisterSTRATA::Observational::Narrative::SpatialScope::ScopeType::PATCH_ID) {
-                     ImGui::Text("Patch %d", scope.getPatchId().value_or(0));
+            if (obs.spatialScope.has_value()) {
+                 auto& scope = obs.spatialScope.value();
+                 if (scope.type == "PATCH_ID" && scope.patchId.has_value()) {
+                     ImGui::Text("Patch %d", scope.patchId.value());
                  } else {
                      ImGui::Text("Yes");
                  }

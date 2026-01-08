@@ -174,6 +174,8 @@ void UserInterface::setupFourthDimension(Core::Domain::FourthDimension::Trajecto
 
 void UserInterface::setupObservational(Application::Session* session) {
     narrativePanel_.setSession(session);
+    discursiveSystemPanel_.setSession(session);
+    recommendationTrajectoryPanel_.setSession(session);
 }
 
 void UserInterface::shutdown() {
@@ -238,6 +240,8 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     soilSimPanel_.drawSiBCS(&mainMenu_.showSiBCSWindow);
     timelinePanel_.draw(&mainMenu_.showTimeline);
     narrativePanel_.draw(&mainMenu_.showNarrativePanel);
+    discursiveSystemPanel_.draw(&mainMenu_.showDiscursivePanel);
+    recommendationTrajectoryPanel_.draw(&mainMenu_.showRecommendationPanel);
 }
 
 

@@ -16,6 +16,8 @@
 #include "ui/panels/SoilSimPanel.hpp"
 #include "ui/panels/HydrologyPanel.hpp"
 #include "ui/panels/NarrativePanel.hpp"
+#include "ui/panels/DiscursiveSystemPanel.hpp"
+#include "ui/panels/RecommendationTrajectoryPanel.hpp"
 
 namespace UI {
 
@@ -72,6 +74,8 @@ private:
     Panels::TerrainGeneratorPanel terrainGeneratorPanel_;
     Panels::TimelinePanel timelinePanel_; // New
     Panels::NarrativePanel narrativePanel_; // New
+    Panels::DiscursiveSystemPanel discursiveSystemPanel_;
+    Panels::RecommendationTrajectoryPanel recommendationTrajectoryPanel_;
 };
 
 } // namespace UI

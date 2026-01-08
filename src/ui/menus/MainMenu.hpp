@@ -35,6 +35,8 @@ public:
     bool showSiBCSWindow = false;   // New
     bool showTimeline = false;      // New (FourthDimension)
     bool showNarrativePanel = false; // New (Observational)
+    bool showDiscursivePanel = false;
+    bool showRecommendationPanel = false;
 private:
     bool showOpenDialog = false;
     bool showSaveAsDialog = false; 

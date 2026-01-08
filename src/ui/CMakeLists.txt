@@ -20,6 +20,8 @@ add_library(ui
     panels/HydrologyPanel.cpp
     panels/TimelinePanel.cpp # Fourth Dimension
     panels/NarrativePanel.cpp # Observational
+    panels/DiscursiveSystemPanel.cpp
+    panels/RecommendationTrajectoryPanel.cpp
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
     ${imgui_SOURCE_DIR}/imgui_tables.cpp
