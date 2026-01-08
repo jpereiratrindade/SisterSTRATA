@@ -21,15 +21,10 @@ imgui.ini
 docs/doxygen/
 
 # Generated Assets
+# Generated Assets
 *.obj
 *.csv
-assets/data/generated_*.obj
-assets/data/generated_*.csv
-!/assets/data/*.obj
-!/assets/data/*.csv
-!exemplo_terrain.csv
-!exemplo_terreno.csv
-!terrain_export.csv
+assets/
 
 # Local datasets and outputs
 *.strata

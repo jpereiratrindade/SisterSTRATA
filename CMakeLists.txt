@@ -19,6 +19,7 @@ add_subdirectory(src/infrastructure)
 add_subdirectory(src/application)
 add_subdirectory(src/world3d)
 add_subdirectory(src/ui)
+add_subdirectory(src/observational)
 add_subdirectory(tests)
 
 # Entry point
