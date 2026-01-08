@@ -15,6 +15,7 @@
 #include "ui/panels/VegetationDeclarationPanel.hpp"
 #include "ui/panels/SoilSimPanel.hpp"
 #include "ui/panels/HydrologyPanel.hpp"
+#include "ui/panels/NarrativePanel.hpp"
 
 namespace UI {
 
@@ -34,6 +35,7 @@ class UserInterface {
 public:
     void init(SDL_Window* window, const VulkanInitInfo& info);
     void setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory, Application::Ports::ILLMService* llmService);
+    void setupObservational(Application::Session* session); // New
     void shutdown();
 
     // Callbacks
@@ -69,6 +71,7 @@ private:
     Panels::HydrologyPanel hydrologyPanel_;
     Panels::TerrainGeneratorPanel terrainGeneratorPanel_;
     Panels::TimelinePanel timelinePanel_; // New
+    Panels::NarrativePanel narrativePanel_; // New
 };
 
 } // namespace UI

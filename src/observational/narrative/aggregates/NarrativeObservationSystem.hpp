@@ -1,63 +1,102 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <string>
-#include <stdexcept>
 #include "src/observational/narrative/entities/NarrativeState.hpp"
+#include <vector>
+#include <algorithm>
+#include <stdexcept>
+#include <memory> 
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 namespace SisterSTRATA::Observational::Narrative {
 
 /**
- * @brief Aggregate Root for the Narrative Observation Context.
- * 
- * Acts as a passive container for narrative observations.
- * 
- * CONTRACT:
- * - Append-only: No deletion or modification of existing states.
- * - No Semantic Validation: It accepts observations as valid declarations of a source.
- * - No Causal Inference: Does not link states implies causation.
+ * @brief Aggregate Root for the Narrative Observation Bounded Context.
  */
 class NarrativeObservationSystem {
 public:
     NarrativeObservationSystem() = default;
 
     /**
-     * @brief Registers a new narrative observation.
-     * 
-     * @param state The immutable state to register.
-     * @throws std::runtime_error if a state with the same ID already exists (integrity check).
+     * @brief Registers a new observation into the system.
      */
-    void registerObservation(std::shared_ptr<NarrativeState> state) {
-        if (!state) {
-            throw std::invalid_argument("Cannot register null state.");
+    void registerObservation(const NarrativeState& observation) {
+        // Enforce Invariant: Structural Uniqueness
+        auto itId = std::find_if(m_history.begin(), m_history.end(),
+            [&](const NarrativeState& existing) {
+                return existing.getId() == observation.getId();
+            });
+
+        if (itId != m_history.end()) {
+            throw std::invalid_argument("Duplicate NarrativeStateID: " + observation.getId());
         }
 
-        // Integrity check: distinct IDs
-        for (const auto& existing : m_observations) {
-            if (existing->getId() == state->getId()) {
-                throw std::runtime_error("Duplicate NarrativeStateID: " + state->getId());
+        auto itContent = std::find_if(m_history.begin(), m_history.end(),
+            [&](const NarrativeState& existing) {
+                bool sameSource = existing.getSource().getSourceId() == observation.getSource().getSourceId();
+                bool sameTime = existing.getTemporalContext().getLabel() == observation.getTemporalContext().getLabel();
+                return sameSource && sameTime;
+            });
+
+        if (itContent != m_history.end()) {
+            throw std::invalid_argument(
+                "Duplicate Observation: Source '" + observation.getSource().getSourceId() + 
+                "' already has an entry for time '" + observation.getTemporalContext().getLabel() + "'"
+            );
+        }
+
+        m_history.push_back(observation);
+    }
+
+    const std::vector<NarrativeState>& getHistory() const {
+        return m_history;
+    }
+
+    // Persistence Logic
+    void serialize(const std::string& filepath) const {
+        nlohmann::json j;
+        j["history"] = m_history;
+        
+        std::ofstream ofs(filepath);
+        if (ofs.is_open()) {
+            ofs << j.dump(4);
+        } else {
+            throw std::runtime_error("Failed to open file for writing narrative data: " + filepath);
+        }
+    }
+
+    void deserialize(const std::string& filepath) {
+        std::ifstream ifs(filepath);
+        if (!ifs.is_open()) {
+            // It's acceptable if the file doesn't exist yet (new project), but we should warn or handle.
+            // For now, if file missing, we assume empty or throw. 
+            // Better behavior: clear history? Or just return if file not found?
+            // "Replace current state" implies clear.
+            // If file doesn't exist, maybe do nothing (or clear to match 'empty file').
+            return; 
+        }
+
+        nlohmann::json j;
+        try {
+            ifs >> j;
+            if (j.contains("history")) {
+                m_history = j["history"].get<std::vector<NarrativeState>>();
             }
+        } catch (const nlohmann::json::parse_error& e) {
+            // Corrupt file or empty
+             throw std::runtime_error("Failed to parse narrative data JSON: " + std::string(e.what()));
         }
-
-        m_observations.push_back(state);
     }
 
-    /**
-     * @brief Retrieves the full history of observations.
-     * 
-     * @return const reference to the vector of states.
-     */
-    const std::vector<std::shared_ptr<NarrativeState>>& getObservations() const {
-        return m_observations;
+    void clear() {
+        m_history.clear();
     }
 
-    // Explicitly disabling update/delete functionality to enforce append-only contract.
     void removeObservation(const std::string&) = delete;
     void updateObservation(const std::string&, const NarrativeState&) = delete;
 
 private:
-    std::vector<std::shared_ptr<NarrativeState>> m_observations;
+    std::vector<NarrativeState> m_history;
 };
 
 } // namespace SisterSTRATA::Observational::Narrative

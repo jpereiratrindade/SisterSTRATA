@@ -55,15 +55,41 @@ void Application::init() {
     
     // Bind UI Callbacks
     ui_->onLoadDemo = []() { World3D::loadDemoCloud(); };
-    ui_->onOpenFile = [](std::string path) { World3D::loadFile(path); };
-    ui_->onSaveFile = [](std::string path) { World3D::saveFile(path); }; // Bind
-    ui_->onCloseFile = []() { World3D::clear(); }; 
+    ui_->onOpenFile = [this](std::string path) { 
+        World3D::loadFile(path); 
+        // Sidecar Load
+        try {
+            this->session_->getNarrativeSystem().deserialize(path + ".json");
+            std::cout << "[Application] Narrative data loaded from " << path << ".json" << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "[Application] Warning: Could not load narrative data: " << e.what() << std::endl;
+        }
+    };
+    ui_->onSaveFile = [this](std::string path) { 
+        if (World3D::saveFile(path)) {
+            // Sidecar Save
+            try {
+                this->session_->getNarrativeSystem().serialize(path + ".json");
+                std::cout << "[Application] Narrative data saved to " << path << ".json" << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "[Application] Error saving narrative data: " << e.what() << std::endl;
+            }
+        }
+    }; 
+    ui_->onCloseFile = [this]() { 
+        World3D::clear(); 
+        this->session_->getNarrativeSystem().clear();
+    }; 
     ui_->onExit = [this]() { this->running_ = false; };
 
     ui_->init(window_->getNativeWindow(), info);
     
     // Link Fourth Dimension System
+    // Link Fourth Dimension System
     ui_->setupFourthDimension(&session_->getTrajectory(), session_->getLLMService());
+    
+    // Link Observational System
+    ui_->setupObservational(session_.get());
 
     std::cout << "[Application] Initialization Complete." << std::endl;
 }

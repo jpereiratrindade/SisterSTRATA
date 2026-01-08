@@ -34,6 +34,7 @@ public:
     bool showScorpanWindow = false; // New
     bool showSiBCSWindow = false;   // New
     bool showTimeline = false;      // New (FourthDimension)
+    bool showNarrativePanel = false; // New (Observational)
 private:
     bool showOpenDialog = false;
     bool showSaveAsDialog = false; 

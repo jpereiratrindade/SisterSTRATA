@@ -1,0 +1,55 @@
+[  2%] Built target Shaders
+[ 15%] Built target core
+[ 16%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o
+[ 17%] Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o
+[ 19%] Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o
+[ 20%] Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o
+[ 21%] Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o
+[ 23%] Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o
+[ 24%] Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o
+[ 26%] Linking CXX static library ../../lib/libui.a
+[ 41%] Built target ui
+[ 42%] Building CXX object src/world3d/CMakeFiles/world3d.dir/World3D.cpp.o
+[ 43%] Building CXX object src/world3d/CMakeFiles/world3d.dir/Engine.cpp.o
+[ 45%] Building CXX object src/world3d/CMakeFiles/world3d.dir/rendering/VulkanContext.cpp.o
+[ 46%] Building CXX object src/world3d/CMakeFiles/world3d.dir/rendering/Swapchain.cpp.o
+[ 47%] Building CXX object src/world3d/CMakeFiles/world3d.dir/rendering/VulkanRenderer.cpp.o
+[ 49%] Building CXX object src/world3d/CMakeFiles/world3d.dir/rendering/Pipeline.cpp.o
+[ 50%] Building CXX object src/world3d/CMakeFiles/world3d.dir/rendering/Buffer.cpp.o
+[ 52%] Building CXX object src/world3d/CMakeFiles/world3d.dir/rendering/ImageWriter.cpp.o
+[ 53%] Building CXX object src/world3d/CMakeFiles/world3d.dir/ScientificAdapter.cpp.o
+[ 54%] Building CXX object src/world3d/CMakeFiles/world3d.dir/camera/Camera.cpp.o
+[ 56%] Building CXX object src/world3d/CMakeFiles/world3d.dir/camera/CameraInputController.cpp.o
+[ 57%] Building CXX object src/world3d/CMakeFiles/world3d.dir/generators/TerrainGenerator.cpp.o
+[ 58%] Building CXX object src/world3d/CMakeFiles/world3d.dir/exporter/ObjExporter.cpp.o
+[ 60%] Building CXX object src/world3d/CMakeFiles/world3d.dir/exporter/CsvExporter.cpp.o
+[ 61%] Linking CXX static library ../../lib/libworld3d.a
+[ 61%] Built target world3d
+[ 63%] Building CXX object src/application/CMakeFiles/application.dir/Session.cpp.o
+[ 64%] Building CXX object src/application/CMakeFiles/application.dir/Application.cpp.o
+[ 65%] Linking CXX static library ../../lib/libapplication.a
+[ 65%] Built target application
+[ 67%] Building CXX object src/infrastructure/CMakeFiles/infrastructure.dir/window/Window.cpp.o
+[ 68%] Building CXX object src/infrastructure/CMakeFiles/infrastructure.dir/threading/ThreadPool.cpp.o
+[ 69%] Building CXX object src/infrastructure/CMakeFiles/infrastructure.dir/llm/OllamaMockAdapter.cpp.o
+[ 71%] Building CXX object src/infrastructure/CMakeFiles/infrastructure.dir/llm/OllamaAdapter.cpp.o
+[ 72%] Linking CXX static library ../../lib/libinfrastructure.a
+[ 72%] Built target infrastructure
+[ 73%] Building CXX object CMakeFiles/SisterSTRATA.dir/src/main.cpp.o
+[ 75%] Linking CXX executable bin/SisterSTRATA
+[ 75%] Built target SisterSTRATA
+[ 78%] Built target core_tests
+[ 80%] Built target patch_analysis_tests
+[ 83%] Built target soil_rasterizer_tests
+[ 86%] Built target patch_trajectory_test
+[ 89%] Built target trajectory_lod_tests
+[ 90%] Building CXX object tests/core/CMakeFiles/veg_vector_tests.dir/VegetationSystemVectorTest.cpp.o
+[ 91%] Linking CXX executable ../../bin/veg_vector_tests
+[ 91%] Built target veg_vector_tests
+[ 94%] Built target observational_tests
+[ 95%] Building CXX object tests/application/CMakeFiles/application_tests.dir/TestUseCases.cpp.o
+[ 97%] Linking CXX executable ../../bin/application_tests
+[ 97%] Built target application_tests
+[ 98%] Building CXX object tests/infrastructure/CMakeFiles/infrastructure_tests.dir/TestThreadPool.cpp.o
+[100%] Linking CXX executable ../../bin/infrastructure_tests
+[100%] Built target infrastructure_tests

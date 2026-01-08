@@ -1,0 +1,15 @@
+[  6%] Built target Shaders
+[ 36%] Built target core
+[ 40%] Building CXX object src/ui/CMakeFiles/ui.dir/UI.cpp.o
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/UI.hpp:18,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/UI.cpp:1:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/NarrativePanel.hpp:55:29: error: redeclaration of ‘char UI::Panels::NarrativePanel::inputTheme_ [128]’
+   55 |     char inputTheme_[128] = "";
+      |                             ^~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/NarrativePanel.hpp:53:10: note: previous declaration ‘char UI::Panels::NarrativePanel::inputTheme_ [128]’
+   53 |     char inputTheme_[128] = "";
+      |          ^~~~~~~~~~~
+gmake[3]: *** [src/ui/CMakeFiles/ui.dir/build.make:79: src/ui/CMakeFiles/ui.dir/UI.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:590: src/ui/CMakeFiles/ui.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:597: src/ui/CMakeFiles/ui.dir/rule] Error 2
+gmake: *** [Makefile:277: ui] Error 2

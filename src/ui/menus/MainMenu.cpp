@@ -71,6 +71,9 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("Terrain Simulator (Procedural)")) {
                 showTerrainGenerator = true;
             }
+            if (ImGui::MenuItem("Narrative Observation Context")) {
+                showNarrativePanel = true;
+            }
 
             if (ImGui::MenuItem("Patch Analysis (CSV)")) {
                 showPatchAnalysis = true;

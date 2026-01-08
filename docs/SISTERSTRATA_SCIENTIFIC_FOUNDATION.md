@@ -116,6 +116,15 @@ A dimensão temporal no SisterSTRATA não é apenas um log, mas uma trajetória 
 
 ---
 
+### 4.5. DOMÍNIO: NARRATIVA E CONTEXTO OBSERVACIONAL
+O SisterSTRATA reconhece que a paisagem não é qualificada apenas por fenômenos biofísicos, mas também por construtos sociais e discursivos.
+
+*   **Separação Ontológica (Território vs. Mapa):** O sistema mantém uma distinção rigorosa entre o "Estado Biofísico" (derivado de simulação causal) e o "Estado Narrativo" (declarado por fontes externas como entrevistas ou relatórios).
+*   **Natureza Observacional:** Diferente dos domínios Simulation-Bound (Solo, Hidro), o domínio Narrativo é *Read-Only* em relação ao mundo físico. Uma entrevista dizendo que "o solo é fértil" cria um *NarrativeState*, mas não altera quimicamente o *SoilState*.
+*   **Ancoragem Espacial:** Narrativas são ancoradas ao território via `SpatialScope` (Pontos ou Manchas), permitindo a correlação visual entre o que é *dito* sobre o lugar e o que é *simulado* no lugar, sem contaminar a causalidade de um com o outro.
+
+---
+
 ## 5. INTERFACE COGNITIVA E GOVERNANÇA DE DADOS
 
 O Contexto de Assistência Cognitiva (CAC) integra Large Language Models (LLMs) como uma camada de **Hermenêutica Científica**.

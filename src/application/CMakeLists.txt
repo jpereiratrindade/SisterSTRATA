@@ -18,6 +18,7 @@ target_link_libraries(application PUBLIC
     world3d
     ui
     infrastructure
+    observational
 )
 
 target_compile_features(application PUBLIC cxx_std_20)

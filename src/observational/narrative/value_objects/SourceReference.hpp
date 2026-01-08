@@ -2,14 +2,12 @@
 
 #include <string>
 #include <optional>
+#include <nlohmann/json.hpp>
 
 namespace SisterSTRATA::Observational::Narrative {
 
 /**
  * @brief Value Object representing the origin of a narrative observation.
- * 
- * Provides strict traceability to the source material (interview, document, etc.).
- * Immutable by design.
  */
 class SourceReference {
 public:
@@ -23,6 +21,8 @@ public:
         FIELD_NOTE,
         OTHER
     };
+
+    SourceReference() = default; // needed for JSON
 
     SourceReference(SourceType type, std::string sourceId, std::string productionDate, std::optional<std::string> author = std::nullopt)
         : m_type(type), m_sourceId(std::move(sourceId)), m_productionDate(std::move(productionDate)), m_author(std::move(author)) {}
@@ -39,10 +39,33 @@ public:
                m_author == other.m_author;
     }
 
+    // Friend serialization functions
+    friend void to_json(nlohmann::json& j, const SourceReference& obj) {
+        j = nlohmann::json{
+            {"type", static_cast<int>(obj.m_type)},
+            {"sourceId", obj.m_sourceId},
+            {"productionDate", obj.m_productionDate}
+        };
+        if (obj.m_author.has_value()) {
+            j["author"] = obj.m_author.value();
+        }
+    }
+
+    friend void from_json(const nlohmann::json& j, SourceReference& obj) {
+        obj.m_type = static_cast<SourceType>(j.at("type").get<int>());
+        obj.m_sourceId = j.at("sourceId").get<std::string>();
+        obj.m_productionDate = j.at("productionDate").get<std::string>();
+        if (j.contains("author")) {
+            obj.m_author = j.at("author").get<std::string>();
+        } else {
+            obj.m_author = std::nullopt;
+        }
+    }
+
 private:
-    SourceType m_type;
+    SourceType m_type = SourceType::OTHER;
     std::string m_sourceId;
-    std::string m_productionDate; // string to avoid complexity, or could be ISO date
+    std::string m_productionDate;
     std::optional<std::string> m_author;
 };
 

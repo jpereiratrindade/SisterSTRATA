@@ -18,6 +18,7 @@ Para entender a filosofia, a governança dos modelos e a arquitetura de conhecim
 *   **[Análise de Trajetória de Patch (DDD)](DDD_PatchTrajectory_Analysis.txt)**: Definição do modelo multi-estado para patches.
 *   **[Arquitetura Vetorial de Hipóteses](docs/Arquitetura_Vetorial_Hipoteses.md)**: Formalização matemática do espaço vetorial de parâmetros.
 *   **[Fourth Dimension (Resilience)](DDD_FourthDimensionSystem.txt)**: O modelo de resiliência e coerência temporal.
+*   **[Contexto de Observação Narrativa](DDD_NarrativeObservationContext.md)**: Sistema observacional para registrar interpretações discursivas do território.
 *   **[Architecture & DDD](projeto_app_ddd_v10.txt)**: Organização do código e princípios de design.
 
 ## Requisitos de Sistema

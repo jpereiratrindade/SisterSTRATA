@@ -164,16 +164,16 @@ void UserInterface::init(SDL_Window* window, const VulkanInitInfo& info) {
     dpiScale_ = computeDpiScale(window_);
     rebuildFontsForDpi(dpiScale_);
     
-    // Create fonts texture
-    // Assuming implicit upload or we can do it manually if needed, but Init usually defers until NewFrame if no cmd provided? 
-    // Actually ImGui_ImplVulkan_CreateFontsTexture is needed if we want it available immediately, 
-    // but deferred creation in NewFrame is often supported or we might see a stutter.
     // Link Panels
     soilSimPanel_.setPatchAnalysisPanel(&patchAnalysisPanel_);
 }
 
 void UserInterface::setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory, Application::Ports::ILLMService* llmService) {
     timelinePanel_.setDependencies(trajectory, &vegetationDeclarationPanel_, llmService);
+}
+
+void UserInterface::setupObservational(Application::Session* session) {
+    narrativePanel_.setSession(session);
 }
 
 void UserInterface::shutdown() {
@@ -237,6 +237,7 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     soilSimPanel_.drawScorpan(&mainMenu_.showScorpanWindow);
     soilSimPanel_.drawSiBCS(&mainMenu_.showSiBCSWindow);
     timelinePanel_.draw(&mainMenu_.showTimeline);
+    narrativePanel_.draw(&mainMenu_.showNarrativePanel);
 }
 
 

@@ -1,0 +1,108 @@
+[  2%] Built target Shaders
+[ 15%] Built target core
+[ 16%] Building CXX object src/ui/CMakeFiles/ui.dir/UI.cpp.o
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/NarrativePanel.hpp:3,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/UI.hpp:18,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/UI.cpp:1:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:33:19: error: ‘Observational’ does not name a type
+   33 |     [[nodiscard]] Observational::Narrative::NarrativeObservationSystem& getNarrativeSystem() const {
+      |                   ^~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:47:21: error: ‘Observational’ was not declared in this scope; did you mean ‘SisterSTRATA::Observational’?
+   47 |     std::unique_ptr<Observational::Narrative::NarrativeObservationSystem> narrativeSystem_;
+      |                     ^~~~~~~~~~~~~
+      |                     SisterSTRATA::Observational
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/narrative/entities/NarrativeState.hpp:7,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/narrative/aggregates/NarrativeObservationSystem.hpp:3,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:6:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/narrative/value_objects/SourceReference.hpp:6:25: note: ‘SisterSTRATA::Observational’ declared here
+    6 | namespace SisterSTRATA::Observational::Narrative {
+      |                         ^~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:47:73: error: template argument 1 is invalid
+   47 |     std::unique_ptr<Observational::Narrative::NarrativeObservationSystem> narrativeSystem_;
+      |                                                                         ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:47:73: error: template argument 2 is invalid
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:47:10: error: ‘<expression error>’ in namespace ‘std’ does not name a type
+   47 |     std::unique_ptr<Observational::Narrative::NarrativeObservationSystem> narrativeSystem_;
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp: In constructor ‘Application::Session::Session()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:15:11: error: class ‘Application::Session’ does not have any field named ‘narrativeSystem_’
+   15 |           narrativeSystem_(std::make_unique<Observational::Narrative::NarrativeObservationSystem>())
+      |           ^~~~~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:15:45: error: ‘Observational’ was not declared in this scope; did you mean ‘SisterSTRATA::Observational’?
+   15 |           narrativeSystem_(std::make_unique<Observational::Narrative::NarrativeObservationSystem>())
+      |                                             ^~~~~~~~~~~~~
+      |                                             SisterSTRATA::Observational
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/narrative/value_objects/SourceReference.hpp:6:25: note: ‘SisterSTRATA::Observational’ declared here
+    6 | namespace SisterSTRATA::Observational::Narrative {
+      |                         ^~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:15:33: error: parse error in template argument list
+   15 |           narrativeSystem_(std::make_unique<Observational::Narrative::NarrativeObservationSystem>())
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:15:98: error: no matching function for call to ‘make_unique<<expression error> >()’
+   15 |           narrativeSystem_(std::make_unique<Observational::Narrative::NarrativeObservationSystem>())
+      |                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:15:98: note: there are 3 candidates
+In file included from /usr/include/c++/15/bits/shared_ptr_base.h:59,
+                 from /usr/include/c++/15/bits/shared_ptr.h:53,
+                 from /usr/include/c++/15/bits/fs_path.h:46,
+                 from /usr/include/c++/15/filesystem:54,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/components/FileSelector.hpp:4,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/menus/MainMenu.hpp:4,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/UI.hpp:8:
+/usr/include/c++/15/bits/unique_ptr.h:1083:5: note: candidate 1: ‘template<class _Tp, class ... _Args> std::__detail::__unique_ptr_t<_Tp> std::make_unique(_Args&& ...)’
+ 1083 |     make_unique(_Args&&... __args)
+      |     ^~~~~~~~~~~
+/usr/include/c++/15/bits/unique_ptr.h:1083:5: note: template argument deduction/substitution failed:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:15:98: error: template argument 1 is invalid
+   15 |           narrativeSystem_(std::make_unique<Observational::Narrative::NarrativeObservationSystem>())
+      |                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+/usr/include/c++/15/bits/unique_ptr.h:1098:5: note: candidate 2: ‘template<class _Tp> std::__detail::__unique_ptr_array_t<_Tp> std::make_unique(size_t)’
+ 1098 |     make_unique(size_t __num)
+      |     ^~~~~~~~~~~
+/usr/include/c++/15/bits/unique_ptr.h:1098:5: note: candidate expects 1 argument, 0 provided
+/usr/include/c++/15/bits/unique_ptr.h:1108:5: note: candidate 3: ‘template<class _Tp, class ... _Args> std::__detail::__invalid_make_unique_t<_Tp> std::make_unique(_Args&& ...)’ (deleted)
+ 1108 |     make_unique(_Args&&...) = delete;
+      |     ^~~~~~~~~~~
+/usr/include/c++/15/bits/unique_ptr.h:1108:5: note: template argument deduction/substitution failed:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:15:98: error: template argument 1 is invalid
+   15 |           narrativeSystem_(std::make_unique<Observational::Narrative::NarrativeObservationSystem>())
+      |                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp: In member function ‘void Application::Session::newSession()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:25:9: error: ‘narrativeSystem_’ was not declared in this scope
+   25 |         narrativeSystem_ = std::make_unique<Observational::Narrative::NarrativeObservationSystem>();
+      |         ^~~~~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:25:45: error: ‘Observational’ was not declared in this scope; did you mean ‘SisterSTRATA::Observational’?
+   25 |         narrativeSystem_ = std::make_unique<Observational::Narrative::NarrativeObservationSystem>();
+      |                                             ^~~~~~~~~~~~~
+      |                                             SisterSTRATA::Observational
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/narrative/value_objects/SourceReference.hpp:6:25: note: ‘SisterSTRATA::Observational’ declared here
+    6 | namespace SisterSTRATA::Observational::Narrative {
+      |                         ^~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:25:33: error: parse error in template argument list
+   25 |         narrativeSystem_ = std::make_unique<Observational::Narrative::NarrativeObservationSystem>();
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:25:98: error: no matching function for call to ‘make_unique<<expression error> >()’
+   25 |         narrativeSystem_ = std::make_unique<Observational::Narrative::NarrativeObservationSystem>();
+      |                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:25:98: note: there are 3 candidates
+/usr/include/c++/15/bits/unique_ptr.h:1083:5: note: candidate 1: ‘template<class _Tp, class ... _Args> std::__detail::__unique_ptr_t<_Tp> std::make_unique(_Args&& ...)’
+ 1083 |     make_unique(_Args&&... __args)
+      |     ^~~~~~~~~~~
+/usr/include/c++/15/bits/unique_ptr.h:1083:5: note: template argument deduction/substitution failed:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:25:98: error: template argument 1 is invalid
+   25 |         narrativeSystem_ = std::make_unique<Observational::Narrative::NarrativeObservationSystem>();
+      |                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+/usr/include/c++/15/bits/unique_ptr.h:1098:5: note: candidate 2: ‘template<class _Tp> std::__detail::__unique_ptr_array_t<_Tp> std::make_unique(size_t)’
+ 1098 |     make_unique(size_t __num)
+      |     ^~~~~~~~~~~
+/usr/include/c++/15/bits/unique_ptr.h:1098:5: note: candidate expects 1 argument, 0 provided
+/usr/include/c++/15/bits/unique_ptr.h:1108:5: note: candidate 3: ‘template<class _Tp, class ... _Args> std::__detail::__invalid_make_unique_t<_Tp> std::make_unique(_Args&& ...)’ (deleted)
+ 1108 |     make_unique(_Args&&...) = delete;
+      |     ^~~~~~~~~~~
+/usr/include/c++/15/bits/unique_ptr.h:1108:5: note: template argument deduction/substitution failed:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:25:98: error: template argument 1 is invalid
+   25 |         narrativeSystem_ = std::make_unique<Observational::Narrative::NarrativeObservationSystem>();
+      |                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+gmake[2]: *** [src/ui/CMakeFiles/ui.dir/build.make:79: src/ui/CMakeFiles/ui.dir/UI.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:590: src/ui/CMakeFiles/ui.dir/all] Error 2
+gmake: *** [Makefile:166: all] Error 2

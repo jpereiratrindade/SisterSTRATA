@@ -3,8 +3,8 @@ DDD – NARRATIVE OBSERVATION CONTEXT
 STRATA – OBSERVAÇÃO SEMÂNTICA A PARTIR DE ENTREVISTAS E DOCUMENTOS
 ===============================================================================
 
-VERSÃO: 1.0
-STATUS: PROPOSTA CONCEITUAL (EM AVALIAÇÃO)
+VERSÃO: 1.1
+STATUS: IMPLEMENTADO (Fases 1-4)
 NATUREZA: Observacional / Declarativa / Read-only
 ESCOPO: Contexto Auxiliar (NÃO Core Domain)
 DEPENDE DE: Fontes textuais externas

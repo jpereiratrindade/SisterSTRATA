@@ -1,0 +1,6 @@
+[  6%] Built target Shaders
+[ 36%] Built target core
+[ 40%] Building CXX object src/ui/CMakeFiles/ui.dir/UI.cpp.o
+[ 43%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o
+[ 46%] Linking CXX static library ../../lib/libui.a
+[100%] Built target ui
