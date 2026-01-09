@@ -104,7 +104,7 @@ void DiscursiveSystemPanel::draw(bool* open) {
 
 void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::TextColored(ImVec4(0.4f, 1.0f, 1.0f, 1.0f), "SYSTEM INGESTION (DSC)");
-    ImGui::SameLine(ImGui::GetWindowWidth() - 280);
+    ImGui::SameLine(ImGui::GetWindowWidth() - 500);
     
     if (ImGui::Button(aiRequestPending_ ? "Waiting..." : "Ask Qwen to Propose System", ImVec2(240, 60))) {
         auto narratives = session_->getNarrativeHistoryDTO();
