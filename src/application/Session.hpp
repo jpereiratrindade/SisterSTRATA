@@ -264,7 +264,8 @@ public:
             world = workspace_->getWorld().get();
             
             // Fix: Create physical mesh for visualization (Ghost Mode requires vertices)
-            World3D::generateTerrain("simulation_mesh.obj", 100, 100, 2.0f, 0, true);
+            // Use Type::Showcase (4) to ensure terrain has slopes/drainage context, avoiding "All Green" flat fallback.
+            World3D::generateTerrain("simulation_mesh.obj", 100, 100, 2.0f, 4, true);
         }
 
         if (!world) return; // Should not happen
@@ -279,7 +280,8 @@ public:
         auto addSlice = [&](int ordinal, const std::vector<int>& cover, const std::string& meta) {
              std::vector<bool> water(size, false);
              trajectory_.addTimeSlice(Core::Domain::FourthDimension::TimeSlice(
-                 ordinal, ordinal, cover, water, meta
+                 ordinal, ordinal, cover, water, meta,
+                 Core::Domain::FourthDimension::ClassificationType::SemanticCode
              ));
         };
 

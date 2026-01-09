@@ -1,6 +1,16 @@
 # Changelog
 
-## [v1.9.2] - 2026-01-07
+## [v1.9.3] - 2026-01-09
+### Added
+- **Trajectory Impact Profile**: Implemented `TrajectoryImpactAnalyzer` service to generate comprehensive impact reports based on simulation trajectories.
+- **Simulation UX**: Added Stability, Fragmentation, and Deforestation simulation controls directly to the `TimelinePanel`.
+- **Spatial Mapping**: Enhanced `Engine` to support correct visualization of simulation grids on high-resolution terrain meshes (handling vertex count mismatches).
+
+### Fixed
+- **Deforestation Visualization**: Resolved issue where deforestation appeared "All Green" by implementing spatial mapping and ensuring correct "Soil" color application.
+- **Ghost Mode**: Fixed visualization persistence issues for simulated states.
+
+
 ### Added
 - **Agent Guidance**: Added `AGENTS.md` with guardrails for automated assistants.
 - **Scientific Docs**: New domain documents for Pedosfera, Hidrologia, Vegetação e Quarta Dimensão.

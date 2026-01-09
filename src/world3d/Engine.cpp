@@ -2,6 +2,7 @@
 #include "world3d/ScientificAdapter.hpp"
 #include "core/value_objects/Vector3.hpp"
 #include <SDL2/SDL_vulkan.h>
+#include <set>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -848,40 +849,90 @@ void Engine::resetVisualization() {
     staging.copyTo(activeVertices_->data(), size);
     
     renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
-    renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
 }
+
+// Forward Declaration
+glm::vec3 getClassColor(int code);
 
 void Engine::applyClassificationVisualization(const std::vector<int>& semanticMap) {
     if (!activeVertices_ || !activeVertexBuffer_) return;
-    if (semanticMap.size() != activeVertices_->size()) {
-         std::cerr << "[Engine] Classification Map Size Mismatch" << std::endl;
-         return;
-    }
+    
+    size_t mapSize = semanticMap.size();
+    size_t vertSize = activeVertices_->size();
+    
+    // Check if Map is likely a Grid
+    int gridSize = static_cast<int>(std::sqrt(mapSize));
+    
+    // Direct Mapping (Ideal case, e.g. Point Cloud)
+    if (mapSize == vertSize) {
+        for (size_t i = 0; i < vertSize; ++i) {
+             (*activeVertices_)[i].color = getClassColor(semanticMap[i]);
+        }
+    } 
+    // Spatial Mapping (Grid -> Mesh)
+    else {
+        // 1. Calculate Bounds
+        float minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+        for (const auto& v : *activeVertices_) {
+            minX = std::min(minX, v.pos.x);
+            maxX = std::max(maxX, v.pos.x);
+            minY = std::min(minY, v.pos.y);
+            maxY = std::max(maxY, v.pos.y);
+        }
 
-    std::cout << "[Engine] Applying Classification Visualization (Ghost Mode)." << std::endl;
-
-    for (size_t i = 0; i < activeVertices_->size(); ++i) {
-        auto& v = (*activeVertices_)[i];
-        int code = semanticMap[i];
+        float width = maxX - minX;
+        float height = maxY - minY;
         
-        using namespace Core::Domain::Vegetation;
-        if (code == static_cast<int>(VegetationCode::FlorestalNatural)) {
-             v.color = glm::vec3(0.0f, 0.4f, 0.0f);
-        } else if (code == static_cast<int>(VegetationCode::Agua)) {
-             v.color = glm::vec3(0.0f, 0.4f, 0.8f);
-        } else if (code == static_cast<int>(VegetationCode::Campestre)) {
-             v.color = glm::vec3(0.6f, 0.8f, 0.2f);
-        } else {
-             v.color = glm::vec3(0.5f, 0.4f, 0.3f); // Soil
+        // Safety check avoids divide by zero
+        if (width < 0.001f || height < 0.001f) {
+             return;
+        }
+
+        // 2. Iterate Vertices and Sample Grid
+        for (auto& v : *activeVertices_) {
+            // Normalized Coordinates [0, 1]
+            float u = (v.pos.x - minX) / width;
+            float v_coord = (v.pos.y - minY) / height;
+
+            // Map to Grid Integer Coords
+            // Clamp to [0, gridSize-1]
+            int gx = std::clamp(static_cast<int>(u * (gridSize - 1) + 0.5f), 0, gridSize - 1);
+            int gy = std::clamp(static_cast<int>(v_coord * (gridSize - 1) + 0.5f), 0, gridSize - 1);
+
+            // Column-Major Indexing (matching TerrainGenerator)
+            int idx = gx * gridSize + gy; 
+
+            if (idx >= 0 && idx < (int)mapSize) {
+                v.color = getClassColor(semanticMap[idx]);
+            }
         }
     }
     
-    // Re-upload
+    // Upload to GPU
     vk::DeviceSize size = sizeof(Rendering::Vertex) * activeVertices_->size();
-    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+    Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc,
+                              vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
     staging.copyTo(activeVertices_->data(), size);
+    
     renderer_->copyBuffer(staging.getHandle(), activeVertexBuffer_->getHandle(), size);
 }
+
+// Helper for Colors (extracted to avoid duplication)
+glm::vec3 getClassColor(int code) {
+    using namespace Core::Domain::Vegetation;
+    if (code == static_cast<int>(VegetationCode::FlorestalNatural) || code == 1) { // 1 = Forest
+            return glm::vec3(0.0f, 0.4f, 0.0f); // Dark Green
+    } else if (code == static_cast<int>(VegetationCode::Agua) || code == 2) {
+            return glm::vec3(0.0f, 0.4f, 0.8f); // Blue
+    } else if (code == static_cast<int>(VegetationCode::Campestre) || code == 0) {
+            return glm::vec3(0.6f, 0.8f, 0.2f); // Light Green
+    } else if (code == -1) {
+            return glm::vec3(0.5f, 0.4f, 0.3f); // Soil (Brown)
+    } else {
+            return glm::vec3(1.0f, 0.0f, 0.0f); // Red (Error/Unknown)
+    }
+}
+
 
 void Engine::applyVegetationVisualization(const ::Core::Domain::Vegetation::VegetationOriginal& hypothesis, const std::vector<bool>& mask, bool accumulative) {
     if (!activeVertices_ || !activeVertexBuffer_) {

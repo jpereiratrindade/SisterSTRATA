@@ -1,0 +1,10 @@
+[  3%] Built target Shaders
+[ 19%] Built target core
+[ 21%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o
+[ 22%] Linking CXX static library ../../lib/libui.a
+[ 56%] Built target ui
+[ 82%] Built target world3d
+[ 87%] Built target application
+[ 96%] Built target infrastructure
+[ 98%] Linking CXX executable bin/SisterSTRATA
+[100%] Built target SisterSTRATA

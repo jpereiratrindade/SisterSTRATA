@@ -149,6 +149,38 @@ void TimelinePanel::draw(bool* open) {
         ImGui::Separator();
     }
 
+    // Simulation Controls (Moved here per user request)
+    ImGui::Separator();
+    ImGui::Text("Simulation Tools");
+    if (ImGui::Button("Simulate: Stability")) {
+        session_->simulateCondition(Application::Session::SimulationType::Stability);
+        // Auto-select last
+        if (!trajectory_->getTimeSlices().empty()) {
+            selectedSliceIndex_ = (int)trajectory_->getTimeSlices().size() - 1;
+            applyGhostVisualization(trajectory_->getTimeSlices().back());
+            ghostMode_ = true; 
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Simulate: Fragmentation")) {
+        session_->simulateCondition(Application::Session::SimulationType::Fragmentation);
+        if (!trajectory_->getTimeSlices().empty()) {
+            selectedSliceIndex_ = (int)trajectory_->getTimeSlices().size() - 1;
+            applyGhostVisualization(trajectory_->getTimeSlices().back());
+            ghostMode_ = true; 
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Simulate: Deforestation")) {
+        session_->simulateCondition(Application::Session::SimulationType::Deforestation);
+        if (!trajectory_->getTimeSlices().empty()) {
+            selectedSliceIndex_ = (int)trajectory_->getTimeSlices().size() - 1;
+            applyGhostVisualization(trajectory_->getTimeSlices().back());
+            ghostMode_ = true; 
+        }
+    }
+    ImGui::Separator();
+
     // Trajectory List
     ImGui::Text("Trajectory (%zu states)", trajectory_->getTimeSlices().size());
     
