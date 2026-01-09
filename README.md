@@ -37,17 +37,54 @@ Para entender a filosofia, a governança dos modelos e a arquitetura de conhecim
 
 ## Requisitos de Sistema
 
-- **GPU**: Compatível com Vulkan 1.2+
-- **Compilador**: C++17 ou superior
-- **AI (Opcional)**: [Ollama](https://ollama.com/) instalado para assistência cognitiva local (recomendado Qwen2.5:14b).
+### Hardware
+- **GPU**: Compatível com Vulkan 1.2+ (NVIDIA RTX 20 series+ ou AMD Radeon 5000+ recomendadas para 14b LLM).
+- **RAM**: 16GB mínimo (64GB recomendados para rodar Qwen 14b simultaneamente).
+
+### Software & Bibliotecas
+- **Compilador**: GCC 10+ ou Clang 10+ (suporte completo a C++20).
+- **Vulkan SDK**: Incluindo `glslc` para compilação de shaders.
+- **SDL2**: Gestão de janelas e inputs.
+- **CMake**: Versão 3.20 ou superior.
+- **AI (Opcional)**: [Ollama](https://ollama.com/) para assistência cognitiva local.
+    - Modelo recomendado: `qwen2.5:14b` (ou `qwen2.5:7b` para máquinas com menos VRAM).
 
 ## Build e Instalação
+
+### 1. Instalar Dependências (Linux)
+
+**Fedora 43:**
+```bash
+sudo dnf install cmake gcc-c++ SDL2-devel vulkan-loader-devel shaderc
+```
+> [!NOTE]
+> Para detalhes específicos de configuração de GPU NVIDIA e Drivers no Fedora 43, consulte as **[Notas de Build do Fedora](BUILD_NOTES_FEDORA43_SisterSTRATA.md)**.
+
+**Ubuntu 22.04+ / Debian:**
+```bash
+sudo apt update && sudo apt install cmake g++ libsdl2-dev libvulkan-dev shaderc
+```
+
+### 2. Compilação
 
 ```bash
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
-./SisterSTRATA
 ```
 
-Consulte `ARCHITECTURE.md` para mais detalhes sobre dependências e configuração do ambiente.
+### 3. Execução
+
+```bash
+./bin/SisterSTRATA
+```
+
+### 4. Configuração da IA (Opcional)
+Para habilitar os recursos de **Assistência Cognitiva** e **Análise de Impacto**:
+1.  Instale o Ollama: `curl -fsSL https://ollama.com/install.sh | sh`
+2.  Baixe o modelo: `ollama run qwen2.5:14b`
+3.  O SisterSTRATA detectará o Ollama automaticamente ao iniciar.
+
+---
+
+Consulte `ARCHITECTURE.md` para detalhes sobre a estrutura do projeto e princípios de design.

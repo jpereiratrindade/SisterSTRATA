@@ -4,7 +4,23 @@ O **SisterSTRATA** é uma plataforma científica de alta performance para análi
 
 ---
 
-## 1. Controles e Navegação 3D
+## 1. Instalação e Requisitos
+O SisterSTRATA exige hardware moderno para processamento 3D e inteligência artificial local.
+
+### Requisitos Mínimos
+*   **SO**: Linux (Fedora 43 recomendado).
+*   **Gráficos**: GPU compatível com Vulkan 1.2+ (NVIDIA ou AMD).
+*   **Dependências**: CMake, SDL2, Vulkan SDK e um compilador C++20.
+
+### Como Instalar
+As instruções detalhadas de compilação e instalação de pacotes encontram-se no arquivo **[README.md](../README.md)** na raiz do projeto. Para usuários de Fedora 43, consulte o guia especializado: **[Notas de Build (Fedora 43)](../BUILD_NOTES_FEDORA43_SisterSTRATA.md)**.
+
+### Configuração da IA (Ollama)
+Para usar as funcionalidades de análise discursiva e hermenêutica, é necessário ter o **Ollama** instalado e rodando o modelo `qwen2.5` (7b ou 14b). Sem isso, as ferramentas de IA permanecerão desativadas ou em modo de simulação limitada.
+
+---
+
+## 2. Controles e Navegação 3D
 
 O ambiente principal utiliza uma câmera híbrida (Orbit/Free-Look) para explorar terrenos e nuvens de pontos.
 
@@ -21,7 +37,7 @@ O ambiente principal utiliza uma câmera híbrida (Orbit/Free-Look) para explora
 
 ---
 
-## 2. Configurações de Visualização (Tools > Settings)
+## 3. Configurações de Visualização (Tools > Settings)
 
 O painel de configurações permite ajustar a renderização em tempo real.
 
@@ -44,7 +60,7 @@ Controles específicos para visualização de dados CSV/XYZ e Drenagem.
 
 ---
 
-## 3. Gestão de Arquivos e Formatos
+## 4. Gestão de Arquivos e Formatos
 
 Acesse via **File > Open** ou atalhos na interface.
 
@@ -58,7 +74,7 @@ Acesse via **File > Open** ou atalhos na interface.
 
 ---
 
-## 4. Análise Temporal (Painel "Fourth Dimension")
+## 5. Análise Temporal (Painel "Fourth Dimension")
 
 Este painel gerencia a dimensão temporal e a resiliência do território.
 > **Fundamentação Científica**: [Quarta Dimensão (Resiliência)](SCIENTIFIC_QUARTA_DIMENSAO.md)
@@ -79,7 +95,7 @@ As ferramentas de simulação geram cenários hipotéticos baseados em modelos c
 
 ---
 
-## 5. Assistência Cognitiva e IA (Painel "Discursive System")
+## 6. Assistência Cognitiva e IA (Painel "Discursive System")
 
 O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como um "Copiloto Científico".
 > **Manual Técnico**: [Integração Qwen](TECHNICAL_MANUAL_QWEN_INTEGRATION.md) | [Arquitetura Vetorial](Arquitetura_Vetorial_Hipoteses.md)
@@ -91,7 +107,7 @@ O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como
 
 ---
 
-## 6. Ferramentas Científicas Específicas
+## 7. Ferramentas Científicas Específicas
 
 ### Hidrologia (Analyze Drainage)
 > **Base Científica**: [Hidrologia](SCIENTIFIC_HIDROLOGIA.md)
