@@ -29,6 +29,15 @@ void TimelinePanel::draw(bool* open) {
         return;
     }
 
+    // Check for Deferred AI Results (Thread-safe UI update)
+    if (session_) {
+        std::lock_guard<std::mutex> lock(insightMutex_);
+        if (aiResultReady_) {
+            ImGui::OpenPopup("AI Cognitive Interpretation");
+            aiResultReady_ = false;
+        }
+    }
+
     if (!trajectory_ || !vegPanel_) {
         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "[!] Missing Dependencies");
         ImGui::End();
@@ -281,10 +290,11 @@ void TimelinePanel::draw(bool* open) {
                 session_->requestAIInterpretation(bundle, 
                     Application::Services::Cognitive::InterpretationMode::CoherenceCheck,
                     [this](const auto& snapshot) {
+                        std::lock_guard<std::mutex> lock(insightMutex_);
                         lastAiSnapshot_ = snapshot;
                         showAiModal_ = true;
                         aiRequestPending_ = false;
-                        ImGui::OpenPopup("AI Cognitive Interpretation");
+                        aiResultReady_ = true; // Signal main thread
                     });
             }
         } else {
@@ -433,10 +443,11 @@ void TimelinePanel::draw(bool* open) {
                 session_->requestAIInterpretation(bundle, 
                     Application::Services::Cognitive::InterpretationMode::TrajectoryReading,
                     [this](const auto& snapshot) {
+                        std::lock_guard<std::mutex> lock(insightMutex_);
                         lastAiSnapshot_ = snapshot;
                         showAiModal_ = true;
                         aiRequestPending_ = false;
-                        ImGui::OpenPopup("AI Cognitive Interpretation");
+                        aiResultReady_ = true; // Signal main thread
                     });
             }
         }
@@ -456,10 +467,11 @@ void TimelinePanel::draw(bool* open) {
             session_->requestAIInterpretation(bundle, 
                 Application::Services::Cognitive::InterpretationMode::TrajectoryReading,
                 [this](const auto& snapshot) {
+                    std::lock_guard<std::mutex> lock(insightMutex_);
                     lastAiSnapshot_ = snapshot;
                     showAiModal_ = true;
                     aiRequestPending_ = false;
-                    ImGui::OpenPopup("AI Cognitive Interpretation");
+                    aiResultReady_ = true; // Signal main thread
                 });
         }
         ImGui::EndDisabled();

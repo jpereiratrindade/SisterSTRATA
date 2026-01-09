@@ -50,6 +50,15 @@ void NarrativePanel::setSession(Application::Session* session) {
 void NarrativePanel::draw(bool* open) {
     if (!open || !*open) return;
 
+    // Check for Deferred AI Results (Thread-safe UI update)
+    {
+        std::lock_guard<std::mutex> lock(aiMutex_);
+        if (aiResultReady_) {
+            ImGui::OpenPopup("AI Interpretation Result");
+            aiResultReady_ = false;
+        }
+    }
+
     // --- Picking Logic ---
     if (pickingMode_) {
         // Change cursor to indicate picking (optional, ImGui supports this)
@@ -327,10 +336,11 @@ void NarrativePanel::drawObservationList() {
             session_->requestAIInterpretation(bundle, 
                 Application::Services::Cognitive::InterpretationMode::ThemeAnalysis,
                 [this](const auto& snapshot) {
+                    std::lock_guard<std::mutex> lock(aiMutex_);
                     lastAiSnapshot_ = snapshot;
                     showAiModal_ = true;
                     aiRequestPending_ = false;
-                    ImGui::OpenPopup("AI Interpretation Result");
+                    aiResultReady_ = true; // Signal the main thread to open the popup
                 });
         }
     }

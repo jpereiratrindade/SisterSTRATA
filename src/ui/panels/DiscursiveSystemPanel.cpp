@@ -41,6 +41,15 @@ void DiscursiveSystemPanel::draw(bool* open) {
         }
 
         if (ImGui::BeginTabBar("DiscursiveTabs")) {
+            // Check for Deferred AI Results (Thread-safe UI update)
+            {
+                std::lock_guard<std::mutex> lock(aiMutex_);
+                if (aiResultReady_) {
+                    ImGui::OpenPopup("AI Discursive Proposal");
+                    aiResultReady_ = false;
+                }
+            }
+
             if (ImGui::BeginTabItem("Ingestion")) {
                 drawIngestionForm();
                 ImGui::Separator();
@@ -75,10 +84,11 @@ void DiscursiveSystemPanel::drawIngestionForm() {
             session_->requestAIInterpretation(bundle, 
                 Application::Services::Cognitive::InterpretationMode::DiscursiveDraft,
                 [this](const auto& snapshot) {
+                    std::lock_guard<std::mutex> lock(aiMutex_);
                     lastAiSnapshot_ = snapshot;
                     showAiModal_ = true;
                     aiRequestPending_ = false;
-                    ImGui::OpenPopup("AI Discursive Proposal");
+                    aiResultReady_ = true; // Signal the main thread to open the popup
                 });
         }
     }

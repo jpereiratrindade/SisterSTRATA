@@ -58,6 +58,7 @@ private:
     // -- Unified AI State --
     bool showAiModal_ = false;
     bool aiRequestPending_ = false;
+    bool aiResultReady_ = false;
     Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
     
     void saveAnalysisToFile(const std::string& content, const std::string& type);

@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <mutex>
 
 namespace UI::Panels {
 
@@ -66,6 +67,8 @@ private:
     // AI Analysis State
     bool showAiModal_ = false;
     bool aiRequestPending_ = false;
+    bool aiResultReady_ = false; // Thread-safe signal
+    std::mutex aiMutex_;
     Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
 };
 

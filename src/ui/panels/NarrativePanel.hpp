@@ -6,6 +6,7 @@
 #include "ui/components/FileSelector.hpp"
 #include <string>
 #include <optional>
+#include <mutex>
 
 namespace UI::Panels {
 
@@ -76,6 +77,8 @@ private:
     // -- AI Analysis State --
     bool showAiModal_ = false;
     bool aiRequestPending_ = false;
+    bool aiResultReady_ = false;
+    std::mutex aiMutex_;
     Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
 };
 
