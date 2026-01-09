@@ -307,7 +307,8 @@ public:
             addSlice(1, baseline, "Baseline (Intact)");
             
             // Massive loss (80% gone)
-            std::vector<int> deforested(size, 0); 
+            // Use -1 (Soil) instead of 0 (Campestre) for high contrast visualization
+            std::vector<int> deforested(size, -1); 
             // Keep small patch in corner
             for(int i=0; i<size/10; ++i) deforested[i] = 1;
             
