@@ -59,6 +59,14 @@ private:
     // Edit State
     bool isEditing_ = false;
     std::string editingId_;
+
+    // -- AI Analysis State --
+    bool showAiModal_ = false;
+    bool aiRequestPending_ = false;
+    bool aiResultReady_ = false;
+    std::mutex aiMutex_;
+    Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
+    Application::DTO::Cognitive::InterpretationSnapshotDTO stagedAiSnapshot_;
 };
 
 } // namespace UI::Panels

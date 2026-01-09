@@ -2,6 +2,11 @@
 #include "imgui.h"
 #include <cstring>
 #include <filesystem>
+#include "application/mappers/CognitiveMappers.hpp"
+#include "ui/components/InterpretationModal.hpp"
+#include "ui/components/InterpretationHistory.hpp"
+#include <algorithm>
+#include <vector>
 
 static const char* REC_SOURCE_LABELS[] = {
     "Technical Recommendation", "Technical Bulletin", "Report", "Document", "Other"
@@ -38,13 +43,33 @@ void RecommendationTrajectoryPanel::draw(bool* open) {
 
         if (ImGui::BeginTabBar("RecommendationTabs")) {
             if (ImGui::BeginTabItem("Trajectory")) {
+                // Check for Deferred AI Results (Thread-safe UI update)
+                {
+                    std::lock_guard<std::mutex> lock(aiMutex_);
+                    if (aiResultReady_) {
+                        lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy
+                        ImGui::OpenPopup("AI Recommendation Analysis");
+                        aiResultReady_ = false;
+                    }
+                }
+                
                 drawTrajectoryConfig();
+                
+                // AI Modal Rendering
+                UI::Components::InterpretationModal::Draw("AI Recommendation Analysis", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
+                    session_->saveInterpretationSnapshotDTO(snap);
+                });
+
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Snapshots")) {
-                drawSnapshotForm();
-                ImGui::Separator();
+            if (ImGui::BeginTabItem("Registered History")) {
                 drawSnapshotList();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Epistemic Memory")) {
+                auto snapshots = session_->getInterpretationSnapshots();
+                std::reverse(snapshots.begin(), snapshots.end());
+                UI::Components::InterpretationHistory::Draw(snapshots);
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
@@ -56,7 +81,36 @@ void RecommendationTrajectoryPanel::draw(bool* open) {
 void RecommendationTrajectoryPanel::drawTrajectoryConfig() {
     auto current = session_->getRecommendationTrajectoryDTO();
 
-    ImGui::TextDisabled("Recommendation Trajectory Setup");
+    ImGui::TextColored(ImVec4(0.4f, 1.0f, 1.0f, 1.0f), "RECOMENDATION TRAJECTORY (RTC)");
+    ImGui::SameLine(ImGui::GetWindowWidth() - 280);
+    
+    if (ImGui::Button(aiRequestPending_ ? "Waiting for Qwen..." : "Analyze Trajectory with Qwen", ImVec2(240, 0))) {
+        auto trajectory = session_->getRecommendationTrajectoryDTO();
+        if (!trajectory.snapshots.empty()) {
+            aiRequestPending_ = true;
+            auto bundle = Application::Mappers::Cognitive::createBundle("trajectory_reading", {}, {}, &trajectory);
+            session_->requestAIInterpretation(bundle, 
+                Application::Services::Cognitive::InterpretationMode::TrajectoryReading,
+                [this](const auto& snapshot) {
+                    std::lock_guard<std::mutex> lock(aiMutex_);
+                    stagedAiSnapshot_ = snapshot;
+                    showAiModal_ = true;
+                    aiRequestPending_ = false;
+                    aiResultReady_ = true; // Signal the main thread to open the popup
+                });
+        } else {
+            ImGui::OpenPopup("SnapshotsEmptyError");
+        }
+    }
+    
+    if (ImGui::BeginPopupModal("SnapshotsEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Snapshots Found");
+        ImGui::Text("The AI needs at least one Recommendation Snapshot to analyze a trajectory.");
+        ImGui::Text("Please add a snapshot in the 'Snapshots' tab first.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
     ImGui::Separator();
 
     ImGui::Text("Current Trajectory ID: %s", current.id.empty() ? "(not set)" : current.id.c_str());

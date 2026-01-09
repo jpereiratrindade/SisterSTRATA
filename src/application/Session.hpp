@@ -36,8 +36,11 @@ public:
           narrativeSystem_(std::make_unique<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem>()),
           discursiveSystemRepository_(std::make_unique<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository>()),
           interpretationRepository_(std::make_unique<SisterSTRATA::Observational::Interpretation::InterpretationRepository>()),
-          cognitiveService_(std::make_unique<Application::Services::Cognitive::CognitiveAssistanceService>(getLLMService()))
+          llmService_(nullptr),
+          cognitiveService_(std::make_unique<Application::Services::Cognitive::CognitiveAssistanceService>(nullptr))
     {
+        // Ensure standard persistence directories exist
+        std::filesystem::create_directories("assets/data/user_db");
         initializePersistence();
     }
 
@@ -323,10 +326,10 @@ private:
     std::unique_ptr<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem> narrativeSystem_;
     std::unique_ptr<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository> discursiveSystemRepository_;
     std::unique_ptr<SisterSTRATA::Observational::Interpretation::InterpretationRepository> interpretationRepository_;
+    std::unique_ptr<Ports::ILLMService> llmService_;
     std::unique_ptr<Application::Services::Cognitive::CognitiveAssistanceService> cognitiveService_;
     SisterSTRATA::Observational::Recommendation::RecommendationTrajectory recommendationTrajectory_;
     Core::Domain::FourthDimension::Trajectory trajectory_;
-    std::unique_ptr<Ports::ILLMService> llmService_;
 
     // Persistence Helpers
     void initializePersistence() {
