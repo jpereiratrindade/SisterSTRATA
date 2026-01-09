@@ -24,6 +24,8 @@ docs/doxygen/
 # Generated Assets
 *.obj
 *.csv
+!examples/**/*.csv
+!examples/**/*.json
 assets/
 
 # Local datasets and outputs
