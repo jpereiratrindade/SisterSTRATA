@@ -1,7 +1,9 @@
 #include "src/ui/panels/NarrativePanel.hpp"
 #include "imgui.h"
 #include "application/mappers/CognitiveMappers.hpp"
+#include "application/mappers/CognitiveMappers.hpp"
 #include "ui/components/InterpretationModal.hpp"
+#include "ui/components/InterpretationHistory.hpp"
 #include <vector>
 #include <algorithm>
 #include <map>
@@ -101,15 +103,29 @@ void NarrativePanel::draw(bool* open) {
             return;
         }
 
-        drawIngestionForm();
-        ImGui::Separator();
-        drawObservationList();
+        if (ImGui::BeginTabBar("NarrativeTabs")) {
+            
+            if (ImGui::BeginTabItem("Observation Log")) {
+                drawIngestionForm();
+                ImGui::Separator();
+                drawObservationList();
 
-        // -- AI Modal Rendering --
-        UI::Components::InterpretationModal::Draw("AI Interpretation Result", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
-            session_->saveInterpretationSnapshotDTO(snap);
-        });
+                // -- AI Modal Rendering --
+                UI::Components::InterpretationModal::Draw("AI Interpretation Result", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
+                    session_->saveInterpretationSnapshotDTO(snap);
+                });
+                ImGui::EndTabItem();
+            }
 
+            if (ImGui::BeginTabItem("Epistemic Memory")) {
+                auto snapshots = session_->getInterpretationSnapshots();
+                std::reverse(snapshots.begin(), snapshots.end());
+                UI::Components::InterpretationHistory::Draw(snapshots);
+                ImGui::EndTabItem();
+            }
+
+            ImGui::EndTabBar();
+        }
     }
     ImGui::End();
 }
@@ -346,7 +362,7 @@ void NarrativePanel::drawObservationList() {
         }
     }
 
-    if (ImGui::BeginTable("NarrativeLogTable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+    if (ImGui::BeginTable("NarrativeLogTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
         ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Source");

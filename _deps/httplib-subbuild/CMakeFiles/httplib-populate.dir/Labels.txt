@@ -1,0 +1,14 @@
+# Target labels
+ httplib-populate
+# Source files and their labels
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/CMakeFiles/httplib-populate
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/CMakeFiles/httplib-populate.rule
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/CMakeFiles/httplib-populate-complete.rule
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/httplib-populate-build.rule
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/httplib-populate-configure.rule
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/httplib-populate-download.rule
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/httplib-populate-install.rule
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/httplib-populate-mkdir.rule
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/httplib-populate-patch.rule
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/httplib-populate-test.rule
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/httplib-populate-update.rule

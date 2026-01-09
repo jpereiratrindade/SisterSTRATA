@@ -344,10 +344,10 @@ void RecommendationTrajectoryPanel::drawSnapshotList() {
             ImGui::TableSetColumnIndex(1);
             ImGui::Text("%s", snapshot.id.c_str());
 
-            ImGui::TableSetColumnIndex(1);
+            ImGui::TableSetColumnIndex(2);
             ImGui::Text("%s", snapshot.sourceReference.sourceId.c_str());
 
-            ImGui::TableSetColumnIndex(2);
+            ImGui::TableSetColumnIndex(3);
             ImGui::Text("%s", snapshot.temporalContext.label.c_str());
 
             ImGui::TableSetColumnIndex(4);

@@ -1,0 +1,40 @@
+[  3%] Built target Shaders
+[ 19%] Built target core
+[ 21%] Building CXX object src/ui/CMakeFiles/ui.dir/UI.cpp.o
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp:3,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:18,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/TimelinePanel.hpp:7,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/UI.hpp:14,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/UI.cpp:1:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/impact_profile/domain/services/TrajectoryImpactAnalyzer.hpp:31:29: error: ‘Trajectory’ in namespace ‘Core::Domain’ does not name a type
+   31 |         const Core::Domain::Trajectory& observed,
+      |                             ^~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/impact_profile/domain/services/TrajectoryImpactAnalyzer.hpp:32:29: error: ‘Trajectory’ in namespace ‘Core::Domain’ does not name a type
+   32 |         const Core::Domain::Trajectory& reference,
+      |                             ^~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp:20:29: error: ‘SisterSTRATA::Observational::ImpactProfile::Domain::TrajectoryImpactProfile SisterSTRATA::Observational::ImpactProfile::Infrastructure::TrajectoryImpactAnalyzerImpl::analyze(const Core::Domain::FourthDimension::Trajectory&, const Core::Domain::FourthDimension::Trajectory&, const SisterSTRATA::Observational::ImpactProfile::Domain::ReferenceFrame&) const’ marked ‘override’, but does not override
+   20 |     TrajectoryImpactProfile analyze(
+      |                             ^~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp: In member function ‘std::string Application::Session::generateImpactProfileText() const’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:221:43: error: unable to deduce ‘auto*’ from ‘((const Application::Session*)this)->Application::Session::workspace_.std::unique_ptr<Core::Domain::Workspace>::operator->()->Core::Domain::Workspace::getWorld()’
+  221 |         auto* world = workspace_->getWorld();
+      |                       ~~~~~~~~~~~~~~~~~~~~^~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:221:44: note:   mismatched types ‘auto*’ and ‘std::unique_ptr<Core::Domain::World>’
+  221 |         auto* world = workspace_->getWorld();
+      |                                            ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:226:54: error: cannot declare variable ‘analyzer’ to be of abstract type ‘SisterSTRATA::Observational::ImpactProfile::Infrastructure::TrajectoryImpactAnalyzerImpl’
+  226 |         Infrastructure::TrajectoryImpactAnalyzerImpl analyzer(world->getResolution().width, world->getResolution().height);
+      |                                                      ^~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp:14:7: note:   because the following virtual functions are pure within ‘SisterSTRATA::Observational::ImpactProfile::Infrastructure::TrajectoryImpactAnalyzerImpl’:
+   14 | class TrajectoryImpactAnalyzerImpl : public ITrajectoryImpactAnalyzer {
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/impact_profile/domain/services/TrajectoryImpactAnalyzer.hpp:30:37: note:     ‘virtual SisterSTRATA::Observational::ImpactProfile::Domain::TrajectoryImpactProfile SisterSTRATA::Observational::ImpactProfile::Domain::ITrajectoryImpactAnalyzer::analyze(const int&, const int&, const SisterSTRATA::Observational::ImpactProfile::Domain::ReferenceFrame&) const’
+   30 |     virtual TrajectoryImpactProfile analyze(
+      |                                     ^~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:246:38: error: ‘Application::Mappers::ImpactProfileMapper’ has not been declared
+  246 |         return Application::Mappers::ImpactProfileMapper::toNaturalLanguage(profile);
+      |                                      ^~~~~~~~~~~~~~~~~~~
+gmake[3]: *** [src/ui/CMakeFiles/ui.dir/build.make:79: src/ui/CMakeFiles/ui.dir/UI.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:666: src/ui/CMakeFiles/ui.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:480: CMakeFiles/SisterSTRATA.dir/rule] Error 2
+gmake: *** [Makefile:199: SisterSTRATA] Error 2

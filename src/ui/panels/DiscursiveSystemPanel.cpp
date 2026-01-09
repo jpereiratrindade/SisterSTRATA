@@ -4,6 +4,7 @@
 #include <filesystem>
 #include "application/mappers/CognitiveMappers.hpp"
 #include "ui/components/InterpretationModal.hpp"
+#include "ui/components/InterpretationHistory.hpp"
 #include <vector>
 #include <algorithm>
 
@@ -41,17 +42,24 @@ void DiscursiveSystemPanel::draw(bool* open) {
         }
 
         if (ImGui::BeginTabBar("DiscursiveTabs")) {
-            // Check for Deferred AI Results (Thread-safe UI update)
-            {
-                std::lock_guard<std::mutex> lock(aiMutex_);
-                if (aiResultReady_) {
-                    lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy to UI thread
-                    ImGui::OpenPopup("AI Discursive Proposal");
-                    aiResultReady_ = false;
-                }
-            }
 
             if (ImGui::BeginTabItem("Ingestion")) {
+                // Check for Deferred AI Results (Thread-safe UI update) inside the tab scope
+                {
+                    std::lock_guard<std::mutex> lock(aiMutex_);
+                    if (aiResultReady_) {
+                        lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy to UI thread
+                        
+                        // Check for error in output
+                        if (lastAiSnapshot_.aiOutput.rfind("Error:", 0) == 0) {
+                            ImGui::OpenPopup("AIError");
+                        } else {
+                            ImGui::OpenPopup("AI Discursive Proposal");
+                        }
+                        aiResultReady_ = false;
+                    }
+                }
+
                 drawIngestionForm();
                 ImGui::Separator();
                 drawSystemList();
@@ -61,12 +69,34 @@ void DiscursiveSystemPanel::draw(bool* open) {
                     session_->saveInterpretationSnapshotDTO(snap);
                 });
 
+                if (ImGui::BeginPopupModal("AIError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+                    ImGui::TextColored(ImVec4(1, 0, 0, 1), "AI Analysis Failed");
+                    ImGui::Separator();
+                    ImGui::TextWrapped("%s", lastAiSnapshot_.aiOutput.c_str());
+                    if (ImGui::Button("Close")) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Registered Systems")) {
                 drawSystemList();
                 ImGui::EndTabItem();
             }
+
+            if (ImGui::BeginTabItem("Epistemic Memory")) {
+                // Fetch snapshots from session
+                auto snapshots = session_->getInterpretationSnapshots();
+                
+                // Reverse to show newest first (optional, but good UX)
+                std::reverse(snapshots.begin(), snapshots.end());
+                
+                UI::Components::InterpretationHistory::Draw(snapshots);
+                ImGui::EndTabItem();
+            }
+
             ImGui::EndTabBar();
         }
     }
@@ -80,17 +110,67 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     if (ImGui::Button(aiRequestPending_ ? "Waiting for Qwen..." : "Ask Qwen to Propose System", ImVec2(240, 0))) {
         auto narratives = session_->getNarrativeHistoryDTO();
         if (!narratives.empty()) {
-            aiRequestPending_ = true;
-            auto bundle = Application::Mappers::Cognitive::createBundle("discursive_draft", narratives);
-            session_->requestAIInterpretation(bundle, 
-                Application::Services::Cognitive::InterpretationMode::DiscursiveDraft,
-                [this](const auto& snapshot) {
-                    std::lock_guard<std::mutex> lock(aiMutex_);
-                    stagedAiSnapshot_ = snapshot;
-                    showAiModal_ = true;
-                    aiRequestPending_ = false;
-                    aiResultReady_ = true; // Signal the main thread to open the popup
-                });
+            try {
+                // Pre-validation: Ensure narratives are valid
+                bool validSources = std::all_of(narratives.begin(), narratives.end(), [](const auto& n){ return !n.id.empty(); });
+                
+                if (validSources) {
+                    aiRequestPending_ = true;
+                    auto bundle = Application::Mappers::Cognitive::createBundle("discursive_draft", narratives);
+                    
+                    // Inject Analytical Profile
+                    bundle.trajectoryImpactProfile = session_->generateImpactProfileText();
+
+                    session_->requestAIInterpretation(bundle, 
+                        Application::Services::Cognitive::InterpretationMode::DiscursiveDraft,
+                        [this](const auto& snapshot) {
+                            std::lock_guard<std::mutex> lock(aiMutex_);
+                            stagedAiSnapshot_ = snapshot;
+                            showAiModal_ = true;
+                            aiRequestPending_ = false;
+                            aiResultReady_ = true; // Signal the main thread to open the popup
+                        });
+                }
+            } catch (const std::exception& e) {
+                // Fallback / Log error
+                aiRequestPending_ = false;
+                ImGui::OpenPopup("AIAnalysisError"); 
+            }
+        }
+    }
+    
+    // Catch-all error popup for try-catch failures
+    if (ImGui::BeginPopupModal("AIAnalysisError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+         ImGui::TextColored(ImVec4(1,0,0,1), "Error Preparing Data for AI");
+         ImGui::Text("Invalid narratives or data corruption.");
+         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+         ImGui::EndPopup();
+    }
+
+    ImGui::Separator();
+    
+    // Impact Profile Preview
+    if (ImGui::CollapsingHeader("Live Trajectory Impact Analysis")) {
+        // Simulation Controls
+        ImGui::TextDisabled("Simulation Tools (Debug)");
+        if (ImGui::Button("Simulate: Stability")) {
+            session_->simulateCondition(Application::Session::SimulationType::Stability);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Simulate: Fragmentation")) {
+            session_->simulateCondition(Application::Session::SimulationType::Fragmentation);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Simulate: Deforestation")) {
+            session_->simulateCondition(Application::Session::SimulationType::Deforestation);
+        }
+        ImGui::Separator();
+
+        std::string profileText = session_->generateImpactProfileText();
+        if (profileText.empty()) {
+             ImGui::TextDisabled("No sufficient trajectory data for analysis.");
+        } else {
+             ImGui::TextWrapped("%s", profileText.c_str());
         }
     }
 

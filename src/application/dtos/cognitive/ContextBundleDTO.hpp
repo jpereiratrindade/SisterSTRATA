@@ -17,9 +17,10 @@ struct ContextBundleDTO {
     std::vector<std::string> discursive;     // Human-readable discursive system projections
     std::string recommendation;             // Human-readable recommendation projection
     std::string trajectorySummary;          // Textual summary of the Fourth Dimension
+    std::string trajectoryImpactProfile;    // New: Analytical Impact Profile
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ContextBundleDTO, 
-        bundleId, intent, narratives, discursive, recommendation, trajectorySummary)
+        bundleId, intent, narratives, discursive, recommendation, trajectorySummary, trajectoryImpactProfile)
 };
 
 } // namespace Application::DTO::Cognitive

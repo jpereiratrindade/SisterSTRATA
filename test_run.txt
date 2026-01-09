@@ -1,0 +1,25 @@
+HELLO FROM MAIN
+[==========] Running 3 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from TrajectoryImpactProfileTest
+[ RUN      ] TrajectoryImpactProfileTest.ImmutableCreation
+[       OK ] TrajectoryImpactProfileTest.ImmutableCreation (0 ms)
+[----------] 1 test from TrajectoryImpactProfileTest (0 ms total)
+
+[----------] 2 tests from TrajectoryImpactAnalyzerTest
+[ RUN      ] TrajectoryImpactAnalyzerTest.AnalyzeIdenticalTrajectoriesReturnsZeroDeviations
+[       OK ] TrajectoryImpactAnalyzerTest.AnalyzeIdenticalTrajectoriesReturnsZeroDeviations (0 ms)
+[ RUN      ] TrajectoryImpactAnalyzerTest.AnalyzeFragmentationShift
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/observational/impact_profile/TrajectoryImpactAnalyzerTest.cpp:76: Failure
+Expected: (profile.getStructuralDeviation().fragmentationIndexDelta) > (0.0), actual: -0.068424673767638167 vs 0
+
+[  FAILED  ] TrajectoryImpactAnalyzerTest.AnalyzeFragmentationShift (0 ms)
+[----------] 2 tests from TrajectoryImpactAnalyzerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 2 test suites ran. (0 ms total)
+[  PASSED  ] 2 tests.
+[  FAILED  ] 1 test, listed below:
+[  FAILED  ] TrajectoryImpactAnalyzerTest.AnalyzeFragmentationShift
+
+ 1 FAILED TEST

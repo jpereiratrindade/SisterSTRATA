@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../lib/libinfrastructure.a CMakeFiles/infrastructure.dir/window/Window.cpp.o CMakeFiles/infrastructure.dir/threading/ThreadPool.cpp.o CMakeFiles/infrastructure.dir/llm/OllamaMockAdapter.cpp.o CMakeFiles/infrastructure.dir/llm/OllamaAdapter.cpp.o
+/usr/bin/ranlib ../../lib/libinfrastructure.a

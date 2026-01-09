@@ -1,0 +1,192 @@
+[  3%] Built target Shaders
+[ 19%] Built target core
+[ 21%] Building CXX object src/ui/CMakeFiles/ui.dir/UI.cpp.o
+[ 22%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o
+[ 24%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o
+[ 26%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o
+[ 28%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o
+[ 29%] Linking CXX static library ../../lib/libui.a
+[ 56%] Built target ui
+[ 82%] Built target world3d
+[ 84%] Building CXX object src/application/CMakeFiles/application.dir/Session.cpp.o
+[ 85%] Building CXX object src/application/CMakeFiles/application.dir/Application.cpp.o
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.hpp:5,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:1:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp: In member function ‘std::string Application::Session::generateImpactProfileText() const’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:227:9: error: reference to ‘Infrastructure’ is ambiguous
+  227 |         Infrastructure::TrajectoryImpactAnalyzerImpl analyzer(world->getResolution().width, world->getResolution().height);
+      |         ^~~~~~~~~~~~~~
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.hpp:4:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/infrastructure/window/Window.hpp:8:11: note: candidates are: ‘namespace Infrastructure { }’
+    8 | namespace Infrastructure::Windowing {
+      |           ^~~~~~~~~~~~~~
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:18:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp:8:55: note:                 ‘namespace SisterSTRATA::Observational::ImpactProfile::Infrastructure { }’
+    8 | namespace SisterSTRATA::Observational::ImpactProfile::Infrastructure {
+      |                                                       ^~~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:244:24: error: ‘analyzer’ was not declared in this scope
+  244 |         auto profile = analyzer.analyze(trajectory_, referenceTrajectory, context);
+      |                        ^~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.hpp: At global scope:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.hpp:10:7: error: ‘struct SisterSTRATA::Application’ redeclared as different kind of entity
+   10 | class Application {
+      |       ^~~~~~~~~~~
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:19:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/mappers/ImpactProfileMapper.hpp:7:25: note: previous declaration ‘namespace SisterSTRATA::Application { }’
+    7 | namespace SisterSTRATA::Application::Mappers {
+      |                         ^~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:11:1: error: ISO C++ forbids declaration of ‘Application’ with no type [-fpermissive]
+   11 | Application::Application() {
+      | ^~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:11:26: error: ‘int SisterSTRATA::Application::Application()’ should have been declared inside ‘SisterSTRATA::Application’
+   11 | Application::Application() {
+      |                          ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:11:26: error: ‘int SisterSTRATA::Application::Application()’ conflicts with a previous declaration
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/mappers/ImpactProfileMapper.hpp:7:25: note: previous declaration ‘namespace SisterSTRATA::Application { }’
+    7 | namespace SisterSTRATA::Application::Mappers {
+      |                         ^~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In function ‘int SisterSTRATA::Application::Application()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:12:5: error: ‘init’ was not declared in this scope; did you mean ‘World3D::init’?
+   12 |     init();
+      |     ^~~~
+      |     World3D::init
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/menus/MainMenu.hpp:5,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/UI.hpp:8,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.hpp:6:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d/include/world3d/World3D.hpp:23:6: note: ‘World3D::init’ declared here
+   23 | void init(SDL_Window* window);
+      |      ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:13:1: warning: no return statement in function returning non-void [-Wreturn-type]
+   13 | }
+      | ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: At global scope:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:15:14: error: scope ‘SisterSTRATA::Application’ before ‘~’ is not a class-name
+   15 | Application::~Application() {
+      |              ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:19:24: error: ‘void SisterSTRATA::Application::init()’ should have been declared inside ‘SisterSTRATA::Application’
+   19 | void Application::init() {
+      |                        ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In function ‘void SisterSTRATA::Application::init()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:23:5: error: ‘window_’ was not declared in this scope
+   23 |     window_ = std::make_unique<Infrastructure::Windowing::Window>("SisterSTRATA - Scientific Engine for Layered Landscapes", 1280, 720);
+      |     ^~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:42:5: error: ‘session_’ was not declared in this scope
+   42 |     session_ = std::make_unique<::Application::Session>();
+      |     ^~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:54:5: error: ‘ui_’ was not declared in this scope
+   54 |     ui_ = std::make_unique<::UI::UserInterface>();
+      |     ^~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:58:24: error: invalid use of ‘this’ in non-member function
+   58 |     ui_->onOpenFile = [this](std::string path) {
+      |                        ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In lambda function:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:62:13: error: ‘this’ was not captured for this lambda function
+   62 |             this->session_->getNarrativeSystem().deserialize(path + ".json");
+      |             ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:68:13: error: ‘this’ was not captured for this lambda function
+   68 |             this->session_->getDiscursiveSystemRepository().deserialize(path + ".discursive.json");
+      |             ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:74:13: error: ‘this’ was not captured for this lambda function
+   74 |             this->session_->getRecommendationTrajectory().deserialize(path + ".recommendation.json");
+      |             ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In function ‘void SisterSTRATA::Application::init()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:80:24: error: invalid use of ‘this’ in non-member function
+   80 |     ui_->onSaveFile = [this](std::string path) {
+      |                        ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In lambda function:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:84:17: error: ‘this’ was not captured for this lambda function
+   84 |                 this->session_->getNarrativeSystem().serialize(path + ".json");
+      |                 ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:90:17: error: ‘this’ was not captured for this lambda function
+   90 |                 this->session_->getDiscursiveSystemRepository().serialize(path + ".discursive.json");
+      |                 ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:96:17: error: ‘this’ was not captured for this lambda function
+   96 |                 this->session_->getRecommendationTrajectory().serialize(path + ".recommendation.json");
+      |                 ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In function ‘void SisterSTRATA::Application::init()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:103:25: error: invalid use of ‘this’ in non-member function
+  103 |     ui_->onCloseFile = [this]() {
+      |                         ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In lambda function:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:105:9: error: ‘this’ was not captured for this lambda function
+  105 |         this->session_->getNarrativeSystem().clear();
+      |         ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:106:9: error: ‘this’ was not captured for this lambda function
+  106 |         this->session_->getDiscursiveSystemRepository().clear();
+      |         ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:107:9: error: ‘this’ was not captured for this lambda function
+  107 |         this->session_->getRecommendationTrajectory().clear();
+      |         ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In function ‘void SisterSTRATA::Application::init()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:109:20: error: invalid use of ‘this’ in non-member function
+  109 |     ui_->onExit = [this]() { this->running_ = false; };
+      |                    ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In lambda function:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:109:30: error: ‘this’ was not captured for this lambda function
+  109 |     ui_->onExit = [this]() { this->running_ = false; };
+      |                              ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: At global scope:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:123:28: error: ‘void SisterSTRATA::Application::shutdown()’ should have been declared inside ‘SisterSTRATA::Application’
+  123 | void Application::shutdown() {
+      |                            ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In function ‘void SisterSTRATA::Application::shutdown()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:124:9: error: ‘window_’ was not declared in this scope
+  124 |     if (window_) {
+      |         ^~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:128:9: error: ‘ui_’ was not declared in this scope
+  128 |         ui_->shutdown();
+      |         ^~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:133:9: error: ‘session_’ was not declared in this scope
+  133 |         session_.reset();
+      |         ^~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: At global scope:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:137:23: error: ‘void SisterSTRATA::Application::run()’ should have been declared inside ‘SisterSTRATA::Application’
+  137 | void Application::run() {
+      |                       ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In function ‘void SisterSTRATA::Application::run()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:138:5: error: ‘mainLoop’ was not declared in this scope
+  138 |     mainLoop();
+      |     ^~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: At global scope:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:141:28: error: ‘void SisterSTRATA::Application::mainLoop()’ should have been declared inside ‘SisterSTRATA::Application’
+  141 | void Application::mainLoop() {
+      |                            ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In function ‘void SisterSTRATA::Application::mainLoop()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:144:12: error: ‘running_’ was not declared in this scope
+  144 |     while (running_ && !window_->shouldClose()) {
+      |            ^~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:144:25: error: ‘window_’ was not declared in this scope
+  144 |     while (running_ && !window_->shouldClose()) {
+      |                         ^~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:149:9: error: ‘processEvents’ was not declared in this scope
+  149 |         processEvents();
+      |         ^~~~~~~~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:157:9: error: ‘ui_’ was not declared in this scope
+  157 |         ui_->beginFrame();
+      |         ^~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:167:28: error: invalid use of ‘this’ in non-member function
+  167 |         World3D::endFrame([this](vk::CommandBuffer cmd) {
+      |                            ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In lambda function:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:168:13: error: ‘this’ was not captured for this lambda function
+  168 |             this->ui_->render(cmd);
+      |             ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: At global scope:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:175:33: error: ‘void SisterSTRATA::Application::processEvents()’ should have been declared inside ‘SisterSTRATA::Application’
+  175 | void Application::processEvents() {
+      |                                 ^
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In function ‘void SisterSTRATA::Application::processEvents()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:176:5: error: ‘window_’ was not declared in this scope
+  176 |     window_->pollEvents([this](const SDL_Event& event) {
+      |     ^~~~~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:176:26: error: invalid use of ‘this’ in non-member function
+  176 |     window_->pollEvents([this](const SDL_Event& event) {
+      |                          ^~~~
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp: In lambda function:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp:178:9: error: ‘ui_’ was not declared in this scope
+  178 |         ui_->processEvent(&event);
+      |         ^~~
+gmake[3]: *** [src/application/CMakeFiles/application.dir/build.make:93: src/application/CMakeFiles/application.dir/Application.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:569: src/application/CMakeFiles/application.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:480: CMakeFiles/SisterSTRATA.dir/rule] Error 2
+gmake: *** [Makefile:199: SisterSTRATA] Error 2

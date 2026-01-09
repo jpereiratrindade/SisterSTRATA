@@ -1,0 +1,29 @@
+Running main() from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 3 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from TrajectoryImpactProfileTest
+[ RUN      ] TrajectoryImpactProfileTest.ImmutableCreation
+[       OK ] TrajectoryImpactProfileTest.ImmutableCreation (0 ms)
+[----------] 1 test from TrajectoryImpactProfileTest (0 ms total)
+
+[----------] 2 tests from TrajectoryImpactAnalyzerTest
+[ RUN      ] TrajectoryImpactAnalyzerTest.AnalyzeIdenticalTrajectoriesReturnsZeroDeviations
+[       OK ] TrajectoryImpactAnalyzerTest.AnalyzeIdenticalTrajectoriesReturnsZeroDeviations (0 ms)
+[ RUN      ] TrajectoryImpactAnalyzerTest.AnalyzeFragmentationShift
+[       OK ] TrajectoryImpactAnalyzerTest.AnalyzeFragmentationShift (0 ms)
+[----------] 2 tests from TrajectoryImpactAnalyzerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 2 test suites ran. (0 ms total)
+[  PASSED  ] 3 tests.
+Running main() from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ImpactProfileMapperTest
+[ RUN      ] ImpactProfileMapperTest.FormatOutputInPortuguese
+[       OK ] ImpactProfileMapperTest.FormatOutputInPortuguese (0 ms)
+[----------] 1 test from ImpactProfileMapperTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.

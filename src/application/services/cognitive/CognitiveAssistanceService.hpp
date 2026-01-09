@@ -31,6 +31,10 @@ public:
     CognitiveAssistanceService(Ports::ILLMService* llmService) 
         : llmService_(llmService) {}
 
+    void setLLMService(Ports::ILLMService* llmService) {
+        llmService_ = llmService;
+    }
+
     /**
      * @brief Interprets a ContextBundle using the specified mode.
      */
@@ -82,6 +86,11 @@ private:
         if (!bundle.trajectorySummary.empty()) {
             prompt += "\n[FOURTH DIMENSION SUMMARY]\n";
             prompt += bundle.trajectorySummary + "\n";
+        }
+
+        if (!bundle.trajectoryImpactProfile.empty()) {
+            prompt += "\n[TRAJECTORY IMPACT PROFILE (ANALYTICAL)]\n";
+            prompt += bundle.trajectoryImpactProfile + "\n";
         }
 
         prompt += "\n### INSTRUCTIONS ###\n";

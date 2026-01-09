@@ -15,6 +15,8 @@
 #include "src/observational/discursive/aggregates/DiscursiveSystemRepository.hpp"
 #include "src/observational/recommendation/aggregates/RecommendationTrajectory.hpp"
 #include "src/observational/interpretation/aggregates/InterpretationRepository.hpp"
+#include "src/observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp"
+#include "src/application/mappers/ImpactProfileMapper.hpp"
 #include <memory>
 #include <vector>
 
@@ -183,6 +185,9 @@ public:
 
     void setLLMService(std::unique_ptr<Ports::ILLMService> llmService) {
         llmService_ = std::move(llmService);
+        if (cognitiveService_) {
+            cognitiveService_->setLLMService(llmService_.get());
+        }
     }
 
     [[nodiscard]] Ports::ILLMService* getLLMService() const {
@@ -208,6 +213,100 @@ public:
                                 Application::Services::Cognitive::InterpretationMode mode,
                                 Application::Services::Cognitive::CognitiveAssistanceService::SnapshotCallback callback) {
         cognitiveService_->interpret(bundle, mode, callback);
+    }
+
+    // --- Trajectory Impact Analysis ---
+    std::string generateImpactProfileText() const {
+        // 1. Check Prerequisites
+        const auto& worldPtr = workspace_->getWorld();
+        if (!worldPtr) return "";
+        auto* world = worldPtr.get();
+
+        // 2. Instantiate Analyzer (Infrastructure)
+        using namespace SisterSTRATA::Observational::ImpactProfile;
+        SisterSTRATA::Observational::ImpactProfile::Infrastructure::TrajectoryImpactAnalyzerImpl analyzer(world->getResolution().width, world->getResolution().height);
+
+        // 3. Define Reference (Self-Reference: First Frame vs Last Frame)
+        // If trajectory has < 2 slices, we can't really do a trend, but can do a structure check if referencing a theoretical baseline.
+        // For now, we try to grab the FIRST slice as the "Historical Baseline".
+        Core::Domain::FourthDimension::Trajectory referenceTrajectory;
+        if (!trajectory_.getTimeSlices().empty()) {
+            referenceTrajectory.addTimeSlice(trajectory_.getTimeSlices().front());
+        }
+
+        Domain::ReferenceFrame context(
+            Domain::ReferenceType::Historical,
+            "Baseline (Estado Inicial)",
+            "REF-START"
+        );
+
+        // 4. Analyze
+        auto profile = analyzer.analyze(trajectory_, referenceTrajectory, context);
+
+        // 5. Map to Natural Language
+        return Application::Mappers::ImpactProfileMapper::toNaturalLanguage(profile);
+    }
+
+    // --- Simulation Tools ---
+    enum class SimulationType {
+        Stability,
+        Fragmentation,
+        Deforestation
+    };
+
+    void simulateCondition(SimulationType type) {
+        auto* world = workspace_->getWorld().get();
+        
+        // Auto-create world if missing (Mock for Simulation)
+        if (!world) {
+            workspace_->createWorld("Simulation Environment", 100, 100);
+            world = workspace_->getWorld().get();
+        }
+
+        if (!world) return; // Should not happen
+
+        trajectory_.clear(); 
+
+        int w = world->getResolution().width;
+        int h = world->getResolution().height;
+        size_t size = w * h;
+
+        // Helper to generate a slice
+        auto addSlice = [&](int ordinal, const std::vector<int>& cover, const std::string& meta) {
+             std::vector<bool> water(size, false);
+             trajectory_.addTimeSlice(Core::Domain::FourthDimension::TimeSlice(
+                 ordinal, ordinal, cover, water, meta
+             ));
+        };
+
+        std::vector<int> baseline(size, 1); // Full Forest
+
+        if (type == SimulationType::Stability) {
+            addSlice(1, baseline, "Baseline Year 1");
+            addSlice(2, baseline, "Baseline Year 5"); // Identical
+        }
+        else if (type == SimulationType::Fragmentation) {
+            addSlice(1, baseline, "Baseline (Intact)");
+            
+            // Checkerboard pattern (High Fragmentation)
+            std::vector<int> fragmented(size);
+            for(int y=0; y<h; ++y) {
+                for(int x=0; x<w; ++x) {
+                    fragmented[y*w + x] = ((x/10 + y/10) % 2 == 0) ? 1 : 0;
+                }
+            }
+            addSlice(2, fragmented, "Simulated Fragmentation");
+        }
+        else if (type == SimulationType::Deforestation) {
+            addSlice(1, baseline, "Baseline (Intact)");
+            
+            // Massive loss (80% gone)
+            std::vector<int> deforested(size, 0); 
+            // Keep small patch in corner
+            for(int i=0; i<size/10; ++i) deforested[i] = 1;
+            
+            addSlice(2, deforested, "Simulated Deforestation");
+        }
     }
 
 private:

@@ -42,7 +42,9 @@ void OllamaAdapter::loadSystemPrompt() {
         "Everything you produce is interpretative support, not scientific output.\n\n"
         "REGRA DE SEGURANÇA INEGOCIÁVEL:\n"
         "Nunca inicie respostas com 'o ideal seria', 'recomenda-se que' ou 'o sistema deveria'.\n"
-        "Use sempre: 'Nos discursos observados...', 'Uma interpretação possível é...' ou similar.";
+        "Use sempre: 'Nos discursos observados...', 'Uma interpretação possível é...' ou similar.\n\n"
+        "IDIOMA:\n"
+        "Responda SEMPRE em Português Brasileiro (pt-BR).";
 }
 
 void OllamaAdapter::requestCompletion(const std::vector<Application::Ports::LLMMessage>& messages, 
