@@ -1,0 +1,26 @@
+[  2%] Built target Shaders
+[  5%] Built target observational_tests
+[ 17%] Built target core
+[ 20%] Built target core_tests
+[ 30%] Built target patch_trajectory_test
+[ 30%] Built target soil_rasterizer_tests
+[ 30%] Built target patch_analysis_tests
+[ 30%] Built target trajectory_lod_tests
+[ 33%] Building CXX object src/ui/CMakeFiles/ui.dir/UI.cpp.o
+[ 33%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o
+[ 34%] Linking CXX static library ../../lib/libui.a
+[ 58%] Built target ui
+[ 78%] Built target world3d
+[ 80%] Building CXX object src/application/CMakeFiles/application.dir/Application.cpp.o
+[ 81%] Linking CXX static library ../../lib/libapplication.a
+[ 82%] Built target application
+[ 89%] Built target infrastructure
+[ 90%] Linking CXX executable ../../bin/infrastructure_tests
+[ 92%] Linking CXX executable ../../bin/application_tests
+[ 93%] Linking CXX executable ../../bin/veg_vector_tests
+[ 94%] Building CXX object CMakeFiles/SisterSTRATA.dir/src/main.cpp.o
+[ 96%] Built target veg_vector_tests
+[ 97%] Built target infrastructure_tests
+[ 98%] Built target application_tests
+[100%] Linking CXX executable bin/SisterSTRATA
+[100%] Built target SisterSTRATA

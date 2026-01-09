@@ -176,6 +176,7 @@ void UserInterface::setupObservational(Application::Session* session) {
     narrativePanel_.setSession(session);
     discursiveSystemPanel_.setSession(session);
     recommendationTrajectoryPanel_.setSession(session);
+    timelinePanel_.setSession(session);
 }
 
 void UserInterface::shutdown() {

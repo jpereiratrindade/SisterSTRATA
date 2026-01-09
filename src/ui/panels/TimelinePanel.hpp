@@ -4,6 +4,8 @@
 #include "core/domain/fourth_dimension/patch_trajectory/PatchTrajectory.hpp"
 #include "core/domain/spatial_pattern/PatchAnalysis.hpp"
 #include "ui/panels/VegetationDeclarationPanel.hpp"
+#include "application/Session.hpp"
+#include "application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
 #include "application/ports/ILLMService.hpp"
 #include <string>
 #include <mutex>
@@ -12,6 +14,10 @@ namespace UI::Panels {
 
 class TimelinePanel {
 public:
+    void setSession(Application::Session* session) {
+        session_ = session;
+    }
+    
     void setDependencies(Core::Domain::FourthDimension::Trajectory* trajectory, 
                          const VegetationDeclarationPanel* vegPanel,
                          Application::Ports::ILLMService* llmService) {
@@ -26,6 +32,7 @@ private:
     Core::Domain::FourthDimension::Trajectory* trajectory_ = nullptr;
     const VegetationDeclarationPanel* vegPanel_ = nullptr;
     Application::Ports::ILLMService* llmService_ = nullptr;
+    Application::Session* session_ = nullptr;
     
     char projectRootName_[64] = "projeto_01";
 
@@ -47,6 +54,11 @@ private:
     bool trajectoryInProgress_ = false;
     std::string llmErrorMessage_;
     std::mutex insightMutex_;
+
+    // -- Unified AI State --
+    bool showAiModal_ = false;
+    bool aiRequestPending_ = false;
+    Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
     
     void saveAnalysisToFile(const std::string& content, const std::string& type);
     

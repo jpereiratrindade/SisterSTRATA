@@ -1,5 +1,7 @@
 #include "TimelinePanel.hpp"
 #include "application/ports/IFileSystem.hpp"
+#include "application/mappers/CognitiveMappers.hpp"
+#include "ui/components/InterpretationModal.hpp"
 #include "core/domain/fourth_dimension/TrajectoryService.hpp"
 #include "core/domain/fourth_dimension/CoherenceIntensityService.hpp"
 #include "core/domain/fourth_dimension/patch_trajectory/PatchTrajectoryService.hpp"
@@ -263,30 +265,27 @@ void TimelinePanel::draw(bool* open) {
         ImGui::Text("Insight Hermenêutico (Transição)");
         
         if (lastCoherenceMean_ >= 0.0f) {
-            if (ImGui::Button("Interpretar Transição A-B", ImVec2(-1, 0)) && !hermeneuticInProgress_) {
-                hermeneuticInProgress_ = true;
-                hermeneuticInsight_.clear();
-                llmErrorMessage_.clear();
-
+            if (ImGui::Button("Interpretar Transição A-B", ImVec2(-1, 0)) && !aiRequestPending_) {
+                aiRequestPending_ = true;
+                
                 const auto& sA = slices[compareSliceA_];
                 const auto& sB = slices[compareSliceB_];
-                std::string distA = getClassDistribution(sA);
-                std::string distB = getClassDistribution(sB);
+                
+                Application::DTO::Cognitive::ContextBundleDTO bundle;
+                bundle.bundleId = "TRANSITION-" + sA.getMetadata() + "-" + sB.getMetadata();
+                bundle.intent = "transition_analysis";
+                bundle.trajectorySummary = "SSI Map Mean: " + std::to_string(lastCoherenceMean_) + "\n" +
+                                         "State A: " + getClassDistribution(sA) + "\n" +
+                                         "State B: " + getClassDistribution(sB);
 
-                hermeneuticContext_ = "Composição A: " + distA + "\n" + "Composição B: " + distB + "\n" + "Métrica SSI: " + std::to_string(lastCoherenceMean_);
-                std::string prompt = "Analise a transição ecológica entre (" + sA.getMetadata() + " e " + sB.getMetadata() + ").\n";
-                prompt += hermeneuticContext_ + "\n";
-                prompt += "Interprete esta mudança do ponto de vista da resiliência ecológica.";
-
-                std::vector<Application::Ports::LLMMessage> messages;
-                messages.push_back({Application::Ports::LLMRole::User, prompt});
-
-                llmService_->requestCompletion(messages, [this](const Application::Ports::ILLMService::Response& res) {
-                    std::lock_guard<std::mutex> lock(insightMutex_);
-                    if (res.success) hermeneuticInsight_ = res.content;
-                    else llmErrorMessage_ = res.errorMessage;
-                    hermeneuticInProgress_ = false;
-                });
+                session_->requestAIInterpretation(bundle, 
+                    Application::Services::Cognitive::InterpretationMode::CoherenceCheck,
+                    [this](const auto& snapshot) {
+                        lastAiSnapshot_ = snapshot;
+                        showAiModal_ = true;
+                        aiRequestPending_ = false;
+                        ImGui::OpenPopup("AI Cognitive Interpretation");
+                    });
             }
         } else {
             ImGui::TextDisabled("Calcule o mapa de coerência para habilitar.");
@@ -363,34 +362,28 @@ void TimelinePanel::draw(bool* open) {
             }
         }
         
-        ImGui::BeginDisabled(trajectoryInProgress_);
+        ImGui::BeginDisabled(aiRequestPending_);
         if (ImGui::Button("Analisar Trajetória do Patch", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 0))) {
             if (selectedPatchId_ < 0) {
                 llmErrorMessage_ = "ID do patch inválido.";
             } else {
-                trajectoryInProgress_ = true;
-                trajectoryInsight_.clear();
+                aiRequestPending_ = true;
                 
                 using namespace Core::Domain::FourthDimension::PatchTrajectory;
                 PatchTrajectory pt(selectedPatchId_);
                 
-                // Historical aggregation logic
+                // ... (Keep historical aggregation logic as is, it's correct for summary generation) ...
                 auto& slicesRef = trajectory_->getTimeSlices();
                 double refX = -1.0, refY = -1.0;
-                
                 for (size_t i = 0; i < slicesRef.size(); ++i) {
                     auto& slice = slicesRef[i];
                     if (slice.isProxy()) Core::Domain::FourthDimension::TrajectoryPersistenceService::loadFromDisk(slice);
-                    
                     const auto& cover = slice.getEcologicalCoverState();
                     if (cover.empty()) continue;
-
                     Core::Domain::SpatialPattern::GridData grid;
                     grid.values = std::vector<double>(cover.begin(), cover.end());
                     grid.width = (int)std::sqrt(grid.values.size()); grid.height = grid.width;
-                    
                     auto result = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.0, true, true});
-                    
                     int bestPatchIdx = -1;
                     if (refX < 0) {
                         if (selectedPatchId_ > 0 && selectedPatchId_ <= (int)result.patches.size()) {
@@ -409,7 +402,6 @@ void TimelinePanel::draw(bool* open) {
                             refY = result.patches[bestPatchIdx].centroidY;
                         }
                     }
-
                     if (bestPatchIdx >= 0) {
                         const auto& pm = result.patches[bestPatchIdx];
                         PatchState ps;
@@ -417,7 +409,7 @@ void TimelinePanel::draw(bool* open) {
                         ps.area = (float)pm.area;
                         ps.perimeter = (float)pm.perimeter;
                         ps.shapeIndex = (float)pm.shape_index;
-                        ps.adjacencyByClass[1] = 50.0f; // Placeholder until full adjacency logic is in
+                        ps.adjacencyByClass[1] = 50.0f;
                         pt.addState(ps);
                     }
                 }
@@ -426,86 +418,59 @@ void TimelinePanel::draw(bool* open) {
                     if (vegPanel_) {
                         const auto& system = vegPanel_->getSystem();
                         const auto& scenarios = system.getScenarios();
-                        if (code >= 0 && code < (int)scenarios.size()) {
-                            return "Scenario: " + scenarios[code].getId();
-                        }
-                        // Fallback: Check if it's a semantic code
-                        if (code >= 0 && code <= 2) {
-                            return Core::Domain::Vegetation::VegetationType(static_cast<Core::Domain::Vegetation::VegetationCode>(code)).toString();
-                        }
+                        if (code >= 0 && code < (int)scenarios.size()) return "Scenario: " + scenarios[code].getId();
+                        if (code >= 0 && code <= 2) return Core::Domain::Vegetation::VegetationType(static_cast<Core::Domain::Vegetation::VegetationCode>(code)).toString();
                     }
                     return "Classe " + std::to_string(code);
                 };
 
                 std::string summary = PatchTrajectoryService::generateLLMSummary(pt, nameResolver);
-                trajectoryContext_ = summary;
-                std::string prompt = "Analise a trajetória histórica do patch ID " + std::to_string(selectedPatchId_) + ".\n" + summary;
                 
-                llmService_->requestCompletion({{Application::Ports::LLMRole::User, prompt}}, [this](const auto& res) {
-                    std::lock_guard<std::mutex> lock(insightMutex_);
-                    if (res.success) trajectoryInsight_ = res.content;
-                    else llmErrorMessage_ = res.errorMessage;
-                    trajectoryInProgress_ = false;
-                });
+                Application::DTO::Cognitive::ContextBundleDTO bundle;
+                bundle.bundleId = "PATCH-TRAJECTORY-" + std::to_string(selectedPatchId_);
+                bundle.trajectorySummary = summary;
+
+                session_->requestAIInterpretation(bundle, 
+                    Application::Services::Cognitive::InterpretationMode::TrajectoryReading,
+                    [this](const auto& snapshot) {
+                        lastAiSnapshot_ = snapshot;
+                        showAiModal_ = true;
+                        aiRequestPending_ = false;
+                        ImGui::OpenPopup("AI Cognitive Interpretation");
+                    });
             }
         }
         ImGui::SameLine();
         if (ImGui::Button("Análise Tática Global", ImVec2(-1, 0))) {
-            trajectoryInProgress_ = true;
-            trajectoryInsight_.clear();
+            aiRequestPending_ = true;
             
-            std::string context = "Slices: " + std::to_string(slices.size()) + "\n";
+            std::string context = "Slices History:\n";
             for (size_t i = 0; i < slices.size(); ++i) {
                 context += "T" + std::to_string(i) + ": " + getClassDistribution(slices[i]) + "\n";
             }
-            trajectoryContext_ = context;
-
-            std::string prompt = "Realize uma análise tática global das trajetórias de manchas neste cenário.\n";
-            prompt += "Atualmente existem " + std::to_string(slices.size()) + " estados temporais.\n\n";
-            prompt += "Resumo da Composição da Paisagem por Estado:\n" + context + "\n";
             
-            // Add detailed stats from the CURRENT (last viewed) state if available
-            if (lastPatchAnalysis_.summary.patchCount > 0) {
-                 const auto& s = lastPatchAnalysis_.summary;
-                 prompt += "Estatísticas Detalhadas do Estado Atual (T" + std::to_string(selectedSliceIndex_) + "):\n";
-                 prompt += "- Total Patches: " + std::to_string(s.patchCount) + "\n";
-                 prompt += "- Área Média: " + std::to_string(s.areaMean/10000.0) + " ha (Desvio: " + std::to_string(s.areaStdDev/10000.0) + ")\n";
-                 prompt += "- Complexidade de Forma (SI) Média: " + std::to_string(s.meanShapeIndex) + " (Desvio: " + std::to_string(s.shapeIndexStdDev) + ")\n";
-                 prompt += "- Variabilidade de Tamanho (Min/Max): " + std::to_string(s.areaMin/10000.0) + " / " + std::to_string(s.areaMax/10000.0) + " ha\n";
-            }
+            Application::DTO::Cognitive::ContextBundleDTO bundle;
+            bundle.bundleId = "GLOBAL-TACTICAL-ANALYSIS";
+            bundle.trajectorySummary = context;
 
-            prompt += "Com base nestas mudanças de composição e nas estatísticas de fragmentação, identifique tendências de fragmentação, regeneração ou estabilidade pulsátil.";
-            prompt += " Analise como a estrutura espacial está evoluindo e se o sistema demonstra resiliência.";
-            
-            llmService_->requestCompletion({{Application::Ports::LLMRole::User, prompt}}, [this](const auto& res) {
-                std::lock_guard<std::mutex> lock(insightMutex_);
-                if (res.success) trajectoryInsight_ = res.content;
-                else llmErrorMessage_ = res.errorMessage;
-                trajectoryInProgress_ = false;
-            });
+            session_->requestAIInterpretation(bundle, 
+                Application::Services::Cognitive::InterpretationMode::TrajectoryReading,
+                [this](const auto& snapshot) {
+                    lastAiSnapshot_ = snapshot;
+                    showAiModal_ = true;
+                    aiRequestPending_ = false;
+                    ImGui::OpenPopup("AI Cognitive Interpretation");
+                });
         }
         ImGui::EndDisabled();
 
-        if (trajectoryInProgress_) ImGui::TextDisabled("Calculando trajetórias...");
-        if (!trajectoryInsight_.empty()) {
-            ImGui::SliderFloat("Altura da Análise", &insightWindowHeight_, 100.0f, 800.0f);
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.15f, 0.1f, 1.0f));
-            ImGui::BeginChild("TrajectoryOutput", ImVec2(0, insightWindowHeight_), true);
-            ImGui::TextWrapped("%s", trajectoryInsight_.c_str());
-            ImGui::EndChild();
-            ImGui::PopStyleColor();
-            
-            if (ImGui::Button("Salvar Resumo de Trajetória")) saveAnalysisToFile(trajectoryInsight_, "trajectory");
+        if (aiRequestPending_) ImGui::TextDisabled("Qwen está analisando trajetórias...");
+        
+        // Modal Rendering
+        UI::Components::InterpretationModal::Draw("AI Cognitive Interpretation", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
+            session_->saveInterpretationSnapshotDTO(snap);
+        });
 
-            if (ImGui::TreeNode("Dados de Origem (Contexto Compartilhado com LLM)")) {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 1.0f, 1.0f));
-                ImGui::TextWrapped("Contexto Gerado para o Patch/Global:");
-                ImGui::Separator();
-                ImGui::TextWrapped("%s", trajectoryContext_.c_str());
-                ImGui::PopStyleColor();
-                ImGui::TreePop();
-            }
-        }
         
         if (!llmErrorMessage_.empty()) ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "[Erro] %s", llmErrorMessage_.c_str());
 
