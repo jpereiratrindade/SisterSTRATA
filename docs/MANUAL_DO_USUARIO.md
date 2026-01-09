@@ -61,6 +61,7 @@ Acesse via **File > Open** ou atalhos na interface.
 ## 4. Análise Temporal (Painel "Fourth Dimension")
 
 Este painel gerencia a dimensão temporal e a resiliência do território.
+> **Fundamentação Científica**: [Quarta Dimensão (Resiliência)](SCIENTIFIC_QUARTA_DIMENSAO.md)
 
 ### Linha do Tempo (Trajectory)
 *   **Capture State**: Registra o estado atual da simulação como um novo ponto na linha do tempo (T1, T2, etc.).
@@ -70,7 +71,8 @@ Este painel gerencia a dimensão temporal e a resiliência do território.
     *   *Sair*: Clique em "Exit Ghost Mode" para restaurar a visualização normal.
 
 ### Ferramentas de Simulação (Simulation Tools)
-Gera cenários hipotéticos baseados em modelos científicos:
+As ferramentas de simulação geram cenários hipotéticos baseados em modelos científicos:
+> **Saiba mais**: [Funcionalidades Científicas](SCIENTIFIC_FUNCTIONALITIES.md)
 *   **Simulate: Stability**: Calcula índices de estabilidade estrutural baseados em coerência espacial.
 *   **Simulate: Fragmentation**: Simula a fragmentação progressiva de habitats e desconexão de patches.
 *   **Simulate: Deforestation**: Gera um cenário de impacto massivo (-1 Soil). Útil para testar a resiliência do sistema e visualização de contraste.
@@ -80,6 +82,7 @@ Gera cenários hipotéticos baseados em modelos científicos:
 ## 5. Assistência Cognitiva e IA (Painel "Discursive System")
 
 O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como um "Copiloto Científico".
+> **Manual Técnico**: [Integração Qwen](TECHNICAL_MANUAL_QWEN_INTEGRATION.md) | [Arquitetura Vetorial](Arquitetura_Vetorial_Hipoteses.md)
 
 *   **Contexto Discursivo**: Analisa as métricas da simulação atual e gera um parágrafo interpretativo.
 *   **Trajectory Impact Profile**: Analisa todo o histórico de mudanças (Trajetória Completa) para gerar um relatório de impacto ambiental, identificando tendências de degradação ou recuperação.
@@ -90,11 +93,13 @@ O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como
 ## 6. Ferramentas Científicas Específicas
 
 ### Hidrologia (Analyze Drainage)
+> **Base Científica**: [Hidrologia](SCIENTIFIC_HIDROLOGIA.md)
 *   Calcula o fluxo de acumulação de água baseado na topografia.
 *   Exibe estatísticas como acumulação máxima e contagem de células de "rio".
 *   Visualiza a rede de drenagem sobre o terreno.
 
 ### Análise de Patches (Patch Analysis)
+> **Base Científica**: [Vegetação](SCIENTIFIC_VEGETACAO.md) | [Pedosfera](SCIENTIFIC_PEDOSFERA.md)
 *   Identifica manchas (patches) de vegetação conectada.
 *   Calcula métricas de paisagem: Área Total, Área Média, Índice de Forma.
 *   Permite selecionar ("picar") um patch específico no 3D para ver seus dados individuais.
