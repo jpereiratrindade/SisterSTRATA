@@ -54,6 +54,7 @@ void NarrativePanel::draw(bool* open) {
     {
         std::lock_guard<std::mutex> lock(aiMutex_);
         if (aiResultReady_) {
+            lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy
             ImGui::OpenPopup("AI Interpretation Result");
             aiResultReady_ = false;
         }
@@ -337,7 +338,7 @@ void NarrativePanel::drawObservationList() {
                 Application::Services::Cognitive::InterpretationMode::ThemeAnalysis,
                 [this](const auto& snapshot) {
                     std::lock_guard<std::mutex> lock(aiMutex_);
-                    lastAiSnapshot_ = snapshot;
+                    stagedAiSnapshot_ = snapshot;
                     showAiModal_ = true;
                     aiRequestPending_ = false;
                     aiResultReady_ = true; // Signal the main thread to open the popup

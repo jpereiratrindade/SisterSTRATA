@@ -80,6 +80,7 @@ private:
     bool aiResultReady_ = false;
     std::mutex aiMutex_;
     Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
+    Application::DTO::Cognitive::InterpretationSnapshotDTO stagedAiSnapshot_;
 };
 
 } // namespace UI::Panels

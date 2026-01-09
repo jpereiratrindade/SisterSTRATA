@@ -69,7 +69,8 @@ private:
     bool aiRequestPending_ = false;
     bool aiResultReady_ = false; // Thread-safe signal
     std::mutex aiMutex_;
-    Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
+    Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_; 
+    Application::DTO::Cognitive::InterpretationSnapshotDTO stagedAiSnapshot_; // Background thread writes here
 };
 
 } // namespace UI::Panels

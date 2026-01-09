@@ -33,6 +33,7 @@ void TimelinePanel::draw(bool* open) {
     if (session_) {
         std::lock_guard<std::mutex> lock(insightMutex_);
         if (aiResultReady_) {
+            lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy
             ImGui::OpenPopup("AI Cognitive Interpretation");
             aiResultReady_ = false;
         }
@@ -291,7 +292,7 @@ void TimelinePanel::draw(bool* open) {
                     Application::Services::Cognitive::InterpretationMode::CoherenceCheck,
                     [this](const auto& snapshot) {
                         std::lock_guard<std::mutex> lock(insightMutex_);
-                        lastAiSnapshot_ = snapshot;
+                        stagedAiSnapshot_ = snapshot;
                         showAiModal_ = true;
                         aiRequestPending_ = false;
                         aiResultReady_ = true; // Signal main thread
@@ -444,7 +445,7 @@ void TimelinePanel::draw(bool* open) {
                     Application::Services::Cognitive::InterpretationMode::TrajectoryReading,
                     [this](const auto& snapshot) {
                         std::lock_guard<std::mutex> lock(insightMutex_);
-                        lastAiSnapshot_ = snapshot;
+                        stagedAiSnapshot_ = snapshot;
                         showAiModal_ = true;
                         aiRequestPending_ = false;
                         aiResultReady_ = true; // Signal main thread
@@ -468,7 +469,7 @@ void TimelinePanel::draw(bool* open) {
                 Application::Services::Cognitive::InterpretationMode::TrajectoryReading,
                 [this](const auto& snapshot) {
                     std::lock_guard<std::mutex> lock(insightMutex_);
-                    lastAiSnapshot_ = snapshot;
+                    stagedAiSnapshot_ = snapshot;
                     showAiModal_ = true;
                     aiRequestPending_ = false;
                     aiResultReady_ = true; // Signal main thread

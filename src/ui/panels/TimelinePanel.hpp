@@ -60,6 +60,7 @@ private:
     bool aiRequestPending_ = false;
     bool aiResultReady_ = false;
     Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
+    Application::DTO::Cognitive::InterpretationSnapshotDTO stagedAiSnapshot_;
     
     void saveAnalysisToFile(const std::string& content, const std::string& type);
     
