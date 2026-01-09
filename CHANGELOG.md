@@ -10,6 +10,12 @@
 - **Deforestation Visualization**: Resolved issue where deforestation appeared "All Green" by implementing spatial mapping and ensuring correct "Soil" color application.
 - **Ghost Mode**: Fixed visualization persistence issues for simulated states.
 
+### Documentation
+- **User Manual**: Comprehensive guide (`docs/MANUAL_DO_USUARIO.md`) connected to scientific foundations.
+- **Scientific Deep Dives**: Added/Linked docs for Hydrology, Vegetation, Fourth Dimension, and Impact Profile.
+-   **Usage Examples**: Added `examples/data_samples/` with JSON/CSV datasets and a practical guide (`docs/EXEMPLOS_PRATICOS.md`).
+-   **README**: Revamped with "Getting Started" and Feature Highlights.
+
 
 ### Added
 - **Agent Guidance**: Added `AGENTS.md` with guardrails for automated assistants.
