@@ -2,7 +2,6 @@
 
 **Plataforma Científica de Processamento de Dados e Visualização 3D**
 
-SisterSTRATA é um instrumento científico digital projetado para a simulação de ecossistemas complexos. Ele integra modelos de pedosfera (Solo), hidrologia e vegetação em um ambiente 3D de alta performance, focando na consistência causal e integridade científica.
 
 SisterSTRATA é um instrumento científico digital projetado para a simulação de ecossistemas complexos. Ele integra modelos de pedosfera (Solo), hidrologia e vegetação em um ambiente 3D de alta performance, focando na consistência causal e integridade científica.
 
@@ -13,6 +12,12 @@ SisterSTRATA é um instrumento científico digital projetado para a simulação 
 *   **Trajectory Impact Profile (AI)**: O sistema analisa todo o histórico de mudanças do território para gerar perfis de impacto detalhados, identificando tendências de degradação estrutural e desvios de resiliência.
 *   **Visualização Híbrida**: Renderização avançada de Nuvens de Pontos (LIDAR/CSV) e Terrenos Sólidos (Mesh/OBJ) com mapeamento espacial automático de dados científicos ("Spatial Mapping").
 *   **Assistência Cognitiva**: Integração nativa com LLMs locais (Qwen/Ollama) para interpretação hermenêutica dos dados quantitativos.
+
+## Comece Aqui (Getting Started)
+
+*   📖 **[Manual do Usuário](docs/MANUAL_DO_USUARIO.md)**: Guia completo de operação (Teclas, Menus, Ferramentas).
+*   🧪 **[Exemplos Práticos](docs/EXEMPLOS_PRATICOS.md)**: Tutorial passo-a-passo com dados de exemplo.
+
 ## Documentação Fundamental
 
 Para entender a filosofia, a governança dos modelos e a arquitetura de conhecimento que rege este projeto, consulte:
