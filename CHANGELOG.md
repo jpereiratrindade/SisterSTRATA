@@ -12,6 +12,7 @@
 - **Vulkan Stabilization (Patch 1)**: Implemented robust semaphore indexing (triple-buffering) and image-in-flight tracking to resolve validation errors on strict drivers (RTX 40xx / Wayland).
 - **AI Connectivity**: Hardened Ollama connection logic to use `127.0.0.1` (IPv4) explicit timeouts, resolving connection failures on Fedora/Linux.
 - **UI Consistency**: Restored integrated history lists in Discursive and Trajectory panels for better UX across development environments.
+- **UI Layout**: Fixed positioning of "Propose System" and "Evaluate Coherence" buttons in Discursive Panel to prevent button clipping on smaller resolutions or high-DPI scaling.
 
 ### Documentation
 - **User Manual**: Comprehensive guide (`docs/MANUAL_DO_USUARIO.md`) connected to scientific foundations.
