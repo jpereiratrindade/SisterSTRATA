@@ -133,7 +133,7 @@ private:
     uint32_t currentFrame_ = 0;
     uint32_t imageIndex_ = 0;
     bool vsyncEnabled_ = true;
-    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+    static constexpr int MAX_FRAMES_IN_FLIGHT = 3;
 
     std::string pendingScreenshotPath_;
     std::unique_ptr<Buffer> screenshotBuffer_;

@@ -104,7 +104,9 @@ void OllamaAdapter::processRequests() {
 
         // Execute HTTP Request
         httplib::Client cli(baseUrl_);
-        cli.set_read_timeout(60); // LLMs can be slow
+        cli.set_read_timeout(120); // LLMs can be slow (14b requires more time)
+
+        std::cout << "[Infrastructure] Sending request to Ollama (" << modelName_ << ")..." << std::endl;
 
         json payload;
         payload["model"] = modelName_;
@@ -148,6 +150,12 @@ void OllamaAdapter::processRequests() {
             response.errorMessage = "Failed to connect to Ollama at " + baseUrl_;
         }
 
+        if (response.success) {
+            std::cout << "[Infrastructure] Ollama response received successfully." << std::endl;
+        } else {
+            std::cerr << "[Infrastructure] Ollama request failed: " << response.errorMessage << std::endl;
+        }
+        
         req.callback(response);
     }
 }

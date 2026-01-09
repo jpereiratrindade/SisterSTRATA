@@ -92,7 +92,10 @@ Propostas para futuras iterações da integração cognitiva:
 - **Níveis de Assertividade Gradual**: Implementação de um seletor de modo na UI:
     - *Modo Analítico*: Focado em fatos e fidelidade extrema aos dados.
     - *Modo Especulativo*: Permite a formulação de hipóteses ecológicas mais amplas (Hermenêutica Sugestiva).
-- **Tokens de Cancelamento**: Melhoria na infraestrutura assíncrona para permitir o cancelamento imediato de inferências em andamento.
+- **Tradução Paramétrica de Recomendações (v2.1)**:
+    - Capacidade de converter notas técnicas (LaTeX/PDF) em `SimulationScenarioDTO`.
+    - Interface de "Staging de Parâmetros" para validação humana de recomendações de manejo.
+- **Tokens de Cancelamento**: Melhoria na infraestrutura assíncrona.
 - **Contexto Multimodal**: Futura integração de metadados de relevo e hidrologia mais granulares no prompt.
 
 ## 9. Pipeline de Dados de Trajetória e Grounding Semântico (v1.8.2)

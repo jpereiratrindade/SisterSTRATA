@@ -136,7 +136,17 @@ void DiscursiveSystemPanel::drawIngestionForm() {
                 aiRequestPending_ = false;
                 ImGui::OpenPopup("AIAnalysisError"); 
             }
+        } else {
+            ImGui::OpenPopup("NarrativesEmptyError");
         }
+    }
+    
+    if (ImGui::BeginPopupModal("NarrativesEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Narratives Found");
+        ImGui::Text("The AI needs at least one Narrative Observation to propose a system.");
+        ImGui::Text("Please register an observation in the 'Narrative' panel first.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
     }
     
     // Catch-all error popup for try-catch failures

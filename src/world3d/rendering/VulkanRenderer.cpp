@@ -27,19 +27,26 @@ VulkanRenderer::~VulkanRenderer() {
     auto device = context_->getDevice();
     device.waitIdle();
 
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        device.destroySemaphore(renderFinishedSemaphores_[i]);
-        device.destroySemaphore(imageAvailableSemaphores_[i]);
-        device.destroyFence(inFlightFences_[i]);
-    }
-
-    device.destroyCommandPool(commandPool_);
-
     for (auto framebuffer : framebuffers_) {
         device.destroyFramebuffer(framebuffer);
     }
 
     device.destroyRenderPass(renderPass_);
+
+    // Destroy pipelines (clears descriptor layout and shaders)
+    pointPipeline_.reset();
+    linePipeline_.reset();
+    trianglePipeline_.reset();
+
+    // Destroy sync and pools
+    device.destroyDescriptorPool(descriptorPool_);
+    device.destroyCommandPool(commandPool_);
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        device.destroySemaphore(renderFinishedSemaphores_[i]);
+        device.destroySemaphore(imageAvailableSemaphores_[i]);
+        device.destroyFence(inFlightFences_[i]);
+    }
 }
 
 void VulkanRenderer::createRenderPass() {
