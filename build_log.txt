@@ -1,1 +1,0 @@
-gmake: *** Sem regra para processar o alvo 'observational_impact_tests' .  Pare.

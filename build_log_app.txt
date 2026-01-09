@@ -1,1 +1,0 @@
-gmake: *** Sem regra para processar o alvo 'application_mapper_tests' .  Pare.

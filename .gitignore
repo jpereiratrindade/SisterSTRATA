@@ -40,7 +40,21 @@ build_final.txt
 /build_log_retry.txt
 build_phase*.log
 test_run*.log
+# Local reports/logs
 status.txt
+
+# General Cleanup (Ignore noise)
+*.txt
+*.log
+
+# Whitelist Critical Files
+!CMakeLists.txt
+!**/CMakeLists.txt
+!DDD_*.txt
+!DTO_*.txt
+!projeto_app_ddd_v10.txt
+!STRATA_*.txt
+!docs/*.txt
 
 # Local-only folders
 /external/

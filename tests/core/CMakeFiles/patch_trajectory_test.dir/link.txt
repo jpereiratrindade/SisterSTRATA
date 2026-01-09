@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/patch_trajectory_test.dir/link.d CMakeFiles/patch_trajectory_test.dir/PatchTrajectoryTest.cpp.o -o ../../bin/patch_trajectory_test  ../../lib/libcore.a

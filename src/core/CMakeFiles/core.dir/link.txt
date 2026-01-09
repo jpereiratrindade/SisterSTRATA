@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../lib/libcore.a CMakeFiles/core.dir/domain/Workspace.cpp.o CMakeFiles/core.dir/domain/soils/SoilSystem.cpp.o CMakeFiles/core.dir/domain/spatial_pattern/PatchAnalysis.cpp.o CMakeFiles/core.dir/domain/spatial_pattern/SoilRasterizer.cpp.o CMakeFiles/core.dir/domain/hydro/DrainageSystem.cpp.o CMakeFiles/core.dir/domain/hydro/Watershed.cpp.o CMakeFiles/core.dir/domain/hydro/HydrologyReport.cpp.o CMakeFiles/core.dir/domain/fourth_dimension/TrajectoryPersistenceService.cpp.o
-/usr/bin/ranlib ../../lib/libcore.a

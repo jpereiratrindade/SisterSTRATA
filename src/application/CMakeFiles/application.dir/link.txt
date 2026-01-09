@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../lib/libapplication.a CMakeFiles/application.dir/Session.cpp.o CMakeFiles/application.dir/Application.cpp.o
-/usr/bin/ranlib ../../lib/libapplication.a

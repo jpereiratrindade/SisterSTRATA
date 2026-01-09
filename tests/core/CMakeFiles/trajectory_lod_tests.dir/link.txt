@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/trajectory_lod_tests.dir/link.d CMakeFiles/trajectory_lod_tests.dir/TestTrajectoryLOD.cpp.o -o ../../bin/trajectory_lod_tests  ../../lib/libcore.a

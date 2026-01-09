@@ -1,4 +1,0 @@
-# Hashes of file build rules.
-4e6ef1d56301359ac69058c87972a43a bin/shaders/simple.frag.spv
-e986cbd808f19addfe4a52e2df17f4a7 bin/shaders/simple.vert.spv
-97cf4680a2492105d776f51d6f96b3e5 src/world3d/CMakeFiles/Shaders

@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/patch_analysis_tests.dir/link.d CMakeFiles/patch_analysis_tests.dir/PatchAnalysisTest.cpp.o -o ../../bin/patch_analysis_tests  ../../lib/libcore.a
