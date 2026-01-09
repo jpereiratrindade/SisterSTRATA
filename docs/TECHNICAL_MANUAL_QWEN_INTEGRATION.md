@@ -146,7 +146,28 @@ Para garantir a transparência científica, abaixo estão listados todos os dado
 | `Timeline Size` | Contagem total de estados | `Trajectory::getSlices` | - |
 | `Composition Hist`| Matriz de composição (%) temporal | `getClassDistribution` | Série Temporal de Histogramas |
 
-## 10. Pipeline de Contexto por Painel (Resumo v2.0)
+## 10. Pipeline de Avaliação de Coerência Lógica (Discursive System)
+A "Avaliação de Coerência Lógica" (`LogicalCoherenceEvaluation`) é um modo dedicado onde o LLM atua como auditor lógico do sistema discursivo cadastrado, em vez de um assistente criativo.
+
+### 10.1. Objetivo Epistemológico
+O objetivo é identificar **Lacunas Causais** na modelagem do especialista, verificando se cada elemento do sistema possui correspondência lógica.
+- **Rigor**: O modelo é instruído a ser pedante na verificação de tríades (Problema -> Ação -> Efeito).
+- **Semântica**: Verifica se o "Efeito" alegado realmente mitiga o "Problema" declarado, ou se a "Ação" é mecanisticamente capaz de produzir o efeito.
+
+### 10.2. Engenharia de Prompt (DiscursiveCoherencePrompt)
+O prompt construído injeta a estrutura JSON do `DiscursiveSystemDTO` e instrui o modelo a aplicar as seguintes regras de validação:
+
+1. **Orfandade**: Problemas sem Ações vinculadas ou Ações que não geram Efeitos.
+2. **Circularidade**: Efeitos que re-alimentam o Problema inicial sem resolução.
+3. **Plausibilidade**: A desconexão semântica grave entre o Mecanismo alegado e o Efeito esperado.
+
+### 10.3. Saída Estruturada
+A resposta gerada deve seguir estritamente o formato de lista de verificação:
+- **Pontos Fortes**: Aspectos bem conectados.
+- **Inconsistências**: Alertas numerados.
+- **Sugestão de Refinamento**: Uma ação concreta para melhorar o design do sistema.
+
+## 11. Pipeline de Contexto por Painel (Resumo v2.0)
 
 | Painel | Modo de Interpretação | Fonte de Dados (ContextBundle) |
 | :--- | :--- | :--- |
