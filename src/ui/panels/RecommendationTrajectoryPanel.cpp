@@ -56,6 +56,9 @@ void RecommendationTrajectoryPanel::draw(bool* open) {
                 
                 drawTrajectoryConfig();
                 
+                ImGui::Separator();
+                drawSnapshotList();
+                
                 // AI Modal Rendering
                 UI::Components::InterpretationModal::Draw("AI Recommendation Analysis", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
                     session_->saveInterpretationSnapshotDTO(snap);

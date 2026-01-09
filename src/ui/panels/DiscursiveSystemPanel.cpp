@@ -83,6 +83,11 @@ void DiscursiveSystemPanel::draw(bool* open) {
                 ImGui::EndTabItem();
             }
 
+            if (ImGui::BeginTabItem("Registered History", nullptr, targetTab_ == 1 ? ImGuiTabItemFlags_SetSelected : 0)) {
+                drawSystemList();
+                ImGui::EndTabItem();
+            }
+
             if (ImGui::BeginTabItem("Epistemic Memory", nullptr, targetTab_ == 2 ? ImGuiTabItemFlags_SetSelected : 0)) {
                 auto snapshots = session_->getInterpretationSnapshots();
                 std::reverse(snapshots.begin(), snapshots.end());
