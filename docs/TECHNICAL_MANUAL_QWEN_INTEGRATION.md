@@ -1,50 +1,62 @@
-# manual Técnico: Integração Qwen & SisterSTRATA
+# Manual Técnico: Ponte Cognitiva STRATA (v2.0)
 
-Este documento detalha a implementação técnica da assistência cognitiva baseada em LLM (Large Language Model) no sistema SisterSTRATA.
+Este documento detalha a implementação da **Ponte Cognitiva** (Cognitive Bridge), uma arquitetura de integração entre o SisterSTRATA e modelos de linguagem de grande porte (LLMs), focada em rastreabilidade científica e integridade epistemológica.
 
-## 1. Arquitetura de Integração (Hexagonal)
+## 1. Arquitetura de Integração (DDD + Hexagonal)
 
-A integração segue o padrão **Ports & Adapters**, desacoplando a lógica científica da infraestrutura de IA.
+A v2.0 introduz uma camada de aplicação robusta que utiliza DTOs (Data Transfer Objects) para desacoplar totalmente o domínio da infraestrutura de IA.
 
 ```mermaid
-graph LR
-    subgraph "Application Layer"
-        UI[TimelinePanel] --> Port[ILLMService]
+graph TD
+    subgraph "UI Layer"
+        NP[NarrativePanel] --> Modal[InterpretationModal]
+        DP[DiscursivePanel] --> Modal
+        TP[TimelinePanel] --> Modal
+    end
+    subgraph "Application Layer (Cognitive Core)"
+        Service[CognitiveAssistanceService]
+        Bundle[ContextBundleDTO]
+        Snapshot[InterpretationSnapshotDTO]
     end
     subgraph "Infrastructure Layer"
-        Adapter[OllamaAdapter] -- HTTP/JSON --> Ollama[Ollama Local API]
-        Port --> Adapter
+        Adapter[OllamaAdapter] -- HTTP --> Ollama[Qwen 14b]
+        Memory[(Epistemic Memory JSON)]
     end
+    
+    NP & DP & TP -- requests --> Service
+    Service -- builds --> Bundle
+    Bundle -- send --> Adapter
+    Adapter -- returns --> Snapshot
+    Snapshot -- persist --> Memory
+    Snapshot -- display --> Modal
 ```
 
-### Componentes Principais:
-- **`ILLMService` (Porta)**: Interface que define o contrato de comunicação assíncrona.
-- **`OllamaAdapter` (Adaptador)**: Implementação concreta que gerencia a comunicação com a API REST do Ollama (localhost:11434).
-- **`OllamaMockAdapter`**: Fallback para desenvolvimento offline ou sistemas sem Ollama instalado.
+### Componentes de Dados (Epistemic DTOs):
+- **`ContextBundleDTO`**: O pacote semântico. Contém projeções textuais de narrativas, sistemas discursivos e trajetórias. É o único dado que a IA "enxerga".
+- **`InterpretationSnapshotDTO`**: O artefato de memória. Contém a resposta da IA, o prompt utilizado, metadados de modelo e timestamp.
 
-## 2. Fluxo de Execução Assíncrona
+## 2. Robustez e Segurança de Threads (Thread-Safety)
 
-Para evitar travamentos na UI (freeze), o `OllamaAdapter` utiliza um modelo de **Worker Thread** com fila de requisições:
+Devido à natureza assíncrona do LLM e aos requisitos de rendering do ImGui (que não é thread-safe), a v2.0 implementa o mecanismo de **Deferred Popups**:
 
-1. A UI solicita uma conclusão via `requestCompletion`.
-2. A requisição é enfileirada (`std::queue`) e a thread principal é liberada imediatamente.
-3. Uma thread de background (`workerThread_`) consome a fila:
-    - Constrói o payload JSON.
-    - Executa a chamada HTTP POST via `cpp-httplib`.
-    - Realiza o parse da resposta via `nlohmann_json`.
-4. Um callback é disparado com o resultado, que é então exibido na UI com proteção de `std::mutex`.
+1. **Background Processing**: O `OllamaAdapter` executa a inferência em uma thread dedicada.
+2. **Mutex Protection**: As variáveis de estado da IA (`lastAiSnapshot_`, `aiRequestPending_`) são protegidas por `std::mutex`.
+3. **Signal & Defer**: O callback da IA **não** chama funções de UI diretamente. Ele seta uma flag `aiResultReady_`.
+4. **Main Thread Sync**: No próximo ciclo de `draw()`, a thread principal detecta `aiResultReady_`, executa `ImGui::OpenPopup` e reseta a flag. 
+   - *Resultado*: Estabilidade total e fim das Falhas de Segmentação durante o retorno da IA.
 
-## 3. Descoberta Robusta de Modelos (Discovery Logic)
+## 3. Seleção de Modelos e Inteligência Local
 
-O sistema não possui o nome do modelo fixo (hardcoded), mas sim uma heurística de priorização baseada nas capacidades do host:
+O sistema realiza uma descoberta dinâmica (Model Discovery) no startup:
+- **Prioridade Estratégica**: `14b` -> `7b`.
+- **Feedback**: O console log agora reporta exatamente qual modelo foi selecionado: `[Application] Ollama detected. Using qwen2.5:14b.`
+- **Timeout**: Elevado para 120s para suportar inferências complexas de 14b em hardware diverso.
 
-Ao iniciar o `isAvailable()`, o adaptador consulta o endpoint `/api/tags` e seleciona o modelo mais potente disponível seguindo esta prioridade:
-1. `qwen2.5:72b`
-2. `qwen2.5:32b`
-3. `qwen2.5:14b`
-4. `qwen2.5:7b`
+## 4. Memória Epistêmica (Interpretation Memory)
 
-Isso garante que se o usuário possuir uma máquina mais potente (ex: 14b), o SisterSTRATA a utilizará automaticamente sem necessidade de reconfiguração manual.
+Diferente de versões anteriores onde a análise se perdia, a Ponte Cognitiva permite a persistência:
+- **`interpretation_memory.json`**: Repositório central de todos os snapshots que o usuário escolheu "Salvar".
+- **Traceability**: Cada snapshot guarda o ID do modelo e a data, permitindo auditoria futura das interpretações da IA.
 
 ## 4. Engenharia de Contexto e Prompt
 
@@ -61,7 +73,7 @@ A "personalidade" e o rigor científico da IA são impostos via **System Prompt*
 - **FetchContent (CMake)**: As dependências são baixadas e compiladas automaticamente durante o build, garantindo portabilidade.
 
 ## 6. Segurança e Performance
-- **Timeout**: Configurado em 60s para acomodar o tempo de inferência em modelos maiores.
+- **Timeout**: Configurado em 120s para acomodar o tempo de inferência em modelos maiores (14b).
 - **Fallback**: Se o Ollama não responder em `/api/tags` no startup, o sistema desativa as opções de IA na UI ou usa o Mock, prevenindo runtime errors.
 - **Memory Safety**: O adaptador é injetado via `std::unique_ptr` no `Session`, garantindo limpeza correta no shutdown.
 
@@ -131,5 +143,15 @@ Para garantir a transparência científica, abaixo estão listados todos os dado
 | `Timeline Size` | Contagem total de estados | `Trajectory::getSlices` | - |
 | `Composition Hist`| Matriz de composição (%) temporal | `getClassDistribution` | Série Temporal de Histogramas |
 
+## 10. Pipeline de Contexto por Painel (Resumo v2.0)
+
+| Painel | Modo de Interpretação | Fonte de Dados (ContextBundle) |
+| :--- | :--- | :--- |
+| **Narrative (NOC)** | `ThemeAnalysis` | Histórico de observações manuais. |
+| **Discursive (DSC)** | `DiscursiveDraft` | Relação entre narrativas e sistemas de ação. |
+| **Timeline (4D)** | `CoherenceCheck` | Índices SSI e distribuição de classes entre estados. |
+| **Timeline (4D)** | `TrajectoryReading` | Resumo qualitativo da evolução de manchas e fragmentação. |
+
 ---
-*Versão 1.4 - Jan/2026 (Consolidada com Fundação Científica)*
+*Documentação v2.0 - Jan/2026*
+*Consolidado por: Antigravity AI*

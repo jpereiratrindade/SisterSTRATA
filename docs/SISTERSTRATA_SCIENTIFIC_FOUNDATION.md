@@ -1,7 +1,7 @@
 # SISTERSTRATA: FUNDAÇÃO CIENTÍFICA E ARQUITETURA DE CONHECIMENTO
 
-**Versão do Documento:** 1.2
-**Data:** 05 de Janeiro de 2026
+**Versão do Documento:** 1.3
+**Data:** 09 de Janeiro de 2026
 **Status:** Consolidado
 
 ---
@@ -127,11 +127,18 @@ O SisterSTRATA reconhece que a paisagem não é qualificada apenas por fenômeno
 
 ## 5. INTERFACE COGNITIVA E GOVERNANÇA DE DADOS
 
-O Contexto de Assistência Cognitiva (CAC) integra Large Language Models (LLMs) como uma camada de **Hermenêutica Científica**.
+A Ponte Cognitiva (v2.0) integra Modelos de Linguagem de Grande Porte (LLMs) como uma camada de **Hermenêutica Científica**, permitindo o diálogo entre a simulação biofísica e o contexto humano.
 
-- **Hermenêutica Baseada em Fatos:** A IA não "inventa" análises; ela interpreta as variáveis derivas (Seção 4.4).
-- **Isolamento Epistemológico:** Garante que a "opinião" da IA não corrompa a base física do modelo (P&A Architecture).
-- **Rastreabilidade:** Cada afirmação da IA pode ser validada voltando às equações fundamentais descritas neste documento.
+### 5.1. Memória Epistêmica
+Diferente das simulações físicas, que são determinísticas, a análise cognitiva produz artefatos interpretativos que devem ser preservados.
+- **Snapshot Cognitivo:** Cada análise gerada pela IA é registrada como um artefato imutável contendo o prompt original, a resposta do modelo e o timestamp.
+- **Socio-Ecological Traceability:** Permite rastrear como as interpretações do sistema mudaram ao longo do tempo ou conforme novos dados narrativos foram ingeridos.
+
+### 5.2. O Contrato Moral (Integridade Epistemológica)
+Para evitar o uso da IA como um "oráculo", a integração é regida por restrições invioláveis injetadas em cada interação:
+- **Descritividade Estrita:** A IA deve descrever padrões, tensões e inconsistências. Está proibida de prescrever ações políticas ou técnicas sem base em algoritmos determinísticos.
+- **Não-Causalidade Involuntária:** A IA não pode inferir causas bio-físicas (ex: "a seca causou a morte do patch") onde o simulador reporta apenas correlação temporal, a menos que o `ContextBundle` contenha essa prova explícita.
+- **Hermenêutica Baseada em Fatos:** Cada afirmação da IA deve ser um reflexo dos dados derivados (Seção 4.4) ou observados (Seção 4.5).
 
 ---
 
