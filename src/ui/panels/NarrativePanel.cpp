@@ -52,15 +52,6 @@ void NarrativePanel::setSession(Application::Session* session) {
 void NarrativePanel::draw(bool* open) {
     if (!open || !*open) return;
 
-    // Check for Deferred AI Results (Thread-safe UI update)
-    {
-        std::lock_guard<std::mutex> lock(aiMutex_);
-        if (aiResultReady_) {
-            lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy
-            ImGui::OpenPopup("AI Interpretation Result");
-            aiResultReady_ = false;
-        }
-    }
 
     // --- Picking Logic ---
     if (pickingMode_) {
@@ -106,6 +97,16 @@ void NarrativePanel::draw(bool* open) {
         if (ImGui::BeginTabBar("NarrativeTabs")) {
             
             if (ImGui::BeginTabItem("Observation Log")) {
+                // Check for Deferred AI Results (Thread-safe UI update)
+                {
+                    std::lock_guard<std::mutex> lock(aiMutex_);
+                    if (aiResultReady_) {
+                        lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy
+                        ImGui::OpenPopup("AI Interpretation Result");
+                        aiResultReady_ = false;
+                    }
+                }
+                
                 drawIngestionForm();
                 ImGui::Separator();
                 drawObservationList();
