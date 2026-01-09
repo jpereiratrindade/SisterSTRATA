@@ -85,7 +85,8 @@ O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como
 > **Manual Técnico**: [Integração Qwen](TECHNICAL_MANUAL_QWEN_INTEGRATION.md) | [Arquitetura Vetorial](Arquitetura_Vetorial_Hipoteses.md)
 
 *   **Contexto Discursivo**: Analisa as métricas da simulação atual e gera um parágrafo interpretativo.
-*   **Trajectory Impact Profile**: Analisa todo o histórico de mudanças (Trajetória Completa) para gerar um relatório de impacto ambiental, identificando tendências de degradação ou recuperação.
+*   **Trajectory Impact Profile**: Analisa todo o histórico de mudanças (Trajetória Completa) para gerar um relatório de impacto ambiental.
+    > **Detalhes do Modelo**: [Impact Profile](SCIENTIFIC_TRAJECTORY_IMPACT_PROFILE.md)
 *   **Configuração**: O sistema detecta automaticamente o modelo mais forte disponível (ex: `qwen2.5:14b`).
 
 ---
