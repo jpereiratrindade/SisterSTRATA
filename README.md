@@ -14,7 +14,7 @@ Para entender a filosofia, a governança dos modelos e a arquitetura de conhecim
 *   **[Hidrologia](docs/SCIENTIFIC_HIDROLOGIA.md)**: Detalhamento científico do domínio hidrológico.
 *   **[Vegetação](docs/SCIENTIFIC_VEGETACAO.md)**: Detalhamento científico do domínio de vegetação.
 *   **[Quarta Dimensão (Resiliência)](docs/SCIENTIFIC_QUARTA_DIMENSAO.md)**: Detalhamento científico de trajetória e coerência.
-*   **[Manual Técnico - Integração Qwen](docs/TECHNICAL_MANUAL_QWEN_INTEGRATION.md)**: Detalhes da implementação da assistência cognitiva via Ollama.
+*   **[Manual do Usuário](docs/MANUAL_DO_USUARIO.md)**: Guia operacional das funcionalidades da ferramenta (Simulação, Visualização 3D, Timeline).
 *   **[Análise de Trajetória de Patch (DDD)](DDD_PatchTrajectory_Analysis.txt)**: Definição do modelo multi-estado para patches.
 *   **[Arquitetura Vetorial de Hipóteses](docs/Arquitetura_Vetorial_Hipoteses.md)**: Formalização matemática do espaço vetorial de parâmetros.
 *   **[Fourth Dimension (Resilience)](DDD_FourthDimensionSystem.txt)**: O modelo de resiliência e coerência temporal.
