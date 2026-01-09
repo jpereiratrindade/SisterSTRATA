@@ -1,9 +1,17 @@
-# Build directories
+# Build directories & artifacts
 build/
 bin/
 lib/
+_deps/
+CMakeFiles/
+CMakeCache.txt
+CMakeDoxyfile.in
+CMakeDoxygenDefaults.bin
+cmake_install.cmake
+Makefile
 *.a
 *.o
+*.so
 *.spv
 
 # IDEs
@@ -14,42 +22,33 @@ lib/
 
 # User specific
 .gemini/
-SisterAppPEC/
 imgui.ini
+.git_status_output
+last_commit.txt
+tracked_files.txt
+debug_output.txt
 
 # Documentation
 docs/doxygen/
 
-# Generated Assets
-# Generated Assets
+# Generated Assets & Data
 *.obj
 *.csv
 !examples/**/*.csv
 !examples/**/*.json
-assets/
+assets/data/user_db/
+exemplo_terrain.csv
+terrain_export.csv
 
-# Local datasets and outputs
+# Local datasets and outputs (Wildcards)
 *.strata
 *.bin
-hermeneutic_trajectory_*.txt
-build_output.txt
-build_final.txt
-
-# Local reports/logs
-/slope_report.txt
-/build_log_retry.txt
-build_phase*.log
-test_run*.log
-# Local reports/logs
-status.txt
-
-# General Cleanup (Ignore noise)
-*.txt
 *.log
-
-# Whitelist Critical Files
+*.txt
 !CMakeLists.txt
 !**/CMakeLists.txt
+!*.md
+!examples/**/*
 
 # Local-only folders
 /external/
@@ -57,10 +56,3 @@ status.txt
 
 # Local snippets
 /tests/core/CMakeLists.txt.snippet
-
-# Local docs
-/docs/LLM_INTEGRATION_ANALYSIS.md
-
-# Empty-dir placeholders (local)
-/src/core/services/.gitkeep
-/src/ui/docking/.gitkeep
