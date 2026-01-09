@@ -50,11 +50,6 @@ status.txt
 # Whitelist Critical Files
 !CMakeLists.txt
 !**/CMakeLists.txt
-!DDD_*.txt
-!DTO_*.txt
-!projeto_app_ddd_v10.txt
-!STRATA_*.txt
-!docs/*.txt
 
 # Local-only folders
 /external/

@@ -29,11 +29,11 @@ Para entender a filosofia, a governança dos modelos e a arquitetura de conhecim
 *   **[Vegetação](docs/SCIENTIFIC_VEGETACAO.md)**: Detalhamento científico do domínio de vegetação.
 *   **[Quarta Dimensão (Resiliência)](docs/SCIENTIFIC_QUARTA_DIMENSAO.md)**: Detalhamento científico de trajetória e coerência.
 *   **[Manual do Usuário](docs/MANUAL_DO_USUARIO.md)**: Guia operacional das funcionalidades da ferramenta (Simulação, Visualização 3D, Timeline).
-*   **[Análise de Trajetória de Patch (DDD)](DDD_PatchTrajectory_Analysis.txt)**: Definição do modelo multi-estado para patches.
+*   **[Análise de Trajetória de Patch (DDD)](docs/DDD_PatchTrajectory_Analysis.md)**: Definição do modelo multi-estado para patches.
 *   **[Arquitetura Vetorial de Hipóteses](docs/Arquitetura_Vetorial_Hipoteses.md)**: Formalização matemática do espaço vetorial de parâmetros.
-*   **[Fourth Dimension (Resilience)](DDD_FourthDimensionSystem.txt)**: O modelo de resiliência e coerência temporal.
-*   **[Contexto de Observação Narrativa](DDD_NarrativeObservationContext.md)**: Sistema observacional para registrar interpretações discursivas do território.
-*   **[Architecture & DDD](projeto_app_ddd_v10.txt)**: Organização do código e princípios de design.
+*   **[Fourth Dimension (Resilience)](docs/DDD_FourthDimensionSystem.md)**: O modelo de resiliência e coerência temporal.
+*   **[Contexto de Observação Narrativa](docs/DTO_NarrativeObservationContext.md)**: Sistema observacional para registrar interpretações discursivas do território.
+*   **[Architecture & DDD](docs/projeto_app_ddd_v10.md)**: Organização do código e princípios de design.
 
 ## Requisitos de Sistema
 
