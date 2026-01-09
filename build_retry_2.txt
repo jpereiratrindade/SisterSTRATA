@@ -1,0 +1,19 @@
+[  2%] Built target Shaders
+[  5%] Built target observational_tests
+[ 17%] Built target core
+[ 20%] Built target patch_analysis_tests
+[ 22%] Built target trajectory_lod_tests
+[ 28%] Built target patch_trajectory_test
+[ 28%] Built target core_tests
+[ 30%] Built target soil_rasterizer_tests
+[ 32%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o
+[ 33%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/NarrativePanel.cpp: In member function ‘void UI::Panels::NarrativePanel::drawObservationList()’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/NarrativePanel.cpp:317:30: error: ‘class Application::Session’ has no member named ‘getNarrativeStateDTOs’; did you mean ‘getNarrativeSystem’?
+  317 |     auto history = session_->getNarrativeStateDTOs();
+      |                              ^~~~~~~~~~~~~~~~~~~~~
+      |                              getNarrativeSystem
+gmake[2]: *** [src/ui/CMakeFiles/ui.dir/build.make:233: src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o] Error 1
+gmake[2]: ** Esperando que outros processos terminem.
+gmake[1]: *** [CMakeFiles/Makefile2:590: src/ui/CMakeFiles/ui.dir/all] Error 2
+gmake: *** [Makefile:166: all] Error 2

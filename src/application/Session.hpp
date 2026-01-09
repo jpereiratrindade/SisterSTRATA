@@ -7,10 +7,14 @@
 #include "application/dtos/RecommendationSnapshotDTO.hpp"
 #include "application/dtos/RecommendationTrajectoryDTO.hpp"
 #include "application/dtos/NarrativeDTOs.hpp"
+#include "src/application/mappers/InterpretationMapper.hpp"
+#include "src/application/dtos/cognitive/ContextBundleDTO.hpp"
+#include "src/application/services/cognitive/CognitiveAssistanceService.hpp"
 #include "application/mappers/ObservationalMappers.hpp"
 #include "src/observational/narrative/aggregates/NarrativeObservationSystem.hpp"
 #include "src/observational/discursive/aggregates/DiscursiveSystemRepository.hpp"
 #include "src/observational/recommendation/aggregates/RecommendationTrajectory.hpp"
+#include "src/observational/interpretation/aggregates/InterpretationRepository.hpp"
 #include <memory>
 #include <vector>
 
@@ -22,11 +26,14 @@ public:
     inline static const std::string DISCURSIVE_DB_PATH = "assets/data/user_db/discursive_systems.json";
     inline static const std::string NARRATIVE_DB_PATH = "assets/data/user_db/narrative_history.json";
     inline static const std::string RECOMMENDATION_DB_PATH = "assets/data/user_db/recommendation_trajectory.json";
+    inline static const std::string INTERPRETATION_DB_PATH = "assets/data/user_db/interpretation_memory.json";
 
     Session() 
         : workspace_(std::make_unique<Core::Domain::Workspace>()),
           narrativeSystem_(std::make_unique<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem>()),
-          discursiveSystemRepository_(std::make_unique<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository>())
+          discursiveSystemRepository_(std::make_unique<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository>()),
+          interpretationRepository_(std::make_unique<SisterSTRATA::Observational::Interpretation::InterpretationRepository>()),
+          cognitiveService_(std::make_unique<Application::Services::Cognitive::CognitiveAssistanceService>(getLLMService()))
     {
         initializePersistence();
     }
@@ -40,6 +47,7 @@ public:
         workspace_ = std::make_unique<Core::Domain::Workspace>();
         narrativeSystem_ = std::make_unique<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem>();
         discursiveSystemRepository_ = std::make_unique<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository>();
+        interpretationRepository_ = std::make_unique<SisterSTRATA::Observational::Interpretation::InterpretationRepository>();
         recommendationTrajectory_ = SisterSTRATA::Observational::Recommendation::RecommendationTrajectory();
         trajectory_.clear();
     }
@@ -52,7 +60,7 @@ public:
         return *narrativeSystem_;
     }
 
-    [[nodiscard]] std::vector<Application::DTO::NarrativeStateDTO> getNarrativeStateDTOs() const {
+    [[nodiscard]] std::vector<Application::DTO::NarrativeStateDTO> getNarrativeHistoryDTO() const {
         std::vector<Application::DTO::NarrativeStateDTO> dtos;
         for (const auto& state : narrativeSystem_->getHistory()) {
             dtos.push_back(Application::Mappers::Narrative::toDTO(state));
@@ -181,10 +189,33 @@ public:
         return llmService_.get();
     }
 
+    // --- Cognitive Interpretation Memory ---
+    void saveInterpretationSnapshotDTO(const Application::DTO::Cognitive::InterpretationSnapshotDTO& dto) {
+        interpretationRepository_->addSnapshot(Application::Mappers::Interpretation::toDomain(dto));
+        autoSaveInterpretation();
+    }
+
+    [[nodiscard]] std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> getInterpretationSnapshots() const {
+        std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> dtos;
+        for (const auto& s : interpretationRepository_->getSnapshots()) {
+            dtos.push_back(Application::Mappers::Interpretation::toDTO(s));
+        }
+        return dtos;
+    }
+
+    // --- Cognitive Assistance ---
+    void requestAIInterpretation(const Application::DTO::Cognitive::ContextBundleDTO& bundle,
+                                Application::Services::Cognitive::InterpretationMode mode,
+                                Application::Services::Cognitive::CognitiveAssistanceService::SnapshotCallback callback) {
+        cognitiveService_->interpret(bundle, mode, callback);
+    }
+
 private:
     std::unique_ptr<Core::Domain::Workspace> workspace_;
     std::unique_ptr<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem> narrativeSystem_;
     std::unique_ptr<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository> discursiveSystemRepository_;
+    std::unique_ptr<SisterSTRATA::Observational::Interpretation::InterpretationRepository> interpretationRepository_;
+    std::unique_ptr<Application::Services::Cognitive::CognitiveAssistanceService> cognitiveService_;
     SisterSTRATA::Observational::Recommendation::RecommendationTrajectory recommendationTrajectory_;
     Core::Domain::FourthDimension::Trajectory trajectory_;
     std::unique_ptr<Ports::ILLMService> llmService_;
@@ -210,6 +241,11 @@ private:
                 recommendationTrajectory_.deserialize(RECOMMENDATION_DB_PATH);
             } catch (...) {}
         }
+        if (std::filesystem::exists(INTERPRETATION_DB_PATH)) {
+            try {
+                interpretationRepository_->deserialize(INTERPRETATION_DB_PATH);
+            } catch (...) {}
+        }
     }
 
     void autoSaveDiscursive() {
@@ -227,6 +263,12 @@ private:
     void autoSaveRecommendation() {
         try {
             recommendationTrajectory_.serialize(RECOMMENDATION_DB_PATH);
+        } catch (...) {}
+    }
+
+    void autoSaveInterpretation() {
+        try {
+            interpretationRepository_->serialize(INTERPRETATION_DB_PATH);
         } catch (...) {}
     }
 };

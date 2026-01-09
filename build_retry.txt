@@ -1,0 +1,56 @@
+[  2%] Built target Shaders
+[  8%] Built target observational_tests
+[ 17%] Built target core
+[ 20%] Built target patch_analysis_tests
+[ 24%] Linking CXX executable ../../bin/soil_rasterizer_tests
+[ 24%] Built target trajectory_lod_tests
+[ 26%] Built target patch_trajectory_test
+[ 29%] Built target core_tests
+[ 32%] Building CXX object src/ui/CMakeFiles/ui.dir/UI.cpp.o
+[ 32%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o
+[ 34%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o
+[ 34%] Building CXX object src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o
+[ 36%] Built target soil_rasterizer_tests
+In file included from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/DiscursiveSystemPanel.cpp:5:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/mappers/CognitiveMappers.hpp: In function ‘std::string Application::Mappers::Cognitive::renderNarrative(const Application::DTO::NarrativeStateDTO&)’:
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/mappers/CognitiveMappers.hpp:21:37: error: no match for ‘operator<<’ (operand types are ‘std::basic_ostream<char>’ and ‘const Application::DTO::ObservationIntentDTO’)
+   21 |     ss << "Interpretation Intent: " << dto.intent << "\n";
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^~ ~~~~~~~~~~
+      |        |                                   |
+      |        std::basic_ostream<char>            const Application::DTO::ObservationIntentDTO
+/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/mappers/CognitiveMappers.hpp:21:37: note: there are 65 candidates
+   21 |     ss << "Interpretation Intent: " << dto.intent << "\n";
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+In file included from /usr/include/c++/15/bits/unique_ptr.h:42,
+                 from /usr/include/c++/15/memory:80,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/core/domain/Workspace.hpp:4,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.hpp:3,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/DiscursiveSystemPanel.hpp:3,
+                 from /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/DiscursiveSystemPanel.cpp:1:
+/usr/include/c++/15/bits/ostream.h:116:7: note: candidate 1: ‘std::basic_ostream<_CharT, _Traits>::__ostream_type& std::basic_ostream<_CharT, _Traits>::operator<<(__ostream_type& (*)(__ostream_type&)) [with _CharT = char; _Traits = std::char_traits<char>; __ostream_type = std::basic_ostream<char>]’
+  116 |       operator<<(__ostream_type& (*__pf)(__ostream_type&))
+      |       ^~~~~~~~
+/usr/include/c++/15/bits/ostream.h:116:36: note: no known conversion for argument 1 from ‘const Application::DTO::ObservationIntentDTO’ to ‘std::basic_ostream<char>::__ostream_type& (*)(std::basic_ostream<char>::__ostream_type&)’ {aka ‘std::basic_ostream<char>& (*)(std::basic_ostream<char>&)’}
+  116 |       operator<<(__ostream_type& (*__pf)(__ostream_type&))
+      |                  ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/ostream.h:125:7: note: candidate 2: ‘std::basic_ostream<_CharT, _Traits>::__ostream_type& std::basic_ostream<_CharT, _Traits>::operator<<(__ios_type& (*)(__ios_type&)) [with _CharT = char; _Traits = std::char_traits<char>; __ostream_type = std::basic_ostream<char>; __ios_type = std::basic_ios<char>]’
+  125 |       operator<<(__ios_type& (*__pf)(__ios_type&))
+      |       ^~~~~~~~
+/usr/include/c++/15/bits/ostream.h:125:32: note: no known conversion for argument 1 from ‘const Application::DTO::ObservationIntentDTO’ to ‘std::basic_ostream<char>::__ios_type& (*)(std::basic_ostream<char>::__ios_type&)’ {aka ‘std::basic_ios<char>& (*)(std::basic_ios<char>&)’}
+  125 |       operator<<(__ios_type& (*__pf)(__ios_type&))
+      |                  ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/ostream.h:135:7: note: candidate 3: ‘std::basic_ostream<_CharT, _Traits>::__ostream_type& std::basic_ostream<_CharT, _Traits>::operator<<(std::ios_base& (*)(std::ios_base&)) [with _CharT = char; _Traits = std::char_traits<char>; __ostream_type = std::basic_ostream<char>]’
+  135 |       operator<<(ios_base& (*__pf) (ios_base&))
+      |       ^~~~~~~~
+/usr/include/c++/15/bits/ostream.h:135:30: note: no known conversion for argument 1 from ‘const Application::DTO::ObservationIntentDTO’ to ‘std::ios_base& (*)(std::ios_base&)’
+  135 |       operator<<(ios_base& (*__pf) (ios_base&))
+      |                  ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/ostream.h:174:7: note: candidate 4: ‘std::basic_ostream<_CharT, _Traits>::__ostream_type& std::basic_ostream<_CharT, _Traits>::operator<<(long int) [with _CharT = char; _Traits = std::char_traits<char>; __ostream_type = std::basic_ostream<char>]’
+  174 |       operator<<(long __n)
+      |       ^~~~~~~~
+/usr/include/c++/15/bits/ostream.h:174:23: note: no known conversion for argument 1 from ‘const Application::DTO::ObservationIntentDTO’ to ‘long int’
+  174 |       operator<<(long __n)
+      |                  ~~~~~^~~
+/usr/include/c++/15/bits/ostream.h:178:7: note: candidate 5: ‘std::basic_ostream<_CharT, _Traits>::__ostream_type& std::basic_ostream<_CharT, _Traits>::operator<<(long unsigned int) [with _CharT = char; _Traits = std::char_traits<char>; __ostream_type = std::basic_ostream<char>]’
+  178 |       operator<<(unsigned long __n)
+      |       ^~~~~~~~

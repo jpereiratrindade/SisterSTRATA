@@ -1,6 +1,9 @@
 #include "src/ui/panels/NarrativePanel.hpp"
 #include "imgui.h"
+#include "application/mappers/CognitiveMappers.hpp"
+#include "ui/components/InterpretationModal.hpp"
 #include <vector>
+#include <algorithm>
 #include <map>
 #include <cstring>
 #include <filesystem>
@@ -88,18 +91,14 @@ void NarrativePanel::draw(bool* open) {
             return;
         }
 
-        // Two tabs: Ingestion and Visualization
-        if (ImGui::BeginTabBar("NarrativeTabs")) {
-            if (ImGui::BeginTabItem("Ingestion")) {
-                drawIngestionForm();
-                ImGui::EndTabItem();
-            }
-            if (ImGui::BeginTabItem("Observation Log")) {
-                drawObservationList();
-                ImGui::EndTabItem();
-            }
-            ImGui::EndTabBar();
-        }
+        drawIngestionForm();
+        ImGui::Separator();
+        drawObservationList();
+
+        // -- AI Modal Rendering --
+        UI::Components::InterpretationModal::Draw("AI Interpretation Result", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
+            session_->saveInterpretationSnapshotDTO(snap);
+        });
 
     }
     ImGui::End();
@@ -315,9 +314,28 @@ void NarrativePanel::drawIngestionForm() {
 }
 
 void NarrativePanel::drawObservationList() {
-    auto history = session_->getNarrativeStateDTOs();
+    auto history = session_->getNarrativeHistoryDTO();
 
-    if (ImGui::BeginTable("ObservationsTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+    ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "OBSERVATION LOG (NOC)");
+    ImGui::SameLine(ImGui::GetWindowWidth() - 280);
+    
+    if (ImGui::Button(aiRequestPending_ ? "Waiting for Qwen..." : "Analyze Themes with Qwen", ImVec2(240, 0))) {
+        auto history = session_->getNarrativeHistoryDTO();
+        if (!history.empty()) {
+            aiRequestPending_ = true;
+            auto bundle = Application::Mappers::Cognitive::createBundle("theme_analysis", history);
+            session_->requestAIInterpretation(bundle, 
+                Application::Services::Cognitive::InterpretationMode::ThemeAnalysis,
+                [this](const auto& snapshot) {
+                    lastAiSnapshot_ = snapshot;
+                    showAiModal_ = true;
+                    aiRequestPending_ = false;
+                    ImGui::OpenPopup("AI Interpretation Result");
+                });
+        }
+    }
+
+    if (ImGui::BeginTable("NarrativeLogTable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
         ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Source");

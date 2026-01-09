@@ -2,6 +2,10 @@
 #include "imgui.h"
 #include <cstring>
 #include <filesystem>
+#include "application/mappers/CognitiveMappers.hpp"
+#include "ui/components/InterpretationModal.hpp"
+#include <vector>
+#include <algorithm>
 
 static const char* DISC_SOURCE_LABELS[] = {
     "Interview", "Document", "Questionnaire", "Technical Bulletin", "Report", "Other"
@@ -39,6 +43,14 @@ void DiscursiveSystemPanel::draw(bool* open) {
         if (ImGui::BeginTabBar("DiscursiveTabs")) {
             if (ImGui::BeginTabItem("Ingestion")) {
                 drawIngestionForm();
+                ImGui::Separator();
+                drawSystemList();
+
+                // AI Modal Rendering
+                UI::Components::InterpretationModal::Draw("AI Discursive Proposal", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
+                    session_->saveInterpretationSnapshotDTO(snap);
+                });
+
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Registered Systems")) {
@@ -52,7 +64,25 @@ void DiscursiveSystemPanel::draw(bool* open) {
 }
 
 void DiscursiveSystemPanel::drawIngestionForm() {
-    ImGui::TextDisabled("Declarative Ingestion of Discursive Systems");
+    ImGui::TextColored(ImVec4(0.4f, 1.0f, 1.0f, 1.0f), "SYSTEM INGESTION (DSC)");
+    ImGui::SameLine(ImGui::GetWindowWidth() - 280);
+    
+    if (ImGui::Button(aiRequestPending_ ? "Waiting for Qwen..." : "Ask Qwen to Propose System", ImVec2(240, 0))) {
+        auto narratives = session_->getNarrativeHistoryDTO();
+        if (!narratives.empty()) {
+            aiRequestPending_ = true;
+            auto bundle = Application::Mappers::Cognitive::createBundle("discursive_draft", narratives);
+            session_->requestAIInterpretation(bundle, 
+                Application::Services::Cognitive::InterpretationMode::DiscursiveDraft,
+                [this](const auto& snapshot) {
+                    lastAiSnapshot_ = snapshot;
+                    showAiModal_ = true;
+                    aiRequestPending_ = false;
+                    ImGui::OpenPopup("AI Discursive Proposal");
+                });
+        }
+    }
+
     ImGui::Separator();
 
     ImGui::Text("System ID (optional)");

@@ -2,6 +2,7 @@
 
 #include "application/Session.hpp"
 #include "application/dtos/NarrativeDTOs.hpp"
+#include "application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
 #include "ui/components/FileSelector.hpp"
 #include <string>
 #include <optional>
@@ -71,6 +72,11 @@ private:
     void drawIngestionForm();
     void drawObservationList();
     void loadIntoForm(const Application::DTO::NarrativeStateDTO& dto);
+
+    // -- AI Analysis State --
+    bool showAiModal_ = false;
+    bool aiRequestPending_ = false;
+    Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
 };
 
 } // namespace UI::Panels
