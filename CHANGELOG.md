@@ -9,6 +9,9 @@
 ### Fixed
 - **Deforestation Visualization**: Resolved issue where deforestation appeared "All Green" by implementing spatial mapping and ensuring correct "Soil" color application.
 - **Ghost Mode**: Fixed visualization persistence issues for simulated states.
+- **Vulkan Stabilization (Patch 1)**: Implemented robust semaphore indexing (triple-buffering) and image-in-flight tracking to resolve validation errors on strict drivers (RTX 40xx / Wayland).
+- **AI Connectivity**: Hardened Ollama connection logic to use `127.0.0.1` (IPv4) explicit timeouts, resolving connection failures on Fedora/Linux.
+- **UI Consistency**: Restored integrated history lists in Discursive and Trajectory panels for better UX across development environments.
 
 ### Documentation
 - **User Manual**: Comprehensive guide (`docs/MANUAL_DO_USUARIO.md`) connected to scientific foundations.
