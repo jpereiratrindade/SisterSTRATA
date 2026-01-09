@@ -77,10 +77,9 @@ void DiscursiveSystemPanel::draw(bool* open) {
                     ImGui::EndPopup();
                 }
 
-                ImGui::EndTabItem();
-            }
-            if (ImGui::BeginTabItem("Registered History", nullptr, targetTab_ == 1 ? ImGuiTabItemFlags_SetSelected : 0)) {
+                ImGui::Separator();
                 drawSystemList();
+
                 ImGui::EndTabItem();
             }
 
