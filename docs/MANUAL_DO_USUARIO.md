@@ -1,42 +1,100 @@
 # Manual do Usuário - SisterSTRATA v1.9.3
 
-Este manual descreve as funcionalidades operacionais da plataforma SisterSTRATA.
+O **SisterSTRATA** é uma plataforma científica de alta performance para análise, simulação e visualização de dados ecológicos complexos. Este manual serve como referência completa para todas as suas funcionalidades.
 
-## 1. Navegação e Visualização 3D
-O ambiente principal é uma viewport 3D de alta performance baseada em Vulkan.
+---
 
-*   **Câmera**:
-    *   `Botão Direito + Arrastar`: Rotacionar a câmera (Orbit).
-    *   `Botão Meio + Arrastar`: Mover a câmera (Pan).
-    *   `Scroll`: Zoom In/Out.
-*   **Modos de Visualização**:
-    *   **Nuvem de Pontos (Point Cloud)**: Visualização padrão para dados brutos (CSV/XYZ).
-    *   **Malha (Mesh)**: Visualização de superfície sólida para terrenos gerados (OBJ).
-    *   **Spatial Mapping**: O sistema colore automaticamente terrenos complexos com base nos dados de classificação, mesmo se a resolução da malha for diferente da simulação.
+## 1. Controles e Navegação 3D
 
-## 2. Painel "Fourth Dimension" (Timeline & Resiliência)
-Este é o centro de controle para análise temporal e simulações.
+O ambiente principal utiliza uma câmera híbrida (Orbit/Free-Look) para explorar terrenos e nuvens de pontos.
 
-### 2.1. Trajetórias (Timeline)
-*   **Captura de Estado**: Permite "fotografar" o estado atual do território para criar um novo ponto na linha do tempo.
-*   **Navegação**: Clique em qualquer fatia (TimeSlice) na lista para visualizar seus metadados.
-*   **Ghost Mode**: Ao selecionar um estado passado e clicar em `View (Ghost)`, o sistema projeta visualmente aquele estado sobre o terreno 3D (ex: mostrando como era a floresta há 10 anos), sem alterar os dados atuais. As áreas de desmatamento aparecem em **Marrom (Solo)** e a floresta em **Verde**.
+### Teclado
+*   **W / S**: Mover para frente / trás.
+*   **A / D**: Mover para esquerda / direita (Strafe).
+*   **Q / E**: Mover para baixo / cima (Elevação).
+*   **SHIFT Esquerdo**: Correr (Aumentar velocidade de movimento).
 
-### 2.2. Ferramentas de Simulação
-Disponíveis diretamente no painel:
-*   **Simulate: Stability**: Gera uma projeção de estabilidade estrutural.
-*   **Simulate: Fragmentation**: Simula a fragmentação progressiva de habitats.
-*   **Simulate: Deforestation**: Cria um cenário de perda massiva de cobertura vegetal (-1 Soil), útil para análise de impacto e visualização de contraste. Use o "Ghost Mode" para ver o resultado 3D.
+### Mouse
+*   **Botão Esquerdo + Arrastar**: **Orbitar** (Girar ao redor do ponto de interesse). Ideal para examinar um objeto ou terreno específico.
+*   **Botão Direito + Arrastar**: **Free Look** (Olhar livremente). Estilo FPS, ideal para "voar" pelo cenário.
+*   **Scroll (Roda)**: Zoom In / Zoom Out.
 
-## 3. Assistência Cognitiva (AI)
-O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para análise hermenêutica.
+---
 
-*   **Contexto Discursivo**: Analisa métricas quantitativas (Coerência, Volatilidade) e gera relatórios qualitativos.
-*   **Trajectory Impact Profile**: Gera perfis de impacto detalhados analisando toda a trajetória de mudanças do território.
+## 2. Configurações de Visualização (Tools > Settings)
 
-## 4. Análise Hidrológica e de Solo
-*   **Drenagem**: Ferramenta para visualizar acumulação de fluxo e redes de drenagem sobre o terreno.
-*   **Análise de Patches**: Identificação e contagem de manchas de vegetação para métricas de ecologia de paisagem.
+O painel de configurações permite ajustar a renderização em tempo real.
 
-## 5. Dicas de Uso
-*   Se o terreno parecer "Verde Sólido" ao usar o Ghost Mode, verifique se está no modo correto. A versão v1.9.3 corrige isso automaticamente usando Mapeamento Espacial e terrenos de demonstração "Showcase" (com relevo).
+### Iluminação (Lighting)
+*   **Light Direction**: Controla a direção do "Sol" virtual (X, Y, Z). Altere para visualizar sombras e relevo.
+*   **Light Color**: Cor da luz solar (RGB).
+*   **Ambient Strength**: Intensidade da luz ambiente (0.0 a 1.0). Aumente para clarear sombras escuras.
+
+### Nuvens de Pontos (Point Clouds / Basins)
+Controles específicos para visualização de dados CSV/XYZ e Drenagem.
+*   **Point Size**: Tamanho dos pontos (1.0 a 20.0). Aumente para tornar os dados mais visíveis.
+*   **Color Mode**:
+    *   *Source (CSV)*: Usa as cores definidas no arquivo de dados.
+    *   *Single Color*: Aplica uma cor uniforme escolhida pelo usuário a todos os pontos.
+
+### Performance
+*   **VSync**: Sincronização vertical para evitar "tearing" na tela.
+*   **Max FPS**: Limitador de taxa de quadros (0 = Ilimitado). Útil para economizar energia em laptops.
+*   **Camera Speed**: Ajuste fino da velocidade base de movimento.
+
+---
+
+## 3. Gestão de Arquivos e Formatos
+
+Acesse via **File > Open** ou atalhos na interface.
+
+### Formatos Suportados
+*   **Projetos (.strata)**: Salva/Carrega todo o estado da sessão (trajetórias, configurações).
+*   **Malhas 3D (.obj)**: Terrenos sólidos e modelos 3D. O SisterSTRATA aplica coloração automática baseada em altura se o OBJ não tiver texturas.
+*   **Nuvens de Pontos (.csv, .xyz, .txt)**:
+    *   *Formato Padrão*: X, Y, Z, R, G, B
+    *   *Detecção Automática*: O sistema detecta coordenadas grandes (UTM) e centraliza automaticamente o modelo para evitar erros de precisão (Jitter).
+    *   *Raster Grids*: CSVs com cabeçalho `# Origin:` são tratados como grades de solo.
+
+---
+
+## 4. Análise Temporal (Painel "Fourth Dimension")
+
+Este painel gerencia a dimensão temporal e a resiliência do território.
+
+### Linha do Tempo (Trajectory)
+*   **Capture State**: Registra o estado atual da simulação como um novo ponto na linha do tempo (T1, T2, etc.).
+*   **Lista de Fatias**: Clique em qualquer item (TimeSlice) para ver seus metadados.
+*   **View (Ghost Mode)**: Ao selecionar um estado passado e clicar neste botão, o sistema projeta visualmente aquele estado sobre o terreno 3D atual.
+    *   *Visualização*: O modo Ghost exibe as mudanças de cobertura vegetal. Áreas desmatadas aparecem em **Marrom (Solo)** e áreas íntegras em **Verde**.
+    *   *Sair*: Clique em "Exit Ghost Mode" para restaurar a visualização normal.
+
+### Ferramentas de Simulação (Simulation Tools)
+Gera cenários hipotéticos baseados em modelos científicos:
+*   **Simulate: Stability**: Calcula índices de estabilidade estrutural baseados em coerência espacial.
+*   **Simulate: Fragmentation**: Simula a fragmentação progressiva de habitats e desconexão de patches.
+*   **Simulate: Deforestation**: Gera um cenário de impacto massivo (-1 Soil). Útil para testar a resiliência do sistema e visualização de contraste.
+
+---
+
+## 5. Assistência Cognitiva e IA (Painel "Discursive System")
+
+O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como um "Copiloto Científico".
+
+*   **Contexto Discursivo**: Analisa as métricas da simulação atual e gera um parágrafo interpretativo.
+*   **Trajectory Impact Profile**: Analisa todo o histórico de mudanças (Trajetória Completa) para gerar um relatório de impacto ambiental, identificando tendências de degradação ou recuperação.
+*   **Configuração**: O sistema detecta automaticamente o modelo mais forte disponível (ex: `qwen2.5:14b`).
+
+---
+
+## 6. Ferramentas Científicas Específicas
+
+### Hidrologia (Analyze Drainage)
+*   Calcula o fluxo de acumulação de água baseado na topografia.
+*   Exibe estatísticas como acumulação máxima e contagem de células de "rio".
+*   Visualiza a rede de drenagem sobre o terreno.
+
+### Análise de Patches (Patch Analysis)
+*   Identifica manchas (patches) de vegetação conectada.
+*   Calcula métricas de paisagem: Área Total, Área Média, Índice de Forma.
+*   Permite selecionar ("picar") um patch específico no 3D para ver seus dados individuais.
