@@ -125,11 +125,23 @@ O SisterSTRATA reconhece que a paisagem não é qualificada apenas por fenômeno
 
 ---
 
-## 5. INTERFACE COGNITIVA E GOVERNANÇA DE DADOS
+### 6.4. Trajectory Impact Profile (Perfil de Impacto de Trajetória)
+
+**Definição:** Conjunto de deformações observáveis de uma trajetória em relação a uma referência explícita.
+**Natureza:** Observacional / Read-Only.
+**Princípio:** Impacto não é um valor absoluto (bom/ruim), mas um padrão de desvio geométrico e temporal (persistência, volatilidade, fragmentação).
+**Contrato:**
+- Impacto é sempre relativo a uma Referência (Baseline ou Potencial).
+- Nenhuma métrica isolada define impacto.
+- Nenhuma decisão é embutida no modelo.
+
+---
+
+## 7. INTEGRAÇÃO E COERÊNCIA SINTÉTICA (O Papel da IA)
 
 A Ponte Cognitiva (v2.0) integra Modelos de Linguagem de Grande Porte (LLMs) como uma camada de **Hermenêutica Científica**, permitindo o diálogo entre a simulação biofísica e o contexto humano.
 
-### 5.1. Memória Epistêmica
+### 7.1. Memória Epistêmica
 Diferente das simulações físicas, que são determinísticas, a análise cognitiva produz artefatos interpretativos que devem ser preservados.
 - **Snapshot Cognitivo:** Cada análise gerada pela IA é registrada como um artefato imutável contendo o prompt original, a resposta do modelo e o timestamp.
 - **Socio-Ecological Traceability:** Permite rastrear como as interpretações do sistema mudaram ao longo do tempo ou conforme novos dados narrativos foram ingeridos.

@@ -30,6 +30,7 @@ public:
             ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 80.0f);
             ImGui::TableHeadersRow();
 
+            bool triggerOpen = false;
             for (int i = 0; i < snapshots.size(); ++i) {
                 const auto& snap = snapshots[i];
                 ImGui::TableNextRow();
@@ -48,14 +49,21 @@ public:
                 if (ImGui::Button("View")) {
                     selectedIndex = i;
                     showDetailModal = true;
-                    ImGui::OpenPopup("HistoryDetailModal");
+                    triggerOpen = true;
+                    // Defer OpenPopup to avoid ID stack mismatch
                 }
                 ImGui::PopID();
             }
             ImGui::EndTable();
+
+            if (triggerOpen) {
+                ImGui::OpenPopup("HistoryDetailModal");
+            }
         }
 
-        // Modal
+
+        // Modal logic continues below
+
         if (showDetailModal && selectedIndex >= 0 && selectedIndex < snapshots.size()) {
             // Ensure Popup is open (must be called in the same scope context as checking condition if outside loop, but here we triggered it inside)
             // Actually, OpenPopup works across frames, so we need to BeginPopupModal here.

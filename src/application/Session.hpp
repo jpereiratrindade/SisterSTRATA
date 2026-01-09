@@ -17,6 +17,7 @@
 #include "src/observational/interpretation/aggregates/InterpretationRepository.hpp"
 #include "src/observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp"
 #include "src/application/mappers/ImpactProfileMapper.hpp"
+#include "world3d/World3D.hpp"
 #include <memory>
 #include <vector>
 
@@ -261,6 +262,9 @@ public:
         if (!world) {
             workspace_->createWorld("Simulation Environment", 100, 100);
             world = workspace_->getWorld().get();
+            
+            // Fix: Create physical mesh for visualization (Ghost Mode requires vertices)
+            World3D::generateTerrain("simulation_mesh.obj", 100, 100, 2.0f, 0, true);
         }
 
         if (!world) return; // Should not happen
@@ -292,7 +296,9 @@ public:
             std::vector<int> fragmented(size);
             for(int y=0; y<h; ++y) {
                 for(int x=0; x<w; ++x) {
-                    fragmented[y*w + x] = ((x/10 + y/10) % 2 == 0) ? 1 : 0;
+                    // Use -1 (Soil) for non-forest to make it visually distinct (Brown cs Dark Green)
+                    // 0 is Campestre (Light Green), which looks too similar to Forest (Dark Green)
+                    fragmented[y*w + x] = ((x/10 + y/10) % 2 == 0) ? 1 : -1;
                 }
             }
             addSlice(2, fragmented, "Simulated Fragmentation");
