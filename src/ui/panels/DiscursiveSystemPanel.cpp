@@ -102,7 +102,7 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::TextColored(ImVec4(0.4f, 1.0f, 1.0f, 1.0f), "SYSTEM INGESTION (DSC)");
     ImGui::SameLine(ImGui::GetWindowWidth() - 280);
     
-    if (ImGui::Button(aiRequestPending_ ? "Waiting for Qwen..." : "Ask Qwen to Propose System", ImVec2(240, 0))) {
+    if (ImGui::Button(aiRequestPending_ ? "Waiting..." : "Ask Qwen to Propose System", ImVec2(240, 60))) {
         auto narratives = session_->getNarrativeHistoryDTO();
         if (!narratives.empty()) {
             try {
@@ -135,11 +135,48 @@ void DiscursiveSystemPanel::drawIngestionForm() {
             ImGui::OpenPopup("NarrativesEmptyError");
         }
     }
+
+    ImGui::SameLine();
+    if (ImGui::Button(aiRequestPending_ ? "Waiting..." : "Evaluate Logical Coherence", ImVec2(240, 60))) {
+        auto systems = session_->getDiscursiveSystemDTOs();
+        if (!systems.empty()) {
+            try {
+                aiRequestPending_ = true;
+                auto bundle = Application::Mappers::Cognitive::createBundle("system_evaluation", {}, systems);
+                
+                // Inject Analytical Profile for context
+                bundle.trajectoryImpactProfile = session_->generateImpactProfileText();
+
+                session_->requestAIInterpretation(bundle, 
+                    Application::Services::Cognitive::InterpretationMode::CoherenceCheck,
+                    [this](const auto& snapshot) {
+                        std::lock_guard<std::mutex> lock(aiMutex_);
+                        stagedAiSnapshot_ = snapshot;
+                        showAiModal_ = true;
+                        aiRequestPending_ = false;
+                        aiResultReady_ = true;
+                    });
+            } catch (...) {
+                aiRequestPending_ = false;
+                ImGui::OpenPopup("AIAnalysisError");
+            }
+        } else {
+            ImGui::OpenPopup("SystemsEmptyError");
+        }
+    }
     
     if (ImGui::BeginPopupModal("NarrativesEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Narratives Found");
-        ImGui::Text("The AI needs at least one Narrative Observation to propose a system.");
-        ImGui::Text("Please register an observation in the 'Narrative' panel first.");
+        ImGui::Text("The 'Propose System' tool needs Narrative Observations to generate a structured system.");
+        ImGui::Text("Alternatively, use 'Evaluate Coherence' if you already have systems registered.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal("SystemsEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Systems Found");
+        ImGui::Text("To evaluate coherence, you need at least one Discursive System registered.");
+        ImGui::Text("Please load an example or add a system manually first.");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
