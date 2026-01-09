@@ -125,15 +125,18 @@ private:
     vk::DescriptorPool descriptorPool_;
     std::vector<vk::DescriptorSet> descriptorSets_;
 
+    void createSyncObjects();
+
     // Sync objects
     std::vector<vk::Semaphore> imageAvailableSemaphores_;
     std::vector<vk::Semaphore> renderFinishedSemaphores_;
     std::vector<vk::Fence> inFlightFences_;
+    std::vector<vk::Fence> imagesInFlight_; // Maps image index to the fence currently using it
     
     uint32_t currentFrame_ = 0;
     uint32_t imageIndex_ = 0;
     bool vsyncEnabled_ = true;
-    static constexpr int MAX_FRAMES_IN_FLIGHT = 3;
+    static constexpr int MAX_FRAMES_IN_FLIGHT = 2; // Reduced back to 2 for better stability on strict drivers
 
     std::string pendingScreenshotPath_;
     std::unique_ptr<Buffer> screenshotBuffer_;

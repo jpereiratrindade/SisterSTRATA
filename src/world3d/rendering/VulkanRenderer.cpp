@@ -130,6 +130,7 @@ void VulkanRenderer::createSyncObjects() {
     imageAvailableSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences_.resize(MAX_FRAMES_IN_FLIGHT);
+    imagesInFlight_.assign(swapchain_->getImageCount(), nullptr);
 
     vk::SemaphoreCreateInfo semaphoreInfo;
     vk::FenceCreateInfo fenceInfo(vk::FenceCreateFlagBits::eSignaled);
@@ -143,6 +144,8 @@ void VulkanRenderer::createSyncObjects() {
 
 void VulkanRenderer::beginFrame(const Camera& camera) {
     auto device = context_->getDevice();
+    
+    // Wait for the frame to be available
     (void)device.waitForFences(1, &inFlightFences_[currentFrame_], VK_TRUE, UINT64_MAX);
 
     try {
@@ -151,6 +154,13 @@ void VulkanRenderer::beginFrame(const Camera& camera) {
     } catch (const vk::OutOfDateKHRError&) {
         throw std::runtime_error("Swapchain out of date!");
     }
+
+    // Check if a previous frame is using this image (there is its fence to wait on)
+    if (imagesInFlight_[imageIndex_]) {
+        (void)device.waitForFences(1, &imagesInFlight_[imageIndex_], VK_TRUE, UINT64_MAX);
+    }
+    // Mark the image as now being in use by this frame
+    imagesInFlight_[imageIndex_] = inFlightFences_[currentFrame_];
     
     updateUniformBuffer(currentFrame_, camera);
 
@@ -502,6 +512,8 @@ void VulkanRenderer::recreateSwapchain() {
         device.destroyFramebuffer(framebuffer);
     }
     createFramebuffers();
+
+    imagesInFlight_.assign(swapchain_->getImageCount(), nullptr);
 }
 
 } // namespace World3D::Rendering

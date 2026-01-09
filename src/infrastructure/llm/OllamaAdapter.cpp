@@ -58,6 +58,7 @@ void OllamaAdapter::requestCompletion(const std::vector<Application::Ports::LLMM
 
 bool OllamaAdapter::isAvailable() const {
     httplib::Client cli(baseUrl_);
+    cli.set_connection_timeout(2);
     if (auto res = cli.Get("/api/tags")) {
         if (res->status == 200) {
             try {
@@ -104,7 +105,8 @@ void OllamaAdapter::processRequests() {
 
         // Execute HTTP Request
         httplib::Client cli(baseUrl_);
-        cli.set_read_timeout(120); // LLMs can be slow (14b requires more time)
+        cli.set_connection_timeout(5); // 5 seconds to connect
+        cli.set_read_timeout(180);    // Increased to 180s for 14b model on busy test machines
 
         std::cout << "[Infrastructure] Sending request to Ollama (" << modelName_ << ")..." << std::endl;
 

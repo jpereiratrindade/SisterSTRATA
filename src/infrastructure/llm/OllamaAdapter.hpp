@@ -41,7 +41,7 @@ private:
 
     void processRequests();
     
-    std::string baseUrl_ = "http://localhost:11434";
+    std::string baseUrl_ = "http://127.0.0.1:11434";
     mutable std::string modelName_ = "qwen2.5:7b";
 };
 
