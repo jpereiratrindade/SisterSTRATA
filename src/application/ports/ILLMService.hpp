@@ -53,6 +53,11 @@ public:
      * @brief Synchronously checks if the service is available (e.g., Ollama is running).
      */
     virtual bool isAvailable() const = 0;
+
+    /**
+     * @brief Returns the name of the model being used (e.g., "qwen2.5:7b").
+     */
+    virtual std::string getModelName() const = 0;
 };
 
 } // namespace Application::Ports

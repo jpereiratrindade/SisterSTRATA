@@ -19,6 +19,7 @@ public:
                            Application::Ports::ILLMService::CompletionCallback callback) override;
 
     bool isAvailable() const override { return true; }
+    std::string getModelName() const override { return "Mock Qwen (Static)"; }
 
 private:
     std::thread workerThread_;

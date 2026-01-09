@@ -44,7 +44,7 @@ void Application::init() {
     // LLM Service setup
     auto realLLM = std::make_unique<::Infrastructure::LLM::OllamaAdapter>();
     if (realLLM->isAvailable()) {
-        std::cout << "[Application] Ollama detected. Using Qwen2.5:7b." << std::endl;
+        std::cout << "[Application] Ollama detected. Using " << realLLM->getModelName() << "." << std::endl;
         session_->setLLMService(std::move(realLLM));
     } else {
         std::cout << "[Application] Ollama not found. Falling back to Mock LLM." << std::endl;

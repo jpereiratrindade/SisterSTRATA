@@ -21,6 +21,7 @@ public:
                            Application::Ports::ILLMService::CompletionCallback callback) override;
 
     bool isAvailable() const override;
+    std::string getModelName() const override { return modelName_; }
 
 private:
     struct Request {
