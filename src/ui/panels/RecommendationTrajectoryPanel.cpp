@@ -42,7 +42,8 @@ void RecommendationTrajectoryPanel::draw(bool* open) {
         }
 
         if (ImGui::BeginTabBar("RecommendationTabs")) {
-            if (ImGui::BeginTabItem("Trajectory")) {
+            
+            if (ImGui::BeginTabItem("Trajectory", nullptr, targetTab_ == 0 ? ImGuiTabItemFlags_SetSelected : 0)) {
                 // Check for Deferred AI Results (Thread-safe UI update)
                 {
                     std::lock_guard<std::mutex> lock(aiMutex_);
@@ -62,17 +63,23 @@ void RecommendationTrajectoryPanel::draw(bool* open) {
 
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Registered History")) {
+
+            if (ImGui::BeginTabItem("Snapshots", nullptr, targetTab_ == 1 ? ImGuiTabItemFlags_SetSelected : 0)) {
+                drawSnapshotForm();
+                ImGui::Separator();
                 drawSnapshotList();
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Epistemic Memory")) {
+
+            if (ImGui::BeginTabItem("Epistemic Memory", nullptr, targetTab_ == 2 ? ImGuiTabItemFlags_SetSelected : 0)) {
                 auto snapshots = session_->getInterpretationSnapshots();
                 std::reverse(snapshots.begin(), snapshots.end());
                 UI::Components::InterpretationHistory::Draw(snapshots);
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
+            
+            targetTab_ = -1; // Reset after one frame of "Selection"
         }
     }
     ImGui::End();
@@ -420,6 +427,7 @@ void RecommendationTrajectoryPanel::drawSnapshotList() {
 void RecommendationTrajectoryPanel::loadIntoForm(const Application::DTO::RecommendationSnapshotDTO& dto) {
     isEditing_ = true;
     editingId_ = dto.id;
+    targetTab_ = 1; // Switch to Snapshots tab for editing
 
     strncpy(inputSnapshotId_, dto.id.c_str(), sizeof(inputSnapshotId_) - 1);
     strncpy(inputRecommendationText_, dto.recommendationText.c_str(), sizeof(inputRecommendationText_) - 1);

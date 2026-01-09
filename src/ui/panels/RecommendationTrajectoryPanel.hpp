@@ -59,6 +59,7 @@ private:
     // Edit State
     bool isEditing_ = false;
     std::string editingId_;
+    int targetTab_ = -1;
 
     // -- AI Analysis State --
     bool showAiModal_ = false;

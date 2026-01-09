@@ -42,8 +42,8 @@ void DiscursiveSystemPanel::draw(bool* open) {
         }
 
         if (ImGui::BeginTabBar("DiscursiveTabs")) {
-
-            if (ImGui::BeginTabItem("Ingestion")) {
+            
+            if (ImGui::BeginTabItem("Ingestion", nullptr, targetTab_ == 0 ? ImGuiTabItemFlags_SetSelected : 0)) {
                 // Check for Deferred AI Results (Thread-safe UI update) inside the tab scope
                 {
                     std::lock_guard<std::mutex> lock(aiMutex_);
@@ -61,10 +61,8 @@ void DiscursiveSystemPanel::draw(bool* open) {
                 }
 
                 drawIngestionForm();
-                ImGui::Separator();
-                drawSystemList();
-
-                // AI Modal Rendering
+                
+                // AI Result Modal (Matches the ID used in OpenPopup inside tab)
                 UI::Components::InterpretationModal::Draw("AI Discursive Proposal", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
                     session_->saveInterpretationSnapshotDTO(snap);
                 });
@@ -81,23 +79,20 @@ void DiscursiveSystemPanel::draw(bool* open) {
 
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Registered Systems")) {
+            if (ImGui::BeginTabItem("Registered History", nullptr, targetTab_ == 1 ? ImGuiTabItemFlags_SetSelected : 0)) {
                 drawSystemList();
                 ImGui::EndTabItem();
             }
 
-            if (ImGui::BeginTabItem("Epistemic Memory")) {
-                // Fetch snapshots from session
+            if (ImGui::BeginTabItem("Epistemic Memory", nullptr, targetTab_ == 2 ? ImGuiTabItemFlags_SetSelected : 0)) {
                 auto snapshots = session_->getInterpretationSnapshots();
-                
-                // Reverse to show newest first (optional, but good UX)
                 std::reverse(snapshots.begin(), snapshots.end());
-                
                 UI::Components::InterpretationHistory::Draw(snapshots);
                 ImGui::EndTabItem();
             }
-
             ImGui::EndTabBar();
+
+            targetTab_ = -1; // Reset selection
         }
     }
     ImGui::End();
@@ -552,6 +547,7 @@ void DiscursiveSystemPanel::drawSystemList() {
 void DiscursiveSystemPanel::loadIntoForm(const Application::DTO::DiscursiveSystemDTO& dto) {
     isEditing_ = true;
     editingId_ = dto.id;
+    targetTab_ = 0; // Return to Ingestion tab for editing
     
     // Copy ID
     strncpy(inputSystemId_, dto.id.c_str(), sizeof(inputSystemId_) - 1);

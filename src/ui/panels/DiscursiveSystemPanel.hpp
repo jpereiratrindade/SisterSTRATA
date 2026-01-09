@@ -26,6 +26,7 @@ private:
     // Edit State
     bool isEditing_ = false;
     std::string editingId_;
+    int targetTab_ = -1;
 
     // Form state
     char inputSystemId_[64] = "";
