@@ -8,12 +8,12 @@ void HydrologyPanel::draw(bool* open) {
 
     if (ImGui::Begin("Hydrology", open)) {
         if (ImGui::Button("Compute Drainage")) {
-            lastDrainageStats_ = World3D::applyDrainageSimulation();
+            lastDrainageStats_ = Application::Services::World3DService::applyDrainageSimulation();
             hasDrainageStats_ = true;
             if (lastDrainageStats_.message.empty()) {
                 showDrainage_ = true;
                 showWatersheds_ = false;
-                World3D::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
+                Application::Services::World3DService::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
                 statusMessage_.clear();
             } else {
                 statusMessage_ = lastDrainageStats_.message;
@@ -28,24 +28,24 @@ void HydrologyPanel::draw(bool* open) {
 
         if (ImGui::Checkbox("Show Drainage (Flux)", &showDrainage_)) {
             if (showDrainage_) showWatersheds_ = false;
-            World3D::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
+            Application::Services::World3DService::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
         }
         if (showDrainage_) {
             ImGui::Indent();
             if (ImGui::SliderFloat("Viz Threshold", &drainageIntensity_, 0.05f, 1.0f)) {
-                World3D::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
+                Application::Services::World3DService::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
             }
             ImGui::Unindent();
         }
 
         if (ImGui::Checkbox("Show Watersheds (Basins)", &showWatersheds_)) {
             if (showWatersheds_) showDrainage_ = false;
-            World3D::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
+            Application::Services::World3DService::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
         }
         if (showWatersheds_) {
             ImGui::Indent();
             if (ImGui::Checkbox("Show Basin Outlines", &showBasinOutlines_)) {
-                World3D::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
+                Application::Services::World3DService::setDrainageVisualization(showDrainage_, showWatersheds_, showBasinOutlines_, drainageIntensity_);
             }
             ImGui::Unindent();
         }
@@ -71,7 +71,7 @@ void HydrologyPanel::draw(bool* open) {
         ImGui::Text("Hydrology Report");
         ImGui::SliderFloat("Stream Threshold (cells)", &streamThreshold_, 10.0f, 1000.0f, "%.0f");
         if (ImGui::Button("Update Hydrology Stats")) {
-            lastHydrologyStats_ = World3D::getHydrologyStats(streamThreshold_);
+            lastHydrologyStats_ = Application::Services::World3DService::getHydrologyStats(streamThreshold_);
             hasHydrologyStats_ = true;
         }
         ImGui::SameLine();
@@ -85,7 +85,7 @@ void HydrologyPanel::draw(bool* open) {
             basinFileSelector_.Open("basin_boundaries.csv");
         }
         if (ImGui::SliderFloat("Boundary Point Size", &boundaryPointSize_, 1.0f, 12.0f, "%.1f")) {
-            World3D::setPointSize(boundaryPointSize_);
+            Application::Services::World3DService::setPointSize(boundaryPointSize_);
         }
 
         if (hasHydrologyStats_) {
@@ -102,7 +102,7 @@ void HydrologyPanel::draw(bool* open) {
         if (showReportDialog_) {
             std::string path;
             if (reportFileSelector_.draw(&showReportDialog_, path, ".txt", true)) {
-                auto result = World3D::generateHydrologyReport(path, streamThreshold_);
+                auto result = Application::Services::World3DService::generateHydrologyReport(path, streamThreshold_);
                 statusMessage_ = result.second;
                 showReportDialog_ = false;
             }
@@ -111,8 +111,8 @@ void HydrologyPanel::draw(bool* open) {
         if (showBasinDialog_) {
             std::string path;
             if (basinFileSelector_.draw(&showBasinDialog_, path, ".csv", true)) {
-                World3D::setPointSize(boundaryPointSize_);
-                auto result = World3D::exportBasinBoundariesCsv(path);
+                Application::Services::World3DService::setPointSize(boundaryPointSize_);
+                auto result = Application::Services::World3DService::exportBasinBoundariesCsv(path);
                 statusMessage_ = result.second;
                 showBasinDialog_ = false;
             }

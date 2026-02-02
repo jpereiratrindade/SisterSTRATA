@@ -1,7 +1,7 @@
 #pragma once
 #include "imgui.h"
-#include "core/domain/soils/Scorpan.hpp"
-#include "core/domain/soils/SiBCS.hpp"
+#include "application/dtos/SoilDTOs.hpp"
+#include <string>
 
 namespace UI::Panels {
 
@@ -17,9 +17,9 @@ public:
 private:
     
 private:
-    Core::Domain::Soils::ScorpanParams params_;
+    Application::DTO::Soils::ScorpanParamsDTO params_;
     int visualizationLevel_ = 1; // 1=Order, 2=Suborder, 3=GreatGroup
-    Core::Domain::Soils::SiBCSFilter filter_; // New
+    Application::DTO::Soils::SiBCSFilterDTO filter_; // New
     PatchAnalysisPanel* patchAnalysisPanel_ = nullptr;
     float rasterCellSize_ = 1.0f;
     std::string rasterStatus_;

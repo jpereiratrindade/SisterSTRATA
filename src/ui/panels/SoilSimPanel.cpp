@@ -1,8 +1,6 @@
 #include "SoilSimPanel.hpp"
-#include "world3d/World3D.hpp"
-#include "core/domain/soils/SoilSystem.hpp" // Added
-#include "core/domain/soils/SiBCS.hpp" // Added
-#include "core/domain/spatial_pattern/SoilRasterizer.hpp" 
+#include "application/services/World3DService.hpp"
+#include "application/services/SoilAnalysisService.hpp"
 #include "ui/panels/PatchAnalysisPanel.hpp"
 #include <string>
 #include <cstdio>
@@ -32,13 +30,13 @@ void SoilSimPanel::drawScorpan(bool* open) {
                 params_.temperature = 28.0f;
                 params_.ageFactor = 0.85f; // Ensures Latossolos (>0.7)
                 params_.vegetationDensity = 0.9f;
-                params_.parentMaterial = Core::Domain::Soils::ParentMaterialType::Sedimentary;
+                params_.parentMaterial = 1; // Sedimentary
             } else if (currentPreset == 2) { // Young
                 params_.rainfall = 1800.0f;
                 params_.temperature = 22.0f;
                 params_.ageFactor = 0.2f; // Only young soils (Cambissolos, Neossolos)
                 params_.vegetationDensity = 0.4f;
-                params_.parentMaterial = Core::Domain::Soils::ParentMaterialType::Igneous;
+                params_.parentMaterial = 0; // Igneous
             } else if (currentPreset == 3) { // Arid
                 params_.rainfall = 400.0f;
                 params_.temperature = 35.0f;
@@ -69,10 +67,21 @@ void SoilSimPanel::drawScorpan(bool* open) {
 
         // P - Parent Material
         ImGui::Text("Parent Material (P)");
-        const char* items[] = { "Igneous", "Sedimentary", "Metamorphic" };
+        const auto materials = Application::Services::SoilAnalysisService::getParentMaterials();
         static int currentItem = 1; // Sedimentary default
-        if (ImGui::Combo("Material", &currentItem, items, IM_ARRAYSIZE(items))) {
-            params_.parentMaterial = static_cast<Core::Domain::Soils::ParentMaterialType>(currentItem);
+        if (currentItem < 0 || currentItem >= static_cast<int>(materials.size())) currentItem = 1;
+        if (ImGui::Combo(
+                "Material",
+                &currentItem,
+                [](void* data, int idx, const char** out_text) {
+                    auto* items = static_cast<std::vector<Application::DTO::Soils::SoilOptionDTO>*>(data);
+                    if (idx < 0 || idx >= static_cast<int>(items->size())) return false;
+                    *out_text = (*items)[idx].label.c_str();
+                    return true;
+                },
+                (void*)&materials,
+                static_cast<int>(materials.size()))) {
+            params_.parentMaterial = materials[currentItem].code;
         }
     }
     ImGui::End();
@@ -89,7 +98,7 @@ void SoilSimPanel::drawSiBCS(bool* open) {
         
         // Execution Button
         if (ImGui::Button("Update Simulation", ImVec2(-1, 40))) {
-            World3D::applySoilSimulation(params_, visualizationLevel_, filter_);
+            Application::Services::SoilAnalysisService::applySoilSimulation(params_, visualizationLevel_, filter_);
         }
         
         ImGui::Separator();
@@ -111,19 +120,22 @@ void SoilSimPanel::drawSiBCS(bool* open) {
         ImGui::Separator();
         ImGui::Text("Filters (Multi-Select)");
         
+        auto toggleCode = [](std::vector<int>& list, int code, bool isSelected) {
+            if (isSelected) {
+                auto it = std::remove(list.begin(), list.end(), code);
+                list.erase(it, list.end());
+            } else {
+                list.push_back(code);
+            }
+        };
+
         // Filter 1: Orders
         if (ImGui::BeginCombo("Orders", "Select Allowed...")) {
-            for (auto order : Core::Domain::Soils::SiBCSHelper::getAllOrders()) {
-                bool isSelected = false;
-                for (auto allowed : filter_.allowedOrders) if (allowed == order) isSelected = true;
-                
-                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(order).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
-                    if (isSelected) { // Remove
-                        auto it = std::remove(filter_.allowedOrders.begin(), filter_.allowedOrders.end(), order);
-                        filter_.allowedOrders.erase(it, filter_.allowedOrders.end());
-                    } else { // Add
-                        filter_.allowedOrders.push_back(order);
-                    }
+            const auto options = Application::Services::SoilAnalysisService::getOrders();
+            for (const auto& option : options) {
+                bool isSelected = std::find(filter_.allowedOrders.begin(), filter_.allowedOrders.end(), option.code) != filter_.allowedOrders.end();
+                if (ImGui::Selectable(option.label.c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    toggleCode(filter_.allowedOrders, option.code, isSelected);
                 }
             }
             ImGui::EndCombo();
@@ -131,17 +143,11 @@ void SoilSimPanel::drawSiBCS(bool* open) {
 
         // Filter 2: Suborders
         if (ImGui::BeginCombo("Suborders", "Select Allowed...")) {
-            for (auto sub : Core::Domain::Soils::SiBCSHelper::getAllSuborders()) {
-                bool isSelected = false;
-                for (auto allowed : filter_.allowedSuborders) if (allowed == sub) isSelected = true;
-                
-                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(sub).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
-                    if (isSelected) {
-                        auto it = std::remove(filter_.allowedSuborders.begin(), filter_.allowedSuborders.end(), sub);
-                        filter_.allowedSuborders.erase(it, filter_.allowedSuborders.end());
-                    } else {
-                        filter_.allowedSuborders.push_back(sub);
-                    }
+            const auto options = Application::Services::SoilAnalysisService::getSuborders();
+            for (const auto& option : options) {
+                bool isSelected = std::find(filter_.allowedSuborders.begin(), filter_.allowedSuborders.end(), option.code) != filter_.allowedSuborders.end();
+                if (ImGui::Selectable(option.label.c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    toggleCode(filter_.allowedSuborders, option.code, isSelected);
                 }
             }
             ImGui::EndCombo();
@@ -149,17 +155,11 @@ void SoilSimPanel::drawSiBCS(bool* open) {
 
         // Filter 3: Great Groups
         if (ImGui::BeginCombo("Gr. Groups", "Select Allowed...")) {
-            for (auto group : Core::Domain::Soils::SiBCSHelper::getAllGreatGroups()) {
-                bool isSelected = false;
-                for (auto allowed : filter_.allowedGreatGroups) if (allowed == group) isSelected = true;
-                
-                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(group).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
-                    if (isSelected) {
-                        auto it = std::remove(filter_.allowedGreatGroups.begin(), filter_.allowedGreatGroups.end(), group);
-                        filter_.allowedGreatGroups.erase(it, filter_.allowedGreatGroups.end());
-                    } else {
-                        filter_.allowedGreatGroups.push_back(group);
-                    }
+            const auto options = Application::Services::SoilAnalysisService::getGreatGroups();
+            for (const auto& option : options) {
+                bool isSelected = std::find(filter_.allowedGreatGroups.begin(), filter_.allowedGreatGroups.end(), option.code) != filter_.allowedGreatGroups.end();
+                if (ImGui::Selectable(option.label.c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    toggleCode(filter_.allowedGreatGroups, option.code, isSelected);
                 }
             }
             ImGui::EndCombo();
@@ -167,17 +167,11 @@ void SoilSimPanel::drawSiBCS(bool* open) {
 
         // Filter 4: Subgroups
         if (ImGui::BeginCombo("Subgroups", "Select Allowed...")) {
-            for (auto sub : Core::Domain::Soils::SiBCSHelper::getAllSubgroups()) {
-                bool isSelected = false;
-                for (auto allowed : filter_.allowedSubgroups) if (allowed == sub) isSelected = true;
-                
-                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(sub).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
-                    if (isSelected) {
-                        auto it = std::remove(filter_.allowedSubgroups.begin(), filter_.allowedSubgroups.end(), sub);
-                        filter_.allowedSubgroups.erase(it, filter_.allowedSubgroups.end());
-                    } else {
-                        filter_.allowedSubgroups.push_back(sub);
-                    }
+            const auto options = Application::Services::SoilAnalysisService::getSubgroups();
+            for (const auto& option : options) {
+                bool isSelected = std::find(filter_.allowedSubgroups.begin(), filter_.allowedSubgroups.end(), option.code) != filter_.allowedSubgroups.end();
+                if (ImGui::Selectable(option.label.c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    toggleCode(filter_.allowedSubgroups, option.code, isSelected);
                 }
             }
             ImGui::EndCombo();
@@ -185,17 +179,11 @@ void SoilSimPanel::drawSiBCS(bool* open) {
 
         // Filter 5: Families
         if (ImGui::BeginCombo("Families", "Select Allowed...")) {
-            for (auto fam : Core::Domain::Soils::SiBCSHelper::getAllFamilies()) {
-                bool isSelected = false;
-                for (auto allowed : filter_.allowedFamilies) if (allowed == fam) isSelected = true;
-                
-                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(fam).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
-                    if (isSelected) {
-                        auto it = std::remove(filter_.allowedFamilies.begin(), filter_.allowedFamilies.end(), fam);
-                        filter_.allowedFamilies.erase(it, filter_.allowedFamilies.end());
-                    } else {
-                        filter_.allowedFamilies.push_back(fam);
-                    }
+            const auto options = Application::Services::SoilAnalysisService::getFamilies();
+            for (const auto& option : options) {
+                bool isSelected = std::find(filter_.allowedFamilies.begin(), filter_.allowedFamilies.end(), option.code) != filter_.allowedFamilies.end();
+                if (ImGui::Selectable(option.label.c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    toggleCode(filter_.allowedFamilies, option.code, isSelected);
                 }
             }
             ImGui::EndCombo();
@@ -203,17 +191,11 @@ void SoilSimPanel::drawSiBCS(bool* open) {
 
         // Filter 6: Series
         if (ImGui::BeginCombo("Series", "Select Allowed...")) {
-            for (auto ser : Core::Domain::Soils::SiBCSHelper::getAllSeries()) {
-                bool isSelected = false;
-                for (auto allowed : filter_.allowedSeries) if (allowed == ser) isSelected = true;
-                
-                if (ImGui::Selectable(Core::Domain::Soils::SiBCSHelper::getBaseName(ser).c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
-                    if (isSelected) {
-                        auto it = std::remove(filter_.allowedSeries.begin(), filter_.allowedSeries.end(), ser);
-                        filter_.allowedSeries.erase(it, filter_.allowedSeries.end());
-                    } else {
-                        filter_.allowedSeries.push_back(ser);
-                    }
+            const auto options = Application::Services::SoilAnalysisService::getSeries();
+            for (const auto& option : options) {
+                bool isSelected = std::find(filter_.allowedSeries.begin(), filter_.allowedSeries.end(), option.code) != filter_.allowedSeries.end();
+                if (ImGui::Selectable(option.label.c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups)) {
+                    toggleCode(filter_.allowedSeries, option.code, isSelected);
                 }
             }
             ImGui::EndCombo();
@@ -229,7 +211,7 @@ void SoilSimPanel::drawSiBCS(bool* open) {
         }
         ImGui::SameLine();
         if (ImGui::Button("Clear Classification")) {
-            Core::Domain::Soils::SoilSystem::clearLastDetectedClasses();
+            Application::Services::SoilAnalysisService::clearLastDetectedClasses();
         }
 
         ImGui::Spacing();
@@ -238,21 +220,17 @@ void SoilSimPanel::drawSiBCS(bool* open) {
         ImGui::Text("Legend (Colors)");
         ImGui::Spacing();
 
-        // Universal Legend Logic 
-        auto commonSoils = Core::Domain::Soils::SiBCSHelper::getCommonVectors(visualizationLevel_);
         if (ImGui::CollapsingHeader("Legend (Colors)", ImGuiTreeNodeFlags_DefaultOpen)) {
-            // Use ACTUAL detected classes from the system
-            const auto& legendItems = Core::Domain::Soils::SoilSystem::getLastDetectedClasses();
+            const auto legendItems = Application::Services::SoilAnalysisService::getDetectedLegendItems(visualizationLevel_);
 
             if (legendItems.empty()) {
-               ImGui::TextDisabled("(No soils detected matching filters)");
+                ImGui::TextDisabled("(No soils detected matching filters)");
             }
 
             for (const auto& soil : legendItems) {
-                glm::vec3 color = Core::Domain::Soils::SiBCSHelper::getColor(soil, visualizationLevel_);
-                ImGui::ColorButton("##legend", ImVec4(color.r, color.g, color.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(16, 16));
+                ImGui::ColorButton("##legend", ImVec4(soil.r, soil.g, soil.b, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(16, 16));
                 ImGui::SameLine();
-                ImGui::Text("%s", Core::Domain::Soils::SiBCSHelper::getName(soil, visualizationLevel_).c_str());
+                ImGui::Text("%s", soil.label.c_str());
             }
         }
         
@@ -269,42 +247,27 @@ void SoilSimPanel::drawSiBCS(bool* open) {
         if (!patchAnalysisPanel_) {
             rasterStatus_ = "Error: Patch Panel not linked.";
         } else {
-            const auto& vertices = World3D::getVertices();
-            if (vertices.empty()) {
+            auto terrainVertices = Application::Services::World3DService::getTerrainVertices();
+            if (terrainVertices.empty()) {
                 rasterStatus_ = "Error: No Active Terrain.";
             } else {
-                // 1. Calculate Bounds for Relative Elevation (needed for Prediction)
-                float minZ = 1e9f;
-                float maxZ = -1e9f;
-                for (const auto& v : vertices) {
-                    minZ = std::min(minZ, v.pos.z);
-                    maxZ = std::max(maxZ, v.pos.z);
-                }
-                if (maxZ == minZ) maxZ = minZ + 1.0f;
+                // 1. Reconstruct Soil Classifications
+                // Explicitly construct DTO to avoid type mismatch if params_ is Domain object
+                Application::DTO::Soils::ScorpanParamsDTO paramsDTO;
+                paramsDTO.rainfall = params_.rainfall;
+                paramsDTO.temperature = params_.temperature;
+                paramsDTO.vegetationDensity = params_.vegetationDensity;
+                paramsDTO.ageFactor = params_.ageFactor;
+                paramsDTO.parentMaterial = params_.parentMaterial;
 
-                // 2. Reconstruct Soil Classifications
-                std::vector<Core::Domain::Soils::SiBCSClassification> classes;
-                classes.reserve(vertices.size());
-                
-                std::vector<Core::Domain::Soils::SiBCSClassification> uniqueClasses;
+                auto soilResult = Application::Services::SoilAnalysisService::classifyTerrain(terrainVertices, paramsDTO);
 
-                for (const auto& v : vertices) {
-                    float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
-                    float slopeDeg = glm::degrees(std::acos(dot));
-                    float relElev = (v.pos.z - minZ) / (maxZ - minZ);
-                    
-                    // Call Public Predict
-                    auto c = Core::Domain::Soils::SoilSystem::predict(params_, slopeDeg, v.pos.z, relElev);
-                    classes.push_back(c);
-
-                    // Track uniques for legend
-                    bool exists = false;
-                    for(const auto& u : uniqueClasses) if(u == c) { exists = true; break; }
-                    if (!exists) uniqueClasses.push_back(c);
-                }
-
-                // 3. Rasterize
-                auto grid = Core::Domain::SpatialPattern::SoilRasterizer::Rasterize(vertices, classes, (double)rasterCellSize_);
+                // 2. Rasterize
+                auto grid = Application::Services::SoilAnalysisService::rasterize(
+                    terrainVertices,
+                    soilResult.classes,
+                    static_cast<double>(rasterCellSize_)
+                );
                 
                 // 4. Save to Disk (for PatchAnalysisPanel to load)
                 std::string csvPath = "assets/data/soil_raster_" + std::to_string((int)rasterCellSize_) + "m.csv";
@@ -347,7 +310,7 @@ void SoilSimPanel::drawSiBCS(bool* open) {
 
                     // 5. Save Legend
                     std::string legendPath = "assets/data/soil_legend.csv"; 
-                    Core::Domain::SpatialPattern::SoilRasterizer::SaveLegendCsv(legendPath, uniqueClasses);
+                    Application::Services::SoilAnalysisService::saveLegendCsv(legendPath, soilResult.uniqueClasses);
 
                     // 6. Trigger Panel
                     patchAnalysisPanel_->SetInputPath(csvPath);

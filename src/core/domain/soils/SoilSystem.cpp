@@ -9,7 +9,7 @@ namespace Core::Domain::Soils {
 std::vector<SiBCSClassification> SoilSystem::lastDetectedClasses_;
 std::vector<SiBCSClassification> SoilSystem::lastClassMap_;
 
-void SoilSystem::process(std::vector<World3D::Rendering::Vertex>& vertices, const ScorpanParams& params, int visualizationLevel, const SiBCSFilter& filter) {
+void SoilSystem::process(std::vector<Core::ValueObjects::TerrainVertex>& vertices, const ScorpanParams& params, int visualizationLevel, const SiBCSFilter& filter) {
     if (vertices.empty()) return;
 
     std::cout << "[SoilSystem] Running SCORPAN Soil Prediction (Level " << visualizationLevel << ")..." << std::endl;

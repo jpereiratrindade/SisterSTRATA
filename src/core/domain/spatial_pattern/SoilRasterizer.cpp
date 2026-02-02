@@ -8,7 +8,7 @@
 
 namespace Core::Domain::SpatialPattern {
 
-GridData SoilRasterizer::Rasterize(const std::vector<World3D::Rendering::Vertex>& vertices, 
+GridData SoilRasterizer::Rasterize(const std::vector<Core::ValueObjects::TerrainVertex>& vertices, 
                                    const std::vector<Core::Domain::Soils::SiBCSClassification>& classes,
                                    double cellSize) {
     GridData grid;

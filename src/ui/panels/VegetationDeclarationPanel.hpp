@@ -1,9 +1,7 @@
 #pragma once
 
-#include "core/domain/vegetation/VegetationSystemOriginal.hpp"
-#include "core/domain/vegetation/VegetationDeclarationService.hpp"
-#include "core/domain/vegetation/VegetationMappingService.hpp"
-#include "core/domain/vegetation/VegetationType.hpp"
+#include "application/services/VegetationScenarioService.hpp"
+#include "application/dtos/VegetationDTOs.hpp"
 #include <unordered_map>
 #include <string>
 
@@ -25,35 +23,37 @@ public:
     void draw(bool* open);
 
     /**
-     * @brief Gets the underlying vegetation system aggregate.
-     * @return Const reference to VegetationSystemOriginal.
-     */
-    const Core::Domain::Vegetation::VegetationSystemOriginal& getSystem() const { return system_; }
-
-    /**
      * @brief Returns the last global scenario resolution result.
      * @return Pointer to ScenarioResult, or nullptr if outdated.
      */
-    const Core::Domain::Vegetation::VegetationMappingService::ScenarioResult* getLastScenarioResult() const {
-        if (scenarioOutdated_) return nullptr;
-        return &lastScenario_;
+    const Application::DTO::Vegetation::ScenarioResultDTO* getLastScenarioResult() const {
+        return service_.getLastScenarioResult();
     }
 
     /**
      * @brief Gets the last semantic classification map generated.
      * @return Const reference to a vector of semantic codes.
      */
-    const std::vector<int>& getLastSemanticClassification() const { return lastSemanticClassification_; }
+    const std::vector<int>& getLastSemanticClassification() const { return service_.getLastSemanticClassification(); }
 
     /**
      * @brief Checks if the current view is a semantic (vector) classification.
      * @return true if semantic classification is active.
      */
-    bool isSemanticClassificationActive() const { return semanticActive_; }
+    bool isSemanticClassificationActive() const { return service_.isSemanticClassificationActive(); }
+
+    const std::vector<Application::DTO::Vegetation::ScenarioDTO>& getScenarioDTOs() const {
+        return service_.getScenarioDTOs();
+    }
+
+    void saveScenarios(const std::string& path) { service_.saveScenarios(path); }
+    void loadScenarios(const std::string& path) { service_.loadScenarios(path); }
+
+    Application::Services::VegetationScenarioService& getService() { return service_; }
+    const Application::Services::VegetationScenarioService& getService() const { return service_; }
 
 private:
-    Core::Domain::Vegetation::VegetationSystemOriginal system_;
-    Core::Domain::Vegetation::VegetationDeclarationService service_;
+    Application::Services::VegetationScenarioService service_;
 
     // UI State
     char idBuffer_[64] = "Hypothesis_01";
@@ -73,10 +73,6 @@ private:
     
     // Scenario Analysis
     bool scenarioOutdated_ = true;
-    Core::Domain::Vegetation::VegetationMappingService::ScenarioResult lastScenario_;
-
-    bool semanticActive_ = false;
-    std::vector<int> lastSemanticClassification_;
 };
 
 } // namespace UI::Panels

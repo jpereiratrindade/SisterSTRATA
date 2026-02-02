@@ -1,6 +1,7 @@
 #include "PatchAnalysisPanel.hpp"
 #include "imgui.h"
-#include "world3d/World3D.hpp"
+#include "application/services/World3DService.hpp"
+#include "application/services/PatchAnalysisService.hpp"
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -266,7 +267,7 @@ void PatchAnalysisPanel::draw(bool* open) {
     ImGui::Checkbox("Use value as height", &state_.useValueAsHeight);
     ImGui::SliderFloat("Height scale", &state_.heightScale, 0.1f, 10.0f, "%.2f");
     if (ImGui::SliderFloat("Point size", &state_.pointSize, 1.0f, 20.0f, "%.1f")) {
-        World3D::setPointSize(state_.pointSize);
+        Application::Services::World3DService::setPointSize(state_.pointSize);
     }
     
     ImGui::Separator();
@@ -278,7 +279,7 @@ void PatchAnalysisPanel::draw(bool* open) {
     if (ImGui::Button("Load grid to 3D")) {
         state_.error.clear();
         try {
-            auto grid = Core::Domain::SpatialPattern::LoadGridCsv(state_.inputPath.data());
+            auto grid = Application::Services::PatchAnalysisService::loadGridCsv(state_.inputPath.data());
             
             // Try to load elevation companion file immediately
             if (grid.elevation.empty()) {
@@ -288,7 +289,7 @@ void PatchAnalysisPanel::draw(bool* open) {
                 if (pos != std::string::npos) {
                     std::string base = input.substr(0, pos) + "soil_elevation_" + input.substr(pos + target.length());
                     try {
-                        auto elevGrid = Core::Domain::SpatialPattern::LoadGridCsv(base);
+                        auto elevGrid = Application::Services::PatchAnalysisService::loadGridCsv(base);
                         if (elevGrid.width == grid.width && elevGrid.height == grid.height) {
                             grid.elevation = elevGrid.values;
                         }
@@ -392,8 +393,8 @@ void PatchAnalysisPanel::draw(bool* open) {
             if (points.empty()) {
                 throw std::runtime_error("No points to load after filtering.");
             }
-            World3D::setPointSize(state_.pointSize);
-            World3D::loadPointCloud(points, colors, "grid-points");
+            Application::Services::World3DService::setPointSize(state_.pointSize);
+            Application::Services::World3DService::loadPointCloud(points, colors, "grid-points");
             state_.status = "Grid sent to 3D view.";
         } catch (const std::exception& e) {
             state_.error = e.what();
@@ -405,7 +406,7 @@ void PatchAnalysisPanel::draw(bool* open) {
     ImGui::InputText("Snapshot PNG", state_.snapshotPath.data(), state_.snapshotPath.size());
     if (ImGui::Button("Save 3D Snapshot")) {
         state_.error.clear();
-        if (!World3D::requestScreenshot(state_.snapshotPath.data())) {
+        if (!Application::Services::World3DService::requestScreenshot(state_.snapshotPath.data())) {
             state_.error = "Unable to request screenshot.";
         } else {
             state_.status = "Screenshot requested.";
@@ -416,20 +417,20 @@ void PatchAnalysisPanel::draw(bool* open) {
     if (ImGui::Button("Run Patch Analysis")) {
         state_.error.clear();
         state_.status.clear();
-        state_.summary = Core::Domain::SpatialPattern::SummaryMetrics{};
+        state_.summary = Application::DTO::SpatialPattern::SummaryMetrics{};
         state_.lastRunSuccess = false;
-        state_.lastLabels = Core::Domain::SpatialPattern::LabelImage{};
+        state_.lastLabels = Application::DTO::SpatialPattern::LabelImage{};
         try {
-            auto grid = Core::Domain::SpatialPattern::LoadGridCsv(state_.inputPath.data());
+            auto grid = Application::Services::PatchAnalysisService::loadGridCsv(state_.inputPath.data());
             grid.cellWidth = state_.cellWidth;
             grid.cellHeight = state_.cellHeight;
 
-            Core::Domain::SpatialPattern::AnalysisConfig cfg;
+            Application::DTO::SpatialPattern::AnalysisConfig cfg;
             cfg.threshold = state_.threshold;
             cfg.byClass = state_.byClass;
             cfg.keepLabels = state_.exportLabels || state_.showPreview;
 
-            auto result = Core::Domain::SpatialPattern::AnalyzeGrid(grid, cfg);
+            auto result = Application::Services::PatchAnalysisService::analyzeGrid(grid, cfg);
             state_.summary = result.summary;
             state_.lastPatches = result.patches;
             if (cfg.keepLabels) {
@@ -440,13 +441,13 @@ void PatchAnalysisPanel::draw(bool* open) {
                 if (state_.outputCsvPath[0] == '\0') {
                     throw std::runtime_error("Output CSV path is empty.");
                 }
-                Core::Domain::SpatialPattern::WriteCsv(state_.outputCsvPath.data(), result.patches, result.summary, state_.summaryOnly);
+                Application::Services::PatchAnalysisService::writeCsv(state_.outputCsvPath.data(), result.patches, result.summary, state_.summaryOnly);
             }
             if (state_.exportLabels) {
                 if (state_.outputLabelsPath[0] == '\0') {
                     throw std::runtime_error("Label CSV path is empty.");
                 }
-                Core::Domain::SpatialPattern::WriteLabelCsv(state_.outputLabelsPath.data(), result.labelImage);
+                Application::Services::PatchAnalysisService::writeLabelCsv(state_.outputLabelsPath.data(), result.labelImage);
             }
 
             std::ostringstream oss;
@@ -557,9 +558,9 @@ void PatchAnalysisPanel::draw(bool* open) {
 }
 
 void PatchAnalysisPanel::clearResults() {
-    state_.summary = Core::Domain::SpatialPattern::SummaryMetrics{};
+    state_.summary = Application::DTO::SpatialPattern::SummaryMetrics{};
     state_.lastRunSuccess = false;
-    state_.lastLabels = Core::Domain::SpatialPattern::LabelImage{};
+    state_.lastLabels = Application::DTO::SpatialPattern::LabelImage{};
     state_.lastPatches.clear();
     state_.legendEntries.clear();
     state_.legendLoaded = false;
@@ -567,7 +568,7 @@ void PatchAnalysisPanel::clearResults() {
     state_.error.clear();
     
     // Fix: Also clear the 3D visualization
-    World3D::clear();
+    Application::Services::World3DService::clear();
 }
 
 void PatchAnalysisPanel::SetInputPath(const std::string& path) {

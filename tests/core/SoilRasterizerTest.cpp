@@ -4,33 +4,33 @@
 #include <cmath>
 #include "core/domain/spatial_pattern/SoilRasterizer.hpp"
 #include "core/domain/soils/SiBCS.hpp"
-#include "world3d/rendering/Vertex.hpp"
+#include "core/value_objects/TerrainVertex.hpp"
 
 using namespace Core::Domain::SpatialPattern;
 using namespace Core::Domain::Soils;
 
 void test_simple_grid() {
     std::cout << "Running test_simple_grid..." << std::endl;
-    std::vector<World3D::Rendering::Vertex> vertices;
+    std::vector<Core::ValueObjects::TerrainVertex> vertices;
     std::vector<SiBCSClassification> classes;
     
     // V1: (0.5, 0.5) -> Class Latossolo
-    World3D::Rendering::Vertex v1; v1.pos = {0.5f, 0.5f, 0.0f};
+    Core::ValueObjects::TerrainVertex v1; v1.pos = {0.5f, 0.5f, 0.0f};
     SiBCSClassification c1; c1.order = SiBCSOrder::Latossolo;
     vertices.push_back(v1); classes.push_back(c1);
 
     // V2: (1.5, 0.5) -> Class Argissolo
-    World3D::Rendering::Vertex v2; v2.pos = {1.5f, 0.5f, 0.0f};
+    Core::ValueObjects::TerrainVertex v2; v2.pos = {1.5f, 0.5f, 0.0f};
     SiBCSClassification c2; c2.order = SiBCSOrder::Argissolo;
     vertices.push_back(v2); classes.push_back(c2);
 
     // V3: (0.5, 1.5) -> Class Latossolo
-    World3D::Rendering::Vertex v3; v3.pos = {0.5f, 1.5f, 0.0f};
+    Core::ValueObjects::TerrainVertex v3; v3.pos = {0.5f, 1.5f, 0.0f};
     SiBCSClassification c3; c3.order = SiBCSOrder::Latossolo;
     vertices.push_back(v3); classes.push_back(c3);
 
     // V4: (1.5, 1.5) -> Class Argissolo
-    World3D::Rendering::Vertex v4; v4.pos = {1.5f, 1.5f, 0.0f};
+    Core::ValueObjects::TerrainVertex v4; v4.pos = {1.5f, 1.5f, 0.0f};
     SiBCSClassification c4; c4.order = SiBCSOrder::Argissolo;
     vertices.push_back(v4); classes.push_back(c4);
 
@@ -62,16 +62,16 @@ void test_simple_grid() {
 
 void test_irregular_spacing() {
     std::cout << "Running test_irregular_spacing..." << std::endl;
-    std::vector<World3D::Rendering::Vertex> vertices;
+    std::vector<Core::ValueObjects::TerrainVertex> vertices;
     std::vector<SiBCSClassification> classes;
     
     // V1: (0.1, 0.1) -> Latossolo
-    World3D::Rendering::Vertex v1; v1.pos = {0.1f, 0.1f, 0.0f};
+    Core::ValueObjects::TerrainVertex v1; v1.pos = {0.1f, 0.1f, 0.0f};
     SiBCSClassification c1; c1.order = SiBCSOrder::Latossolo;
     vertices.push_back(v1); classes.push_back(c1);
     
     // V2: (0.2, 0.2) -> Argissolo
-    World3D::Rendering::Vertex v2; v2.pos = {0.2f, 0.2f, 0.0f};
+    Core::ValueObjects::TerrainVertex v2; v2.pos = {0.2f, 0.2f, 0.0f};
     SiBCSClassification c2; c2.order = SiBCSOrder::Argissolo;
     vertices.push_back(v2); classes.push_back(c2);
     

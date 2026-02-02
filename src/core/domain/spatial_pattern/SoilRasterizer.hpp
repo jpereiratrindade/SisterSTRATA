@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "world3d/rendering/Vertex.hpp"
+#include "core/value_objects/TerrainVertex.hpp"
 #include "core/domain/spatial_pattern/PatchAnalysis.hpp" // For GridData struct
 #include "core/domain/soils/SiBCS.hpp"
 
@@ -27,7 +27,7 @@ public:
      * @param cellSize The size of each grid cell in world units.
      * @return GridData The resulting grid compatible with PatchAnalysis.
      */
-    static GridData Rasterize(const std::vector<World3D::Rendering::Vertex>& vertices, 
+    static GridData Rasterize(const std::vector<Core::ValueObjects::TerrainVertex>& vertices, 
                               const std::vector<Core::Domain::Soils::SiBCSClassification>& classes,
                               double cellSize);
 

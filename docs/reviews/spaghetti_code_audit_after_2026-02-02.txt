@@ -1,0 +1,33 @@
+Cross-layer include counts:
+ui -> application: 32
+world3d -> core: 23
+ui -> core: 18
+application -> observational: 10
+application -> core: 7
+application -> world3d: 4
+application -> infrastructure: 3
+infrastructure -> application: 3
+world3d -> infrastructure: 2
+application -> ui: 1
+
+Top cross-include hotspots:
+ 9 ui/panels/TimelinePanel.cpp [core:6, application:3]
+ 8 application/Session.hpp [observational:5, core:2, world3d:1]
+ 8 world3d/Engine.hpp [core:6, infrastructure:2]
+ 6 ui/panels/TimelinePanel.hpp [core:3, application:3]
+ 6 world3d/include/world3d/World3D.hpp [core:6]
+ 4 ui/panels/VegetationDeclarationPanel.hpp [core:3, application:1]
+ 3 application/Application.cpp [infrastructure:2, world3d:1]
+ 3 application/mappers/ObservationalMappers.hpp [observational:3]
+ 3 application/services/SoilAnalysisService.hpp [core:3]
+ 3 ui/panels/NarrativePanel.cpp [application:3]
+ 3 ui/panels/NarrativePanel.hpp [application:3]
+ 3 ui/panels/SoilSimPanel.cpp [application:2, core:1]
+ 3 world3d/EngineHydrology.cpp [core:3]
+ 2 application/Application.hpp [infrastructure:1, ui:1]
+ 2 application/services/VegetationAnalysisService.hpp [core:2]
+ 2 application/services/World3DService.hpp [world3d:2]
+ 2 ui/panels/DiscursiveSystemPanel.hpp [application:2]
+ 2 ui/panels/PatchAnalysisPanel.cpp [application:1, core:1]
+ 2 ui/panels/SoilSimPanel.hpp [core:2]
+ 2 ui/panels/TimelinePanelHelpers.cpp [core:1, application:1]

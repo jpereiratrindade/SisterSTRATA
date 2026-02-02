@@ -2,7 +2,7 @@
 
 #include <string>
 #include "ui/components/FileSelector.hpp"
-#include "world3d/World3D.hpp"
+#include "application/services/World3DService.hpp"
 
 namespace UI::Panels {
 
@@ -29,10 +29,10 @@ private:
     float drainageIntensity_ = 0.2f;
     float streamThreshold_ = 100.0f;
 
-    World3D::DrainageStats lastDrainageStats_;
+    Application::Services::World3DService::DrainageStats lastDrainageStats_;
     bool hasDrainageStats_ = false;
 
-    World3D::HydrologyStats lastHydrologyStats_;
+    Application::Services::World3DService::HydrologyStats lastHydrologyStats_;
     bool hasHydrologyStats_ = false;
     std::string statusMessage_;
 };

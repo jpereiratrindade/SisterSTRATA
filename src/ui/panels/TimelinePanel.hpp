@@ -1,14 +1,19 @@
 #pragma once
 
-#include "core/domain/fourth_dimension/Trajectory.hpp"
-#include "core/domain/fourth_dimension/patch_trajectory/PatchTrajectory.hpp"
-#include "core/domain/spatial_pattern/PatchAnalysis.hpp"
 #include "ui/panels/VegetationDeclarationPanel.hpp"
 #include "application/Session.hpp"
 #include "application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
 #include "application/ports/ILLMService.hpp"
 #include <string>
 #include <mutex>
+
+namespace Core::Domain::FourthDimension {
+class Trajectory;
+}
+
+namespace Core::Domain::SpatialPattern {
+struct AnalysisResult;
+}
 
 namespace UI::Panels {
 
@@ -19,7 +24,7 @@ public:
     }
     
     void setDependencies(Core::Domain::FourthDimension::Trajectory* trajectory, 
-                         const VegetationDeclarationPanel* vegPanel,
+                         VegetationDeclarationPanel* vegPanel,
                          Application::Ports::ILLMService* llmService) {
         trajectory_ = trajectory;
         vegPanel_ = vegPanel;
@@ -30,7 +35,7 @@ public:
 
 private:
     Core::Domain::FourthDimension::Trajectory* trajectory_ = nullptr;
-    const VegetationDeclarationPanel* vegPanel_ = nullptr;
+    VegetationDeclarationPanel* vegPanel_ = nullptr;
     Application::Ports::ILLMService* llmService_ = nullptr;
     Application::Session* session_ = nullptr;
     

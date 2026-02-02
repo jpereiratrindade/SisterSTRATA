@@ -1,6 +1,6 @@
 #include "AnalysisPanel.hpp"
 #include "imgui.h"
-#include "world3d/World3D.hpp"
+#include "application/services/World3DService.hpp"
 #include <cstdio> // for snprintf if needed
 
 namespace UI::Panels {
@@ -9,7 +9,7 @@ void AnalysisPanel::draw(bool* open) {
     if (!open || !(*open)) return;
 
     if (ImGui::Begin("Analysis Report", open)) {
-        auto stats = World3D::getSlopeAnalysisStats();
+        auto stats = Application::Services::World3DService::getSlopeAnalysisStats();
         
         if (stats.total > 0) {
             ImGui::Text("Total Vertices: %d", stats.total);
@@ -31,7 +31,7 @@ void AnalysisPanel::draw(bool* open) {
             ImGui::InputText("Filename", reportFilename, IM_ARRAYSIZE(reportFilename));
             
             if (ImGui::Button("Save Report")) {
-                if (World3D::saveReport(reportFilename)) {
+                if (Application::Services::World3DService::saveReport(reportFilename)) {
                     ImGui::OpenPopup("Saved");
                 }
             }

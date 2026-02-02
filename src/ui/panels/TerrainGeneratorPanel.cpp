@@ -4,7 +4,7 @@
  */
 #include "TerrainGeneratorPanel.hpp"
 #include "imgui.h"
-#include "world3d/World3D.hpp"
+#include "application/services/World3DService.hpp"
 #include <filesystem>
 
 namespace UI::Panels {
@@ -43,9 +43,9 @@ void TerrainGeneratorPanel::draw(bool* open) {
 
         ImGui::Separator();
 
-        if (World3D::isTerrainGenerating()) {
-            float progress = World3D::getGenerationProgress();
-            std::string msg = World3D::getGenerationMessage();
+        if (Application::Services::World3DService::isTerrainGenerating()) {
+            float progress = Application::Services::World3DService::getGenerationProgress();
+            std::string msg = Application::Services::World3DService::getGenerationMessage();
             ImGui::ProgressBar(progress, ImVec2(-1, 0), msg.c_str());
             ImGui::TextDisabled("Generating... Please wait.");
         } else {
@@ -58,7 +58,7 @@ void TerrainGeneratorPanel::draw(bool* open) {
                 // Add extension if missing? No, user should specify.
                 
                 // Call Generator
-                World3D::generateTerrain(path, width_, height_, spacing_, selectedType_, autoLoad_);
+                Application::Services::World3DService::generateTerrain(path, width_, height_, spacing_, selectedType_, autoLoad_);
             }
         }
         

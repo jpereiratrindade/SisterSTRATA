@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "world3d/rendering/Vertex.hpp"
+#include "core/value_objects/TerrainVertex.hpp"
 #include "core/domain/soils/Scorpan.hpp"
 #include "core/domain/soils/SiBCS.hpp"
 
@@ -16,7 +16,7 @@ public:
      * @param visualizationLevel The SiBCS level to visualize (1=Order, 2=Suborder, 3=GreatGroup...)
      * @param filter An optional filter to isolate specific soil classes or levels.
      */
-    static void process(std::vector<World3D::Rendering::Vertex>& vertices, const ScorpanParams& params, int visualizationLevel, const SiBCSFilter& filter);
+    static void process(std::vector<Core::ValueObjects::TerrainVertex>& vertices, const ScorpanParams& params, int visualizationLevel, const SiBCSFilter& filter);
     /**
      * @brief Retrieves the list of unique soil classes detected in the last simulation frame.
      * Used for populating the dynamic legend.

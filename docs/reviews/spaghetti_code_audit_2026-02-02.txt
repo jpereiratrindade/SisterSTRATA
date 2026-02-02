@@ -1,0 +1,114 @@
+SisterSTRATA — Analise de sinais de “spaghetti code” (projeto todo)
+Data: 2026-02-02
+
+Escopo
+- Projeto inteiro (src/), com foco em acoplamento entre camadas e hotspots de coesao.
+- Base de referencia: docs/ e arquivos listados abaixo.
+
+Referencia de arquitetura (baseline esperado)
+- Separacao UI ↔ World3D via DTOs e camadas DDD.
+- Fontes no repo: ARCHITECTURE.md; docs/reviews/2025-12-27_v1.0.0_review.md.
+
+Resumo executivo
+- O projeto nao e “spaghetti total”, pois existe arquitetura declarada e alguma separacao.
+- Ha sinais fortes de acoplamento e mistura de responsabilidades entre UI, core e world3d,
+  contrariando a separacao descrita no baseline.
+- O risco principal e o crescimento progressivo de acoplamento (hard-to-change code).
+
+Mapa de dependencias (evidencias por includes cruzados)
+- world3d -> core: 22
+- ui -> core: 21
+- ui -> application: 17
+- ui -> world3d: 12
+- application -> observational: 10
+- application -> infrastructure: 3
+- core -> world3d: 3
+- infrastructure -> application: 3
+- application -> core: 2
+- application -> world3d: 2
+- world3d -> infrastructure: 2
+- application -> ui: 1
+
+Hotspots de acoplamento (arquivos com mais cross-includes)
+- src/ui/panels/TimelinePanel.cpp (9)
+- src/application/Session.hpp (8)
+- src/world3d/Engine.hpp (8)
+- src/world3d/Engine.cpp (6)
+- src/world3d/include/world3d/World3D.hpp (6)
+- src/ui/panels/SoilSimPanel.cpp (4)
+- src/ui/panels/VegetationDeclarationPanel.hpp (4)
+
+Sinais concretos de “spaghetti”
+1) UI chamando diretamente core/world3d (quebra da “DTO membrane”)
+- src/ui/UI.cpp
+- src/ui/panels/SoilSimPanel.cpp
+- src/ui/panels/TimelinePanel.cpp
+- src/ui/menus/MainMenu.cpp
+
+2) Core dependente de rendering (mistura simulacao ↔ visualizacao)
+- src/core/domain/soils/SoilSystem.hpp inclui world3d/rendering/Vertex.hpp
+- src/core/domain/spatial_pattern/SoilRasterizer.hpp inclui world3d/rendering/Vertex.hpp
+- src/core/domain/vegetation/VegetationMappingService.hpp inclui world3d/rendering/Vertex.hpp
+
+3) World3D carregando dominio (Engine 3D com logica cientifica)
+- src/world3d/Engine.cpp inclui headers de src/core/domain/...
+
+4) Arquivos monoliticos (baixo grau de coesao)
+- src/world3d/Engine.cpp (~1575 linhas)
+- src/ui/panels/TimelinePanel.cpp (~659)
+- src/ui/panels/DiscursiveSystemPanel.cpp (~621)
+- src/ui/panels/PatchAnalysisPanel.cpp (~582)
+- src/application/mappers/ObservationalMappers.hpp (~541)
+
+Conclusao tecnica
+- Ha discrepancia entre a arquitetura documentada (separacao por DTOs) e a pratica atual.
+- O acoplamento cruzado e arquivos monoliticos sao sinais tipicos de spaghetti code em crescimento.
+
+Sugestoes minimas de refatoracao (sem tocar no Core Domain cientifico)
+1) Cortar dependencia Core -> World3D
+- Criar VO de dominio (ex.: core/value_objects/TerrainVertex.hpp) e adaptar no world3d.
+- Arquivos alvo:
+  - src/core/domain/soils/SoilSystem.hpp
+  - src/core/domain/spatial_pattern/SoilRasterizer.hpp
+  - src/core/domain/vegetation/VegetationMappingService.hpp
+
+2) Encapsular chamadas diretas da UI na Application layer
+- Criar/use cases no application para intermediar chamada de simulacao/engine.
+- Arquivos alvo:
+  - src/ui/panels/SoilSimPanel.cpp
+  - src/ui/panels/TimelinePanel.cpp
+  - src/ui/menus/MainMenu.cpp
+
+3) Reforcar DTOs no caminho UI ↔ core/world3d
+- UI consome DTOs simples e comandos da camada de aplicacao.
+- Referencias: ARCHITECTURE.md; docs/reviews/2025-12-27_v1.0.0_review.md
+
+4) Dividir monolitos (reduzir complexidade local)
+- world3d/Engine.cpp: separar init, IO/loaders, simulation hooks, render plumbing.
+- ui/panels/TimelinePanel.cpp: separar seccoes de UI, input, e composicao de dados.
+
+Proximos passos sugeridos (se desejar evoluir)
+- Gerar mapa visual de dependencias por camada e arquivo.
+- Planejar refatoracao incremental em PRs pequenos.
+- Definir regras de include por camada (lint simples ou checks no CI).
+
+Notas
+- Esta analise respeita as regras do AGENTS.md: nao altera modelos cientificos e usa docs/ como base.
+- Nenhum dado cientifico foi inventado; referencias estao no repo.
+
+Atualizacao Fase 2 (2026-02-02)
+- DTOs e services para UI -> dominio:
+  - Soil: src/application/dtos/SoilDTOs.hpp + src/application/services/SoilAnalysisService.hpp
+  - Vegetation: src/application/dtos/VegetationDTOs.hpp + src/application/services/VegetationScenarioService.hpp
+  - Spatial Pattern: src/application/dtos/SpatialPatternDTOs.hpp + src/application/services/PatchAnalysisService.hpp
+- UI refatorada para consumir DTOs/services:
+  - src/ui/panels/SoilSimPanel.cpp/.hpp
+  - src/ui/panels/VegetationDeclarationPanel.cpp/.hpp
+  - src/ui/panels/PatchAnalysisPanel.cpp/.hpp
+  - src/ui/panels/TimelinePanel.cpp/.hpp + src/ui/panels/TimelinePanelHelpers.cpp
+- Remocao de includes core nos headers da UI (permanecem apenas em .cpp, por enquanto).
+
+Relatorios de auditoria (antes/depois)
+- docs/reviews/spaghetti_code_audit_baseline_2026-02-02.txt
+- docs/reviews/spaghetti_code_audit_after_2026-02-02.txt
+- docs/reviews/spaghetti_code_audit_delta_2026-02-02.txt

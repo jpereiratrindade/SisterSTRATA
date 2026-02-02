@@ -1,0 +1,35 @@
+Cross-layer include counts:
+world3d -> core: 22
+ui -> core: 21
+ui -> application: 17
+ui -> world3d: 12
+application -> observational: 10
+application -> infrastructure: 3
+core -> world3d: 3
+infrastructure -> application: 3
+application -> core: 2
+application -> world3d: 2
+world3d -> infrastructure: 2
+application -> ui: 1
+
+Top cross-include hotspots:
+ 9 ui/panels/TimelinePanel.cpp [core:6, application:2, world3d:1]
+ 8 application/Session.hpp [observational:5, core:2, world3d:1]
+ 8 world3d/Engine.hpp [core:6, infrastructure:2]
+ 6 ui/panels/TimelinePanel.hpp [core:3, application:3]
+ 6 world3d/Engine.cpp [core:6]
+ 6 world3d/include/world3d/World3D.hpp [core:6]
+ 4 ui/panels/SoilSimPanel.cpp [core:3, world3d:1]
+ 4 ui/panels/VegetationDeclarationPanel.hpp [core:4]
+ 3 application/Application.cpp [infrastructure:2, world3d:1]
+ 3 application/mappers/ObservationalMappers.hpp [observational:3]
+ 3 ui/panels/NarrativePanel.cpp [application:2, world3d:1]
+ 3 ui/panels/NarrativePanel.hpp [application:3]
+ 2 application/Application.hpp [infrastructure:1, ui:1]
+ 2 ui/panels/DiscursiveSystemPanel.hpp [application:2]
+ 2 ui/panels/PatchAnalysisPanel.cpp [world3d:1, core:1]
+ 2 ui/panels/SoilSimPanel.hpp [core:2]
+ 2 ui/panels/VegetationDeclarationPanel.cpp [core:1, world3d:1]
+ 1 application/mappers/ImpactProfileMapper.hpp [observational:1]
+ 1 application/mappers/InterpretationMapper.hpp [observational:1]
+ 1 core/domain/soils/SoilSystem.hpp [world3d:1]

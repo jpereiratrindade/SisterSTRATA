@@ -1,7 +1,8 @@
 #pragma once
 
 #include "core/domain/vegetation/VegetationOriginal.hpp"
-#include "world3d/rendering/Vertex.hpp"
+#include "core/domain/vegetation/EcologicalScenario.hpp"
+#include "core/value_objects/TerrainVertex.hpp"
 #include <vector>
 #include <cmath>
 #include <algorithm> // For std::clamp
@@ -41,7 +42,7 @@ public:
      */
     static MappingResult calculatePotentialCoverage(
         const VegetationOriginal& hypothesis,
-        const std::vector<World3D::Rendering::Vertex>& vertices,
+        const std::vector<Core::ValueObjects::TerrainVertex>& vertices,
         const Core::Domain::Hydro::HydroGrid& hydro,
         float gridSpacing
     ) {
@@ -149,7 +150,7 @@ public:
         std::vector<ScenarioStats> stats;
     };
 
-    static std::vector<float> calculateDrainageMap(const std::vector<World3D::Rendering::Vertex>& vertices, const Core::Domain::Hydro::HydroGrid& hydro) {
+    static std::vector<float> calculateDrainageMap(const std::vector<Core::ValueObjects::TerrainVertex>& vertices, const Core::Domain::Hydro::HydroGrid& hydro) {
          if (!hydro.isValid() || hydro.flowAccumulationCells.size() != vertices.size()) return {};
          
          const int STREAM_THRESHOLD = 500;
@@ -208,7 +209,7 @@ public:
      */
     static ScenarioResult calculateScenario(
         const std::vector<EcologicalScenario>& scenarios,
-        const std::vector<World3D::Rendering::Vertex>& vertices,
+        const std::vector<Core::ValueObjects::TerrainVertex>& vertices,
         const Core::Domain::Hydro::HydroGrid& hydro,
         float gridSpacing
     ) {
@@ -279,7 +280,7 @@ public:
      */
     static std::vector<int> resolveScenarioToCodes(
         const EcologicalScenario& scenario,
-        const std::vector<World3D::Rendering::Vertex>& vertices,
+        const std::vector<Core::ValueObjects::TerrainVertex>& vertices,
         const Core::Domain::Hydro::HydroGrid& hydro,
         float gridSpacing
     ) {

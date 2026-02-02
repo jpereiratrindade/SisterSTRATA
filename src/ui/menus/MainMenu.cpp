@@ -1,8 +1,8 @@
 #include "MainMenu.hpp"
 #include "imgui.h"
-#include "world3d/World3D.hpp" // For direct actions like ApplySlopeAnalysis if needed, or better, delegate? 
+#include "application/services/World3DService.hpp" // For direct actions like ApplySlopeAnalysis if needed, or better, delegate? 
 #include <filesystem>
-// Original code called World3D::applySlopeAnalysis direct from menu. keeping specific logic here.
+// Original code called Application::Services::World3DService::applySlopeAnalysis direct from menu. keeping specific logic here.
 
 namespace UI::Menus {
 
@@ -14,17 +14,17 @@ void MainMenu::draw() {
                 openFileSelector.Open(lastOpenPath);
             }
             if (ImGui::MenuItem("Save", "Ctrl+S")) {
-                 if (World3D::getCurrentFilePath().empty()) {
+                 if (Application::Services::World3DService::getCurrentFilePath().empty()) {
                      showSaveAsDialog = true;
                      saveFileSelector.Open(lastSavePath.empty() ? "assets/data/" : lastSavePath);
                  } else {
-                     if (onSaveFile) onSaveFile(World3D::getCurrentFilePath());
+                     if (onSaveFile) onSaveFile(Application::Services::World3DService::getCurrentFilePath());
                  }
             }
             if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) {
                 if (showSaveAsDialog) { // If already flagged
                 } else {
-                     std::string current = World3D::getCurrentFilePath();
+                     std::string current = Application::Services::World3DService::getCurrentFilePath();
                      showSaveAsDialog = true;
                      saveFileSelector.Open(current.empty() ? "assets/data/" : current);
                 }
@@ -46,7 +46,7 @@ void MainMenu::draw() {
             ImGui::MenuItem("Welcome Panel", nullptr, &showWelcome);
             ImGui::Separator();
             if (ImGui::MenuItem("Reset Visualization (Original Colors)")) {
-                 World3D::resetVisualization();
+                 Application::Services::World3DService::resetVisualization();
             }
             ImGui::EndMenu();
         }
@@ -56,7 +56,7 @@ void MainMenu::draw() {
                 showSettings = true;
             }
             if (ImGui::MenuItem("Analyze Slope")) {
-                World3D::applySlopeAnalysis(); // Call logic directly as before
+                Application::Services::World3DService::applySlopeAnalysis(); // Call logic directly as before
                 showAnalysisReport = true;
             }
             if (ImGui::MenuItem("Hydrology Inspector")) {

@@ -1,5 +1,16 @@
 # Changelog
 
+## [v1.9.4] - 2026-02-02
+### Added
+- **DTO Boundary Reinforcement**: Added DTOs and application services for Soil, Vegetation, and Spatial Pattern UI flows.
+- **Domain Vertex VO**: Introduced `TerrainVertex` with World3D adapters to reduce core/rendering coupling.
+- **Engine Module Split**: Extracted soil and hydrology logic into `EngineSoil.cpp` and `EngineHydrology.cpp`.
+- **Audit Tooling**: Added `scripts/spaghetti_audit.py` and audit reports for before/after metrics.
+
+### Changed
+- **UI Decoupling**: Soil, Vegetation, Patch Analysis, and Timeline panels now consume application services and DTOs.
+- **Timeline Helpers**: Moved helper logic to `TimelinePanelHelpers.cpp` for smaller units.
+
 ## [v1.9.3] - 2026-01-09
 ### Added
 - **Trajectory Impact Profile**: Implemented `TrajectoryImpactAnalyzer` service to generate comprehensive impact reports based on simulation trajectories.

@@ -1,5 +1,4 @@
 #include "ui/UI.hpp"
-#include "world3d/World3D.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_vulkan.h"

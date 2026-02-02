@@ -9,7 +9,7 @@
 #include <map>
 #include <cstring>
 #include <filesystem>
-#include "world3d/World3D.hpp" // Trusted include path
+#include "application/services/World3DService.hpp" // Trusted include path
 
 // Map Enums to Strings for UI
 static const char* SOURCE_TYPES[] = { 
@@ -66,7 +66,7 @@ void NarrativePanel::draw(bool* open) {
                 ImGuiIO& io = ImGui::GetIO();
                 
                 // Call World3D Pick
-                int patchId = World3D::getPickIndex(mousePos.x, mousePos.y, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+                int patchId = Application::Services::World3DService::getPickIndex(mousePos.x, mousePos.y, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
                 
                 if (patchId > 0) { // Assuming 0 is invalid/background
                     Application::DTO::SpatialScopeDTO scope;

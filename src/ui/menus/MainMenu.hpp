@@ -2,7 +2,7 @@
 #include <functional>
 #include <string>
 #include "ui/components/FileSelector.hpp"
-#include "world3d/World3D.hpp" // For DrainageStats
+#include "application/services/World3DService.hpp" // For DrainageStats
 
 namespace UI::Menus {
 

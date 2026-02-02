@@ -8,7 +8,7 @@
 #include "core/domain/vegetation/VegetationType.hpp"
 #include "core/domain/fourth_dimension/TrajectoryService.hpp"
 #include "core/domain/fourth_dimension/Trajectory.hpp"
-#include "world3d/rendering/Vertex.hpp"
+#include "core/value_objects/TerrainVertex.hpp"
 
 using namespace Core::Domain::Vegetation;
 using namespace Core::Domain::FourthDimension;
@@ -73,14 +73,14 @@ void testScenarioResolution() {
     scenario.addComponent(VegetationOriginal(HypothesisID("Test_Vector"), VegetationType(VegetationCode::FlorestalNatural), cond2));
 
     // Setup mock vertices
-    std::vector<World3D::Rendering::Vertex> vertices;
+    std::vector<Core::ValueObjects::TerrainVertex> vertices;
     // Vertex 0: Flat (Up normal)
-    World3D::Rendering::Vertex v0;
+    Core::ValueObjects::TerrainVertex v0;
     v0.normal = glm::vec3(0,0,1); // 0 degrees
     vertices.push_back(v0);
     
     // Vertex 1: Sloped
-    World3D::Rendering::Vertex v1;
+    Core::ValueObjects::TerrainVertex v1;
     v1.normal = glm::vec3(0, 0.25f, 0.968f); // ~14.5 degrees
     vertices.push_back(v1);
 

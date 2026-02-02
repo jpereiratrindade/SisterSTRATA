@@ -4,6 +4,8 @@ find_package(SDL2 REQUIRED)
 add_library(world3d
     World3D.cpp
     Engine.cpp
+    EngineSoil.cpp
+    EngineHydrology.cpp
     rendering/VulkanContext.cpp
     rendering/Swapchain.cpp
     rendering/VulkanRenderer.cpp

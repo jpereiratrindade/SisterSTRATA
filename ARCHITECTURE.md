@@ -39,3 +39,27 @@ While robust, to reach a "General Purpose Commercial Engine" level, the followin
 
 ## Conclusion
 For a **Scientific Visualization Tool**, this architecture is **Excellent**. It prioritizes stability, data throughput, and UI responsiveness, avoiding the bloat of generic game engines.
+
+## 2026-02 Structural Reinforcement (Spaghetti Reduction)
+To align the codebase with the documented DTO boundaries and reduce cross-layer coupling, the following structural reinforcements were introduced:
+
+### 1) Domain Vertex Value Object
+*   Introduced `Core::ValueObjects::TerrainVertex` to keep domain logic independent from rendering types.
+*   Added adapters in `src/world3d/adapters/TerrainVertexAdapter.hpp` to map between rendering and domain vertices.
+
+### 2) Application Services as UI Boundary
+*   Introduced application services to serve as the boundary between UI and World3D/Core:
+    * `World3DService` (UI -> World3D facade)
+    * `SoilAnalysisService` + `SoilDTOs` (UI -> Soil domain)
+    * `VegetationScenarioService` + `VegetationDTOs` (UI -> Vegetation domain)
+    * `PatchAnalysisService` + `SpatialPatternDTOs` (UI -> Spatial Pattern domain)
+
+### 3) Monolith Split
+*   Split `Engine.cpp` into smaller modules:
+    * `EngineSoil.cpp`
+    * `EngineHydrology.cpp`
+*   Split `TimelinePanel` helpers into `TimelinePanelHelpers.cpp`.
+
+### 4) Current State
+*   UI headers no longer include core domain headers for Soil/Vegetation/PatchAnalysis panels.
+*   Remaining core usage in UI is concentrated in `.cpp` files (behavioral glue), to be refactored into services next.

@@ -6,9 +6,8 @@
 #include "core/domain/fourth_dimension/CoherenceIntensityService.hpp"
 #include "core/domain/fourth_dimension/patch_trajectory/PatchTrajectoryService.hpp"
 #include "core/domain/fourth_dimension/TrajectoryPersistenceService.hpp"
-#include "core/domain/vegetation/VegetationPersistenceService.hpp"
 #include "core/domain/spatial_pattern/PatchAnalysis.hpp"
-#include "world3d/World3D.hpp"
+#include "application/services/World3DService.hpp"
 #include "imgui.h"
 #include <fstream>
 #include <ctime>
@@ -50,13 +49,13 @@ void TimelinePanel::draw(bool* open) {
         ImVec2 mousePos = ImGui::GetMousePos();
         ImVec2 vpSize = ImGui::GetMainViewport()->Size;
         
-        int vertexIdx = World3D::getPickIndex(mousePos.x, mousePos.y, (int)vpSize.x, (int)vpSize.y);
+        int vertexIdx = Application::Services::World3DService::getPickIndex(mousePos.x, mousePos.y, (int)vpSize.x, (int)vpSize.y);
         if (vertexIdx != -1 && !lastPatchAnalysis_.labelImage.labels.empty()) {
             if (vertexIdx < (int)lastPatchAnalysis_.labelImage.labels.size()) {
                 int patchId = lastPatchAnalysis_.labelImage.labels[vertexIdx];
                 if (patchId > 0) {
                     selectedPatchId_ = patchId;
-                    World3D::highlightPatch(lastPatchAnalysis_.labelImage.labels, patchId);
+                    Application::Services::World3DService::highlightPatch(lastPatchAnalysis_.labelImage.labels, patchId);
                 }
             }
         }
@@ -81,10 +80,9 @@ void TimelinePanel::draw(bool* open) {
             if (res && !res->classification.empty()) {
                 std::string meta = "State " + std::to_string(trajectory_->getNextOrdinal());
                 std::vector<bool> waterMask; 
-                Core::Domain::FourthDimension::TrajectoryService::captureState(
+                vegPanel_->getService().captureScenarioState(
                     *trajectory_,
-                    res->classification, 
-                    vegPanel_->getSystem(), 
+                    res->classification,
                     waterMask,
                     meta
                 );
@@ -106,7 +104,7 @@ void TimelinePanel::draw(bool* open) {
     if (ImGui::Button("Save Project", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 0))) {
         std::string scenariosPath = std::string(projectRootName_) + ".strata";
         std::string trajPath = std::string(projectRootName_) + "_traj.strata";
-        Core::Domain::Vegetation::VegetationPersistenceService::saveScenarios(vegPanel_->getSystem(), scenariosPath);
+        vegPanel_->saveScenarios(scenariosPath);
         Core::Domain::FourthDimension::TrajectoryPersistenceService::saveTrajectory(*trajectory_, ".", trajPath);
     }
     ImGui::SameLine();
@@ -114,8 +112,7 @@ void TimelinePanel::draw(bool* open) {
         std::string scenariosPath = std::string(projectRootName_) + ".strata";
         std::string trajPath = std::string(projectRootName_) + "_traj.strata";
         
-        auto& mutableSystem = const_cast<Core::Domain::Vegetation::VegetationSystemOriginal&>(vegPanel_->getSystem());
-        Core::Domain::Vegetation::VegetationPersistenceService::loadScenarios(mutableSystem, scenariosPath);
+        vegPanel_->loadScenarios(scenariosPath);
         Core::Domain::FourthDimension::TrajectoryPersistenceService::loadTrajectory(*trajectory_, ".", trajPath);
 
         // Fix: Automatically visualize the last state to ensure patch cache is built
@@ -144,7 +141,7 @@ void TimelinePanel::draw(bool* open) {
         
         if (ImGui::Button("Exit Ghost Mode (Restore Soil)")) {
             ghostMode_ = false;
-            World3D::resetVisualization();
+            Application::Services::World3DService::resetVisualization();
         }
         ImGui::Separator();
     }
@@ -269,7 +266,7 @@ void TimelinePanel::draw(bool* open) {
                     coherenceStatus_ = "State sizes do not match.";
                 } else {
                     Core::Domain::FourthDimension::CoherenceIntensityParams params;
-                    const auto& hydro = World3D::getHydroGrid();
+                    const auto& hydro = Application::Services::World3DService::getHydroGrid();
                     if (hydro.isValid() && (int)hydro.flowAccumulationCells.size() == (int)coverA.size()) {
                         params.width = hydro.width;
                         params.height = hydro.height;
@@ -391,7 +388,7 @@ void TimelinePanel::draw(bool* open) {
 
         if (ImGui::InputInt("ID do Patch", &selectedPatchId_)) {
             if (selectedPatchId_ > 0 && !lastPatchAnalysis_.labelImage.labels.empty()) {
-                World3D::highlightPatch(lastPatchAnalysis_.labelImage.labels, selectedPatchId_);
+                Application::Services::World3DService::highlightPatch(lastPatchAnalysis_.labelImage.labels, selectedPatchId_);
             }
         }
         if (selectedPatchId_ > 0) {
@@ -459,9 +456,8 @@ void TimelinePanel::draw(bool* open) {
 
                 auto nameResolver = [this](int code) -> std::string {
                     if (vegPanel_) {
-                        const auto& system = vegPanel_->getSystem();
-                        const auto& scenarios = system.getScenarios();
-                        if (code >= 0 && code < (int)scenarios.size()) return "Scenario: " + scenarios[code].getId();
+                        const auto& scenarios = vegPanel_->getScenarioDTOs();
+                        if (code >= 0 && code < (int)scenarios.size()) return "Scenario: " + scenarios[code].id;
                         if (code >= 0 && code <= 2) return Core::Domain::Vegetation::VegetationType(static_cast<Core::Domain::Vegetation::VegetationCode>(code)).toString();
                     }
                     return "Classe " + std::to_string(code);
@@ -525,135 +521,5 @@ void TimelinePanel::draw(bool* open) {
 
     ImGui::End();
 }
-
-void TimelinePanel::applyGhostVisualization(const Core::Domain::FourthDimension::TimeSlice& slice) {
-    // Fix: Ensure data is loaded from disk if it's a proxy
-    if (slice.isProxy()) {
-        Core::Domain::FourthDimension::TrajectoryPersistenceService::loadFromDisk(
-            const_cast<Core::Domain::FourthDimension::TimeSlice&>(slice)
-        );
-    }
-
-    World3D::applyClassificationVisualization(slice.getEcologicalCoverState());
-    
-    // Cache spatial result for picking
-    const auto& cover = slice.getEcologicalCoverState();
-    if (!cover.empty()) {
-        Core::Domain::SpatialPattern::GridData grid;
-        grid.values = std::vector<double>(cover.begin(), cover.end());
-        grid.width = (int)std::sqrt(grid.values.size()); grid.height = grid.width;
-        lastPatchAnalysis_ = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.0, true, true});
-    }
-}
-
-void TimelinePanel::saveAnalysisToFile(const std::string& content, const std::string& type) {
-    std::string filename = "hermeneutic_" + type + "_" + std::to_string(std::time(nullptr)) + ".txt";
-    std::ofstream file(filename);
-    if (file.is_open()) {
-        file << "SISTERSTRATA HERMENEUTIC ANALYSIS (" << type << ")\n";
-        file << "==========================================\n\n";
-        file << content << "\n";
-        file.close();
-    }
-}
-
-std::string TimelinePanel::getClassDistribution(const Core::Domain::FourthDimension::TimeSlice& slice) {
-    auto& mutableSlice = const_cast<Core::Domain::FourthDimension::TimeSlice&>(slice);
-    if (mutableSlice.isProxy()) {
-        Core::Domain::FourthDimension::TrajectoryPersistenceService::loadFromDisk(mutableSlice);
-    }
-
-    const auto& cover = slice.getEcologicalCoverState();
-    if (cover.empty()) return "Nenhum dado capturado";
-
-    std::map<int, size_t> counts;
-    for (int code : cover) {
-        if (code != -1) counts[code]++;
-    }
-
-    float gridSpacing = 2.0f;
-    if (vegPanel_) {
-        const auto& vertices = World3D::getVertices();
-        if (vertices.size() > 1) {
-            float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
-            if (d > 0.001f) gridSpacing = d;
-        }
-    }
-
-    int w = static_cast<int>(std::sqrt(cover.size()));
-    int h = w;
-
-    std::stringstream ss;
-    ss << "[" << slice.getMetadata() << "]: ";
-    bool first = true;
-
-    auto type = slice.getClassificationType();
-    // Fallback for slices created before the ClassificationType was added
-    if (slice.getMetadata().find("Semantic") != std::string::npos) {
-        type = Core::Domain::FourthDimension::ClassificationType::SemanticCode;
-    }
-
-    if (type == Core::Domain::FourthDimension::ClassificationType::ScenarioIndex) {
-        // SCENARIO MODE: List ALL scenarios in the system to ensure 0% are visible
-        if (vegPanel_) {
-            const auto& system = vegPanel_->getSystem();
-            const auto& scenarios = system.getScenarios();
-            for (size_t i = 0; i < scenarios.size(); ++i) {
-                if (!first) ss << ", ";
-                int code = static_cast<int>(i);
-                size_t count = counts.count(code) ? counts[code] : 0;
-                float pct = 0.0f;
-                if (!cover.empty()) pct = (static_cast<float>(count) / cover.size()) * 100.0f;
-                float areaHa = (count * gridSpacing * gridSpacing) / 10000.0f;
-                
-                ss << "Scenario " << scenarios[i].getId() << ": " << std::fixed << std::setprecision(1) << pct << "%";
-                if (count > 0 && w * h == (int)cover.size()) {
-                    // Add spatial metrics only for present classes
-                    Core::Domain::SpatialPattern::GridData grid;
-                    grid.width = w; grid.height = h;
-                    grid.cellWidth = gridSpacing; grid.cellHeight = gridSpacing;
-                    grid.values.assign(cover.size(), 0.0);
-                    for(size_t j=0; j<cover.size(); ++j) if(cover[j] == code) grid.values[j] = 1.0;
-                    auto res = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.5});
-                    ss << " (" << areaHa << "ha, " << res.summary.patchCount << " patches, SI: " << (float)res.summary.meanShapeIndex << ")";
-                } else if (count > 0) {
-                     ss << " (" << areaHa << "ha)";
-                } else {
-                     ss << " (0.0ha)";
-                }
-                first = false;
-            }
-        }
-    } else {
-        // SEMANTIC MODE: List classes (0=Campestre, 1=Forest, 2=Water)
-        for (int code = 0; code <= 2; ++code) {
-            if (!first) ss << ", ";
-            size_t count = counts.count(code) ? counts[code] : 0;
-    std::string name = Core::Domain::Vegetation::VegetationType(static_cast<Core::Domain::Vegetation::VegetationCode>(code)).toString();
-            float pct = 0.0f;
-            if (!cover.empty()) {
-                pct = (static_cast<float>(count) / cover.size()) * 100.0f;
-            }
-            float areaHa = (count * gridSpacing * gridSpacing) / 10000.0f;
-            ss << name << ": " << std::fixed << std::setprecision(1) << pct << "%";
-            
-            if (count > 0 && w * h == (int)cover.size()) {
-                Core::Domain::SpatialPattern::GridData grid;
-                grid.width = w; grid.height = h;
-                grid.cellWidth = gridSpacing; grid.cellHeight = gridSpacing;
-                grid.values.assign(cover.size(), 0.0);
-                for(size_t j=0; j<cover.size(); ++j) if(cover[j] == code) grid.values[j] = 1.0;
-                auto res = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.5});
-                ss << " (" << areaHa << "ha, " << res.summary.patchCount << " patches, SI: " << (float)res.summary.meanShapeIndex << ")";
-            } else if (count > 0) {
-                 ss << " (" << areaHa << "ha)";
-            }
-            first = false;
-        }
-    }
-
-    return ss.str();
-}
-
 
 } // namespace UI::Panels

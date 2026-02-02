@@ -19,6 +19,7 @@ add_library(ui
     panels/TerrainGeneratorPanel.cpp 
     panels/HydrologyPanel.cpp
     panels/TimelinePanel.cpp # Fourth Dimension
+    panels/TimelinePanelHelpers.cpp
     panels/NarrativePanel.cpp # Observational
     panels/DiscursiveSystemPanel.cpp
     panels/RecommendationTrajectoryPanel.cpp

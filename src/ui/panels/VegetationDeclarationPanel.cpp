@@ -1,7 +1,7 @@
 #include "VegetationDeclarationPanel.hpp"
 #include "imgui.h"
-#include "core/domain/vegetation/VegetationMappingService.hpp"
-#include "world3d/World3D.hpp"
+#include "application/services/World3DService.hpp"
+#include <cmath>
 
 namespace UI::Panels {
 
@@ -29,15 +29,14 @@ void VegetationDeclarationPanel::draw(bool* open) {
         ImGui::Separator();
 
         if (ImGui::Button("Declare Hypothesis")) {
-            Core::Domain::Vegetation::DTOs::VegetationDeclarationDTO dto;
+            Application::DTO::Vegetation::DeclarationDTO dto;
             dto.id = std::string(idBuffer_);
-            dto.typeCode = static_cast<Core::Domain::Vegetation::VegetationCode>(selectedType_);
+            dto.typeCode = selectedType_;
             dto.minSlope = minSlope_;
             dto.maxSlope = maxSlope_;
             dto.maxDistDrainage = maxDistDrainage_;
 
-            auto hypo = service_.createHypothesis(dto);
-            system_.addHypothesis(hypo);
+            service_.declareHypothesis(dto);
         }
 
         ImGui::Separator();
@@ -67,12 +66,12 @@ void VegetationDeclarationPanel::draw(bool* open) {
         ImGui::Separator();
         ImGui::Text("Declared Hypotheses & Technical Bases (Grouped by Scenario):");
         
-        const auto& vertices = World3D::getVertices();
-        auto& scenarios = system_.getScenarios(); 
+        auto terrainVertices = Application::Services::World3DService::getTerrainVertices();
+        const auto& scenarios = service_.getScenarioDTOs(); 
         
         for (size_t i = 0; i < scenarios.size(); ++i) {
             auto& scenario = scenarios[i];
-            std::string sid = scenario.getId();
+            std::string sid = scenario.id;
             
             // Append index to ID for UI uniqueness to handle duplicate IDs
             std::string uiId = sid + "##Scene" + std::to_string(i);
@@ -82,7 +81,7 @@ void VegetationDeclarationPanel::draw(bool* open) {
                 if (i > 0) {
                     ImGui::SameLine();
                     if (ImGui::Button("Up")) {
-                        system_.swapScenarios(i, i - 1);
+                        service_.swapScenarios(i, i - 1);
                         scenarioOutdated_ = true;
                         ImGui::TreePop(); 
                         break;
@@ -91,7 +90,7 @@ void VegetationDeclarationPanel::draw(bool* open) {
                 if (i < scenarios.size() - 1) {
                     ImGui::SameLine();
                     if (ImGui::Button("Down")) {
-                        system_.swapScenarios(i, i + 1);
+                        service_.swapScenarios(i, i + 1);
                         scenarioOutdated_ = true;
                         ImGui::TreePop();
                         break;
@@ -100,57 +99,52 @@ void VegetationDeclarationPanel::draw(bool* open) {
 
                 ImGui::SameLine();
                 if (ImGui::Button("Resolve This Scenario (Vector)")) {
-                    const auto& hydro = World3D::getHydroGrid();
+                    const auto& hydro = Application::Services::World3DService::getHydroGrid();
                     float spacing = 2.0f; 
-                    if (vertices.size() > 1) {
-                        float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
+                    if (terrainVertices.size() > 1) {
+                        float d = std::abs(terrainVertices[1].pos.x - terrainVertices[0].pos.x);
                         if (d > 0.001f) spacing = d;
                     }
 
-                    lastSemanticClassification_ = Core::Domain::Vegetation::VegetationMappingService::resolveScenarioToCodes(
-                        scenario, vertices, hydro, spacing
-                    );
-                    semanticActive_ = true;
+                    auto result = service_.resolveScenarioToCodes(i, terrainVertices, hydro, spacing);
                     scenarioOutdated_ = true; // Mark scenario (indices) as outdated since we switched mode
                     
-                    World3D::applyClassificationVisualization(lastSemanticClassification_);
+                    service_.applyClassificationVisualization(result);
                 }
 
                 ImGui::SameLine();
                 if (ImGui::Button("Suprimir Scenario")) {
-                    system_.removeScenarioByIndex(i);
+                    service_.removeScenarioByIndex(i);
                     ImGui::TreePop();
                     break;
                 }
 
-                const auto& components = scenario.getComponents();
+                const auto& components = scenario.components;
                 for (size_t j = 0; j < components.size(); ++j) {
                     const auto& h = components[j];
-                    std::string compId = h.getType().toString() + "##" + std::to_string(j);
+                    std::string compId = h.typeLabel + "##" + std::to_string(j);
                     
                     CachedStats& stats = statsCache_[sid + "_" + compId]; 
 
                     ImGui::PushID(compId.c_str());
-                    ImGui::BulletText("%s", h.getType().toString().c_str());
+                    ImGui::BulletText("%s", h.typeLabel.c_str());
 
                     ImGui::Indent();
                     ImGui::Text("Criteria: Slope %.1f-%.1f deg, Dist < %.0f m", 
-                        h.getConditions().minSlope.value_or(0),
-                        h.getConditions().maxSlope.value_or(90),
-                        h.getConditions().maxDistanceToDrainage.value_or(9999)
+                        h.minSlope.value_or(0),
+                        h.maxSlope.value_or(90),
+                        h.maxDistanceToDrainage.value_or(9999)
                     );
 
                     if (ImGui::Button("Verify Coverage")) {
-                        const auto& hydro = World3D::getHydroGrid();
+                        const auto& hydro = Application::Services::World3DService::getHydroGrid();
                         float spacing = 2.0f; 
-                        if (vertices.size() > 1) {
-                            float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
+                        if (terrainVertices.size() > 1) {
+                            float d = std::abs(terrainVertices[1].pos.x - terrainVertices[0].pos.x);
                             if (d > 0.001f) spacing = d;
                         }
                         
-                        auto result = Core::Domain::Vegetation::VegetationMappingService::calculatePotentialCoverage(
-                            h, vertices, hydro, spacing
-                        );
+                        auto result = service_.calculatePotentialCoverage(i, j, terrainVertices, hydro, spacing);
                         stats.matchVertices = result.matchVertices;
                         stats.coveragePercentage = result.coveragePercentage;
                         stats.outdated = false;
@@ -158,23 +152,20 @@ void VegetationDeclarationPanel::draw(bool* open) {
 
                     ImGui::SameLine();
                     if (ImGui::Button("Visualize (Apply)")) {
-                        const auto& hydro = World3D::getHydroGrid();
+                        const auto& hydro = Application::Services::World3DService::getHydroGrid();
                         float spacing = 2.0f; 
-                        if (vertices.size() > 1) {
-                            float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
+                        if (terrainVertices.size() > 1) {
+                            float d = std::abs(terrainVertices[1].pos.x - terrainVertices[0].pos.x);
                             if (d > 0.001f) spacing = d;
                         }
 
-                        auto result = Core::Domain::Vegetation::VegetationMappingService::calculatePotentialCoverage(
-                            h, vertices, hydro, spacing
-                        );
+                        auto result = service_.calculatePotentialCoverage(i, j, terrainVertices, hydro, spacing);
                         
                         stats.matchVertices = result.matchVertices;
                         stats.coveragePercentage = result.coveragePercentage;
                         stats.outdated = false;
 
-                        World3D::applyVegetationVisualization(h, result.coverageMask);
-                        semanticActive_ = false; // Visualization is now mixed/partial
+                        service_.applyVegetationVisualization(i, j, result.coverageMask);
                     }
 
                     if (!stats.outdated) {
@@ -197,28 +188,24 @@ void VegetationDeclarationPanel::draw(bool* open) {
         ImGui::TextDisabled("Priority: Top of list wins (Scenarios exclude each other)");
         
         if (ImGui::Button("Resolve All scenarios (Overlap)")) {
-             const auto& hydro = World3D::getHydroGrid();
-             const auto& vertices = World3D::getVertices();
+             const auto& hydro = Application::Services::World3DService::getHydroGrid();
              float spacing = 2.0f; 
-             if (vertices.size() > 1) {
-                 float d = std::abs(vertices[1].pos.x - vertices[0].pos.x);
+             if (terrainVertices.size() > 1) {
+                 float d = std::abs(terrainVertices[1].pos.x - terrainVertices[0].pos.x);
                  if (d > 0.001f) spacing = d;
              }
              
-             auto& scenarios = system_.getScenarios();
-             lastScenario_ = Core::Domain::Vegetation::VegetationMappingService::calculateScenario(
-                 scenarios, vertices, hydro, spacing
-             );
+             service_.calculateScenario(terrainVertices, hydro, spacing);
              scenarioOutdated_ = false;
-             semanticActive_ = false; 
         }
         
         if (!scenarioOutdated_) {
             ImGui::SameLine();
             if (ImGui::Button("Visualize Global Resolution")) {
-                 if (!lastScenario_.semanticCodes.empty()) {
-                     World3D::applyClassificationVisualization(lastScenario_.semanticCodes);
-                 }
+                const auto* res = service_.getLastScenarioResult();
+                if (res && !res->semanticCodes.empty()) {
+                    Application::Services::World3DService::applyClassificationVisualization(res->semanticCodes);
+                }
             }
         }
     }

@@ -5,7 +5,7 @@
 #include <vector>
 #include "imgui.h"
 #include <glm/glm.hpp>
-#include "core/domain/spatial_pattern/PatchAnalysis.hpp"
+#include "application/dtos/SpatialPatternDTOs.hpp"
 #include "ui/components/FileSelector.hpp"
 
 namespace UI::Panels {
@@ -57,12 +57,12 @@ private:
         UI::Components::FileSelector fileSelector{"Select Grid CSV"};
         bool showFileSelector = false;
 
-        Core::Domain::SpatialPattern::SummaryMetrics summary;
+        Application::DTO::SpatialPattern::SummaryMetrics summary;
         std::string status;
         std::string error;
         bool lastRunSuccess = false;
-        Core::Domain::SpatialPattern::LabelImage lastLabels;
-        std::vector<Core::Domain::SpatialPattern::PatchMetrics> lastPatches;
+        Application::DTO::SpatialPattern::LabelImage lastLabels;
+        std::vector<Application::DTO::SpatialPattern::PatchMetrics> lastPatches;
         std::vector<LegendEntry> legendEntries;
     };
 
