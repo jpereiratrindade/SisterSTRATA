@@ -196,15 +196,30 @@ public:
         double cellSize = 1.0; 
 
         // Check header for metadata
-        std::getline(file, line);
-        if (line.rfind("# Origin:", 0) == 0) {
-            isGrid = true;
-            std::stringstream meta(line.substr(9));
-            char comma;
-            meta >> originX >> comma >> originY;
-            std::cout << "[CsvLoader] Detected Grid CSV. Origin: " << originX << ", " << originY << std::endl;
+        while (std::getline(file, line) && (line.empty() || line[0] == '#')) {
+            if (line.empty()) continue;
+            std::string lowLine = line;
+            std::transform(lowLine.begin(), lowLine.end(), lowLine.begin(), ::tolower);
+
+            if (lowLine.rfind("# origin:", 0) == 0) {
+                isGrid = true;
+                std::stringstream meta(line.substr(9));
+                char comma;
+                if (meta >> originX >> comma >> originY) {
+                    std::cout << "[CsvLoader] Origin: " << originX << ", " << originY << std::endl;
+                }
+            } else if (lowLine.rfind("# cell_size:", 0) == 0) {
+                isGrid = true;
+                std::stringstream meta(line.substr(12));
+                if (meta >> cellSize) {
+                    std::cout << "[CsvLoader] Cell Size: " << cellSize << std::endl;
+                }
+            }
+        }
+        
+        if (isGrid) {
+            std::cout << "[CsvLoader] Data identified as Grid CSV." << std::endl;
         } else {
-            // Reset to beginning if not a grid header (or handle as point cloud)
             file.clear();
             file.seekg(0);
         }
@@ -221,24 +236,23 @@ public:
                     if (token.empty()) continue;
                     try {
                         double val = std::stod(token);
-                        // Skip NoData/Zero if desired, or visualize everything.
-                        // Let's visualize non-zero patches.
-                        if (std::abs(val) > 0.001) {
+                        if (std::abs(val) > 0.0001) {
                              double px = originX + x * cellSize;
                              double py = originY + y * cellSize;
-                             double pz = val; // Use value as height for visibility? Or 0?
-                             // Patches are usually labels (1, 2, 3). Z=1 is minimal.
-                             // Z=0 might be buried.
-                             // Let's use Z=val but maybe scaled?
-                             // Just use raw value.
+                             
+                             // If it's a grid CSV from SisterSTRATA, the value is likely an ID.
+                             // Plotting ID as Z makes them "float" at Z=1, 2, 3...
+                             // For better context, we keep it as Z, but warn the user in docs.
+                             double pz = val; 
                              
                              data.points.push_back({px, py, pz});
                              
-                             // Simple Hash Color for Label
+                             // Better Hash Color for Label
                              int label = static_cast<int>(val);
-                             float r = (label * 123 % 255) / 255.0f;
-                             float g = (label * 456 % 255) / 255.0f;
-                             float b = (label * 789 % 255) / 255.0f;
+                             uint32_t h = static_cast<uint32_t>(label) * 0x9E3779B1u;
+                             float r = ((h >> 16) & 0xFF) / 255.0f;
+                             float g = ((h >> 8) & 0xFF) / 255.0f;
+                             float b = (h & 0xFF) / 255.0f;
                              data.colors.push_back({r, g, b});
                         }
                     } catch(...) {}

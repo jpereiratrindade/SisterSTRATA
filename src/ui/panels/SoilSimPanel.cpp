@@ -262,6 +262,16 @@ void SoilSimPanel::drawSiBCS(bool* open) {
 
                 auto soilResult = Application::Services::SoilAnalysisService::classifyTerrain(terrainVertices, paramsDTO);
 
+                // 1.5 Filter classifications according to UI selection
+                auto coreFilter = Application::Services::SoilAnalysisService::toCore(filter_);
+                if (!coreFilter.isEmpty()) {
+                    for (auto& c : soilResult.classes) {
+                        if (!Core::Domain::Soils::SiBCSHelper::matches(c, coreFilter)) {
+                             c.order = Core::Domain::Soils::SiBCSOrder::Unknown;
+                        }
+                    }
+                }
+
                 // 2. Rasterize
                 auto grid = Application::Services::SoilAnalysisService::rasterize(
                     terrainVertices,
@@ -282,7 +292,8 @@ void SoilSimPanel::drawSiBCS(bool* open) {
                 std::ofstream file(csvPath);
                 if (file.is_open()) {
                     // Write Metadata Header
-                    file << "# Origin: " << grid.originX << ", " << grid.originY << "\n";
+                    file << "# origin: " << grid.originX << ", " << grid.originY << "\n";
+                    file << "# cell_size: " << grid.cellWidth << "\n";
                     
                     for (int y = 0; y < grid.height; y++) {
                         for (int x = 0; x < grid.width; x++) {

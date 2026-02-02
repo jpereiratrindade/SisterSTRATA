@@ -10,22 +10,22 @@ namespace Core::Domain::Soils {
  * Represents the highest level of soil classification, determined largely by pedogenesis degree.
  */
 enum class SiBCSOrder {
-    Latossolo,   ///< Deep, highly weathered, uniform profile (Horizonte B Latossólico).
-    Argissolo,   ///< Clay accumulation in B horizon (Horizonte B Textural).
-    Neossolo,    ///< Little to no development, no diagnostic B horizon.
-    Cambissolo,  ///< Incipient B horizon (Horizonte B Incipiente).
-    Gleissolo,   ///< Hydromorphic, permanently saturated (Horizonte Gleique).
+    Unknown = 0,
+    Latossolo = 1,   ///< Deep, highly weathered, uniform profile (Horizonte B Latossólico).
+    Argissolo = 2,   ///< Clay accumulation in B horizon (Horizonte B Textural).
+    Neossolo = 3,    ///< Little to no development, no diagnostic B horizon.
+    Cambissolo = 4,  ///< Incipient B horizon (Horizonte B Incipiente).
+    Gleissolo = 5,   ///< Hydromorphic, permanently saturated (Horizonte Gleique).
     
-    // Others (Not fully simulated yet, placeholders for future expansion)
-    Planossolo,
-    Espodossolo,
-    Vertissolo,
-    Nitossolo,
-    Chernossolo,
-    Luvissolo,
-    Plintossolo,
-    Organossolo,
-    Unknown
+    // Others
+    Planossolo = 6,
+    Espodossolo = 7,
+    Vertissolo = 8,
+    Nitossolo = 9,
+    Chernossolo = 10,
+    Luvissolo = 11,
+    Plintossolo = 12,
+    Organossolo = 13
 };
 
 // 2. Suborder ( simplified for simulation )

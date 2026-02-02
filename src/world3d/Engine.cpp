@@ -1,5 +1,6 @@
 #include "world3d/Engine.hpp"
 #include "world3d/ScientificAdapter.hpp"
+#include "core/domain/shared/SlopeHelper.hpp"
 #include "core/value_objects/Vector3.hpp"
 #include <SDL2/SDL_vulkan.h>
 #include <set>
@@ -692,24 +693,30 @@ void Engine::applySlopeVisualization() {
     // Reset Stats
     lastStats_ = SlopeStats{};
     lastStats_.total = activeVertices_->size();
-    
+
+    const size_t count = activeVertices_->size();
+    auto gridInfo = Core::Domain::Shared::SlopeHelper::detectGrid(*activeVertices_);
+    bool useHeightSlope = gridInfo.isValid && (activeTopology_ == vk::PrimitiveTopology::ePointList || Core::Domain::Shared::SlopeHelper::areNormalsUniformUp(*activeVertices_));
+
+    if (useHeightSlope) {
+        std::cout << "[Engine] Using height-based slope calculation (Grid detected)." << std::endl;
+    }
+
     // Process on CPU
-    for (auto& v : *activeVertices_) {
-        // Up vector is (0,0,1)
-        // Dot product with normal = n.z
-        // theta = acos(n.z)
-        
-        // Clamp for safety
-        float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
-        float angleRad = std::acos(dot);
-        float angleDeg = glm::degrees(angleRad);
+    for (size_t idx = 0; idx < count; ++idx) {
+        auto& v = (*activeVertices_)[idx];
+        float angleDeg = 0.0f;
+
+        if (useHeightSlope) {
+            int gx = static_cast<int>(idx / static_cast<size_t>(gridInfo.height));
+            int gy = static_cast<int>(idx % static_cast<size_t>(gridInfo.height));
+            angleDeg = Core::Domain::Shared::SlopeHelper::calculateSlopeDeg(*activeVertices_, gridInfo, gx, gy);
+        } else {
+            float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
+            angleDeg = glm::degrees(std::acos(dot));
+        }
         
         // Define Slope Classes
-        // 0-5: Flat (Green)
-        // 5-20: Gentle (Yellow)
-        // 20-45: Steep (Orange)
-        // >45: Cliff (Red)
-        
         if (angleDeg < 5.0f) {
             v.color = glm::vec3(0.2f, 0.8f, 0.2f); // Green
             lastStats_.countFlat++;

@@ -3,6 +3,7 @@
 #include "ui/panels/VegetationDeclarationPanel.hpp"
 #include "application/Session.hpp"
 #include "application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
+#include "application/dtos/SpatialPatternDTOs.hpp"
 #include "application/ports/ILLMService.hpp"
 #include <string>
 #include <mutex>
@@ -11,9 +12,6 @@ namespace Core::Domain::FourthDimension {
 class Trajectory;
 }
 
-namespace Core::Domain::SpatialPattern {
-struct AnalysisResult;
-}
 
 namespace UI::Panels {
 
@@ -72,7 +70,7 @@ private:
     // Patch Trajectory State
     int selectedPatchId_ = -1;
     int lastPatchCount_ = 0;
-    Core::Domain::SpatialPattern::AnalysisResult lastPatchAnalysis_;
+    Application::DTO::SpatialPattern::AnalysisResult lastPatchAnalysis_;
     std::string patchTrajectorySummary_;
 
     // Aggregated state summary

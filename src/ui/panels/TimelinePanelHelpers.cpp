@@ -1,5 +1,6 @@
 #include "TimelinePanel.hpp"
-#include "core/domain/fourth_dimension/TrajectoryPersistenceService.hpp"
+#include "application/services/FourthDimensionService.hpp"
+#include "application/services/PatchAnalysisService.hpp"
 #include "application/services/World3DService.hpp"
 #include <algorithm>
 #include <cmath>
@@ -13,7 +14,7 @@ namespace UI::Panels {
 
 void TimelinePanel::applyGhostVisualization(const Core::Domain::FourthDimension::TimeSlice& slice) {
     if (slice.isProxy()) {
-        Core::Domain::FourthDimension::TrajectoryPersistenceService::loadFromDisk(
+        Application::Services::FourthDimensionService::loadSliceFromDisk(
             const_cast<Core::Domain::FourthDimension::TimeSlice&>(slice)
         );
     }
@@ -22,11 +23,15 @@ void TimelinePanel::applyGhostVisualization(const Core::Domain::FourthDimension:
 
     const auto& cover = slice.getEcologicalCoverState();
     if (!cover.empty()) {
-        Core::Domain::SpatialPattern::GridData grid;
-        grid.values = std::vector<double>(cover.begin(), cover.end());
+        Application::DTO::SpatialPattern::GridData grid;
+        grid.values.assign(cover.begin(), cover.end());
         grid.width = static_cast<int>(std::sqrt(grid.values.size()));
         grid.height = grid.width;
-        lastPatchAnalysis_ = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.0, true, true});
+        Application::DTO::SpatialPattern::AnalysisConfig cfg;
+        cfg.threshold = 0.0;
+        cfg.byClass = true;
+        cfg.keepLabels = true;
+        lastPatchAnalysis_ = Application::Services::PatchAnalysisService::analyzeGrid(grid, cfg);
     }
 }
 
@@ -44,7 +49,7 @@ void TimelinePanel::saveAnalysisToFile(const std::string& content, const std::st
 std::string TimelinePanel::getClassDistribution(const Core::Domain::FourthDimension::TimeSlice& slice) {
     auto& mutableSlice = const_cast<Core::Domain::FourthDimension::TimeSlice&>(slice);
     if (mutableSlice.isProxy()) {
-        Core::Domain::FourthDimension::TrajectoryPersistenceService::loadFromDisk(mutableSlice);
+        Application::Services::FourthDimensionService::loadSliceFromDisk(mutableSlice);
     }
 
     const auto& cover = slice.getEcologicalCoverState();
@@ -89,14 +94,18 @@ std::string TimelinePanel::getClassDistribution(const Core::Domain::FourthDimens
 
                 ss << "Scenario " << scenarios[i].id << ": " << std::fixed << std::setprecision(1) << pct << "%";
                 if (count > 0 && w * h == static_cast<int>(cover.size())) {
-                    Core::Domain::SpatialPattern::GridData grid;
+                    Application::DTO::SpatialPattern::GridData grid;
                     grid.width = w;
                     grid.height = h;
                     grid.cellWidth = gridSpacing;
                     grid.cellHeight = gridSpacing;
                     grid.values.assign(cover.size(), 0.0);
                     for (size_t j = 0; j < cover.size(); ++j) if (cover[j] == code) grid.values[j] = 1.0;
-                    auto res = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.5});
+                    Application::DTO::SpatialPattern::AnalysisConfig cfg;
+                    cfg.threshold = 0.5;
+                    cfg.byClass = false;
+                    cfg.keepLabels = false;
+                    auto res = Application::Services::PatchAnalysisService::analyzeGrid(grid, cfg);
                     ss << " (" << areaHa << "ha, " << res.summary.patchCount << " patches, SI: "
                        << static_cast<float>(res.summary.meanShapeIndex) << ")";
                 } else if (count > 0) {
@@ -115,14 +124,18 @@ std::string TimelinePanel::getClassDistribution(const Core::Domain::FourthDimens
 
             ss << "Class " << code << ": " << std::fixed << std::setprecision(1) << pct << "%";
             if (w * h == static_cast<int>(cover.size())) {
-                Core::Domain::SpatialPattern::GridData grid;
+                Application::DTO::SpatialPattern::GridData grid;
                 grid.width = w;
                 grid.height = h;
                 grid.cellWidth = gridSpacing;
                 grid.cellHeight = gridSpacing;
                 grid.values.assign(cover.size(), 0.0);
                 for (size_t j = 0; j < cover.size(); ++j) if (cover[j] == code) grid.values[j] = 1.0;
-                auto res = Core::Domain::SpatialPattern::AnalyzeGrid(grid, {0.5});
+                Application::DTO::SpatialPattern::AnalysisConfig cfg;
+                cfg.threshold = 0.5;
+                cfg.byClass = false;
+                cfg.keepLabels = false;
+                auto res = Application::Services::PatchAnalysisService::analyzeGrid(grid, cfg);
                 ss << " (" << areaHa << "ha, " << res.summary.patchCount << " patches, SI: "
                    << static_cast<float>(res.summary.meanShapeIndex) << ")";
             } else {

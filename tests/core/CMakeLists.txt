@@ -33,3 +33,9 @@ add_executable(veg_vector_tests
 )
 target_link_libraries(veg_vector_tests PRIVATE core world3d)
 add_test(NAME CoreVegVectorTest COMMAND veg_vector_tests)
+
+add_executable(slope_fix_tests
+    SlopeFixTest.cpp
+)
+target_link_libraries(slope_fix_tests PRIVATE core)
+add_test(NAME CoreSlopeFixTest COMMAND slope_fix_tests)

@@ -239,12 +239,9 @@ public:
                       if (cond.minSlope.has_value() && slopeDeg < cond.minSlope.value()) fit = false;
                       if (cond.maxSlope.has_value() && slopeDeg > cond.maxSlope.value()) fit = false;
                       
-                      if (fit && cond.maxDistanceToDrainage.has_value()) {
-                          if (!hasDrainage) fit = false;
-                          else {
-                              float dist = drainageMap[i];
-                              if (dist * gridSpacing > cond.maxDistanceToDrainage.value()) fit = false;
-                          }
+                      if (fit && cond.maxDistanceToDrainage.has_value() && hasDrainage) {
+                          float dist = drainageMap[i];
+                          if (dist * gridSpacing > cond.maxDistanceToDrainage.value()) fit = false;
                       }
 
                       if (fit) {
@@ -303,12 +300,9 @@ public:
                 if (cond.minSlope.has_value() && slopeDeg < cond.minSlope.value()) fit = false;
                 if (cond.maxSlope.has_value() && slopeDeg > cond.maxSlope.value()) fit = false;
                 
-                if (fit && cond.maxDistanceToDrainage.has_value()) {
-                    if (!hasDrainage) fit = false;
-                    else {
-                        float dist = drainageMap[i];
-                        if (dist * gridSpacing > cond.maxDistanceToDrainage.value()) fit = false;
-                    }
+                if (fit && cond.maxDistanceToDrainage.has_value() && hasDrainage) {
+                    float dist = drainageMap[i];
+                    if (dist * gridSpacing > cond.maxDistanceToDrainage.value()) fit = false;
                 }
 
                 if (fit) {

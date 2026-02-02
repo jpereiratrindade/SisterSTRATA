@@ -2,11 +2,7 @@
 #include "application/ports/IFileSystem.hpp"
 #include "application/mappers/CognitiveMappers.hpp"
 #include "ui/components/InterpretationModal.hpp"
-#include "core/domain/fourth_dimension/TrajectoryService.hpp"
-#include "core/domain/fourth_dimension/CoherenceIntensityService.hpp"
-#include "core/domain/fourth_dimension/patch_trajectory/PatchTrajectoryService.hpp"
-#include "core/domain/fourth_dimension/TrajectoryPersistenceService.hpp"
-#include "core/domain/spatial_pattern/PatchAnalysis.hpp"
+#include "application/services/FourthDimensionService.hpp"
 #include "application/services/World3DService.hpp"
 #include "imgui.h"
 #include <fstream>
@@ -63,32 +59,33 @@ void TimelinePanel::draw(bool* open) {
 
     // Capture Controls
     if (ImGui::Button("Capture Current State", ImVec2(-1, 0))) {
-        if (vegPanel_->isSemanticClassificationActive()) {
-            const auto& semantic = vegPanel_->getLastSemanticClassification();
-            if (!semantic.empty()) {
-                std::string meta = "Semantic State " + std::to_string(trajectory_->getNextOrdinal());
-                std::vector<bool> waterMask; 
-                Core::Domain::FourthDimension::TrajectoryService::captureSemanticState(
-                    *trajectory_,
-                    semantic, 
-                    waterMask,
-                    meta
-                );
-            }
+        const auto& semantic = vegPanel_->getLastSemanticClassification();
+        const auto* res = vegPanel_->getLastScenarioResult();
+        const bool canSemantic = !semantic.empty();
+        const bool canScenario = res && !res->classification.empty();
+        const bool canScenarioSemantic = res && !res->semanticCodes.empty();
+        const bool preferSemantic = vegPanel_->isSemanticClassificationActive() || canScenarioSemantic || !canScenario;
+
+        if (preferSemantic && (canSemantic || canScenarioSemantic)) {
+            std::string meta = "Semantic State " + std::to_string(trajectory_->getNextOrdinal());
+            std::vector<bool> waterMask;
+            Application::Services::FourthDimensionService::captureSemanticState(
+                *trajectory_,
+                canScenarioSemantic ? res->semanticCodes : semantic,
+                waterMask,
+                meta
+            );
+        } else if (canScenario) {
+            std::string meta = "State " + std::to_string(trajectory_->getNextOrdinal());
+            std::vector<bool> waterMask;
+            vegPanel_->getService().captureScenarioState(
+                *trajectory_,
+                res->classification,
+                waterMask,
+                meta
+            );
         } else {
-            const auto* res = vegPanel_->getLastScenarioResult();
-            if (res && !res->classification.empty()) {
-                std::string meta = "State " + std::to_string(trajectory_->getNextOrdinal());
-                std::vector<bool> waterMask; 
-                vegPanel_->getService().captureScenarioState(
-                    *trajectory_,
-                    res->classification,
-                    waterMask,
-                    meta
-                );
-            } else {
-                 ImGui::OpenPopup("CaptureFailed");
-            }
+            ImGui::OpenPopup("CaptureFailed");
         }
 
         // Auto-select and cache analysis for the new state
@@ -105,7 +102,7 @@ void TimelinePanel::draw(bool* open) {
         std::string scenariosPath = std::string(projectRootName_) + ".strata";
         std::string trajPath = std::string(projectRootName_) + "_traj.strata";
         vegPanel_->saveScenarios(scenariosPath);
-        Core::Domain::FourthDimension::TrajectoryPersistenceService::saveTrajectory(*trajectory_, ".", trajPath);
+        Application::Services::FourthDimensionService::saveTrajectory(*trajectory_, ".", trajPath);
     }
     ImGui::SameLine();
     if (ImGui::Button("Load Project", ImVec2(-1, 0))) {
@@ -113,7 +110,7 @@ void TimelinePanel::draw(bool* open) {
         std::string trajPath = std::string(projectRootName_) + "_traj.strata";
         
         vegPanel_->loadScenarios(scenariosPath);
-        Core::Domain::FourthDimension::TrajectoryPersistenceService::loadTrajectory(*trajectory_, ".", trajPath);
+        Application::Services::FourthDimensionService::loadTrajectory(*trajectory_, ".", trajPath);
 
         // Fix: Automatically visualize the last state to ensure patch cache is built
         if (!trajectory_->getTimeSlices().empty()) {
@@ -265,25 +262,12 @@ void TimelinePanel::draw(bool* open) {
                 if (coverA.size() != coverB.size() || coverA.empty()) {
                     coherenceStatus_ = "State sizes do not match.";
                 } else {
-                    Core::Domain::FourthDimension::CoherenceIntensityParams params;
                     const auto& hydro = Application::Services::World3DService::getHydroGrid();
-                    if (hydro.isValid() && (int)hydro.flowAccumulationCells.size() == (int)coverA.size()) {
-                        params.width = hydro.width;
-                        params.height = hydro.height;
-                    }
-                    params.radius = 2;
-                    params.sigma = 1.0f;
-                    params.weightType = 0.45f;
-                    params.weightStructure = 0.4f;
-                    params.weightEdge = 0.15f;
-
-                    auto map = Core::Domain::FourthDimension::CoherenceIntensityService::compare(sliceA, sliceB, params);
-                    if (map.intensity.empty()) {
-                        coherenceStatus_ = "Unable to compute map.";
+                    auto result = Application::Services::FourthDimensionService::computeCoherenceMean(sliceA, sliceB, hydro);
+                    if (!result.ok) {
+                        coherenceStatus_ = result.error.empty() ? "Unable to compute map." : result.error;
                     } else {
-                        double sum = 0.0;
-                        for (float v : map.intensity) sum += v;
-                        lastCoherenceMean_ = static_cast<float>(sum / map.intensity.size());
+                        lastCoherenceMean_ = result.mean;
                         coherenceStatus_ = "Coherence map computed.";
                     }
                 }
@@ -417,7 +401,7 @@ void TimelinePanel::draw(bool* open) {
                 double refX = -1.0, refY = -1.0;
                 for (size_t i = 0; i < slicesRef.size(); ++i) {
                     auto& slice = slicesRef[i];
-                    if (slice.isProxy()) Core::Domain::FourthDimension::TrajectoryPersistenceService::loadFromDisk(slice);
+                    if (slice.isProxy()) Application::Services::FourthDimensionService::loadSliceFromDisk(slice);
                     const auto& cover = slice.getEcologicalCoverState();
                     if (cover.empty()) continue;
                     Core::Domain::SpatialPattern::GridData grid;
@@ -463,7 +447,7 @@ void TimelinePanel::draw(bool* open) {
                     return "Classe " + std::to_string(code);
                 };
 
-                std::string summary = PatchTrajectoryService::generateLLMSummary(pt, nameResolver);
+                std::string summary = Application::Services::FourthDimensionService::generatePatchTrajectorySummary(pt, nameResolver);
                 
                 Application::DTO::Cognitive::ContextBundleDTO bundle;
                 bundle.bundleId = "PATCH-TRAJECTORY-" + std::to_string(selectedPatchId_);

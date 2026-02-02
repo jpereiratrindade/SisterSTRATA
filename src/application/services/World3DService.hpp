@@ -2,6 +2,7 @@
 
 #include "world3d/World3D.hpp"
 #include "world3d/adapters/TerrainVertexAdapter.hpp"
+#include "application/dtos/GeometryDTOs.hpp"
 #include <vector>
 
 namespace Application::Services {
@@ -80,6 +81,17 @@ public:
                                const std::vector<glm::vec3>& colors,
                                const std::string& label) {
         ::World3D::loadPointCloud(points, colors, label);
+    }
+
+    static void loadPointCloud(const std::vector<Application::DTO::Geometry::Vec3>& points,
+                               const std::vector<glm::vec3>& colors,
+                               const std::string& label) {
+        std::vector<Core::ValueObjects::Vector3> corePoints;
+        corePoints.reserve(points.size());
+        for (const auto& p : points) {
+            corePoints.push_back({p.x, p.y, p.z});
+        }
+        ::World3D::loadPointCloud(corePoints, colors, label);
     }
 
     static std::string getCurrentFilePath() { return ::World3D::getCurrentFilePath(); }

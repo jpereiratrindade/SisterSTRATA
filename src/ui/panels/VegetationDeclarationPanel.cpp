@@ -68,6 +68,23 @@ void VegetationDeclarationPanel::draw(bool* open) {
         
         auto terrainVertices = Application::Services::World3DService::getTerrainVertices();
         const auto& scenarios = service_.getScenarioDTOs(); 
+        const auto& hydro = Application::Services::World3DService::getHydroGrid();
+
+        bool needsDrainage = false;
+        for (const auto& scenario : scenarios) {
+            for (const auto& comp : scenario.components) {
+                if (comp.maxDistanceToDrainage.has_value() && comp.maxDistanceToDrainage.value() > 0.0f) {
+                    needsDrainage = true;
+                    break;
+                }
+            }
+            if (needsDrainage) break;
+        }
+        if (needsDrainage && !hydro.isValid()) {
+            ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f),
+                "Aviso: Rode a Hidrologia/Drainage antes da vegetacao (max dist to drainage ativo).");
+            ImGui::Separator();
+        }
         
         for (size_t i = 0; i < scenarios.size(); ++i) {
             auto& scenario = scenarios[i];
@@ -99,7 +116,6 @@ void VegetationDeclarationPanel::draw(bool* open) {
 
                 ImGui::SameLine();
                 if (ImGui::Button("Resolve This Scenario (Vector)")) {
-                    const auto& hydro = Application::Services::World3DService::getHydroGrid();
                     float spacing = 2.0f; 
                     if (terrainVertices.size() > 1) {
                         float d = std::abs(terrainVertices[1].pos.x - terrainVertices[0].pos.x);

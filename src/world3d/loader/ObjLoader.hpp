@@ -141,7 +141,7 @@ public:
                 } else {
                     vertex.color = glm::vec3(0.8f, 0.8f, 0.8f);
                 }
-                vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+                vertex.normal = glm::vec3(0.0f, 0.0f, 1.0f);
                 vertex.uv = glm::vec2(0.0f, 0.0f);
                 vertices.push_back(vertex);
             }
@@ -167,7 +167,7 @@ public:
             if (!temp_normals.empty() && i < normalIndices.size()) {
                 vertex.normal = temp_normals[normalIndices[i] - 1];
             } else {
-                vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+                vertex.normal = glm::vec3(0.0f, 0.0f, 1.0f);
             }
             
             vertex.uv = glm::vec2(0.0f, 0.0f);

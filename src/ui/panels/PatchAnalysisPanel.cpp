@@ -6,7 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <glm/glm.hpp>
-#include "core/value_objects/Vector3.hpp"
+#include "application/dtos/GeometryDTOs.hpp"
 #include <cmath>
 #include <algorithm>
 #include <unordered_map>
@@ -297,7 +297,7 @@ void PatchAnalysisPanel::draw(bool* open) {
                 }
             }
 
-            std::vector<Core::ValueObjects::Vector3> points;
+            std::vector<Application::DTO::Geometry::Vec3> points;
             std::vector<glm::vec3> colors;
             points.reserve(grid.values.size());
             colors.reserve(grid.values.size());
@@ -369,7 +369,9 @@ void PatchAnalysisPanel::draw(bool* open) {
                         z += state_.manualOffset.z;
                     }
                     
-                    points.push_back({startX + x * state_.cellWidth, startY + y * state_.cellHeight, z});
+                    points.push_back({static_cast<float>(startX + x * state_.cellWidth),
+                                      static_cast<float>(startY + y * state_.cellHeight),
+                                      static_cast<float>(z)});
 
                     uint32_t label = 1u;
                     if (state_.useLabelColors && haveLabels) {

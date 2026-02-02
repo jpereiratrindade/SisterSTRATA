@@ -11,6 +11,8 @@
 #include <cmath>
 #include <glm/glm.hpp>
 
+#include "core/domain/shared/SlopeHelper.hpp"
+
 namespace Application::Services {
 
 class SoilAnalysisService {
@@ -67,9 +69,23 @@ public:
 
         result.classes.reserve(vertices.size());
 
-        for (const auto& v : vertices) {
-            float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
-            float slopeDeg = glm::degrees(std::acos(dot));
+        // Slope Fallback Logic
+        auto gridInfo = Core::Domain::Shared::SlopeHelper::detectGrid(vertices);
+        bool useHeightFallback = gridInfo.isValid && Core::Domain::Shared::SlopeHelper::areNormalsUniformUp(vertices);
+
+        for (size_t idx = 0; idx < vertices.size(); ++idx) {
+            const auto& v = vertices[idx];
+            float slopeDeg = 0.0f;
+
+            if (useHeightFallback) {
+                int gx = static_cast<int>(idx / static_cast<size_t>(gridInfo.height));
+                int gy = static_cast<int>(idx % static_cast<size_t>(gridInfo.height));
+                slopeDeg = Core::Domain::Shared::SlopeHelper::calculateSlopeDeg(vertices, gridInfo, gx, gy);
+            } else {
+                float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
+                slopeDeg = glm::degrees(std::acos(dot));
+            }
+
             float relElev = (v.pos.z - minZ) / (maxZ - minZ);
 
             auto c = Core::Domain::Soils::SoilSystem::predict(coreParams, slopeDeg, v.pos.z, relElev);

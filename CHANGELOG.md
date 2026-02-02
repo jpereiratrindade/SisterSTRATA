@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.9.5] - 2026-02-02
+### Fixed
+- **Slope Analysis**: Implemented a robust "Height-Based Fallback" in `SoilSystem` and `Engine` to correctly calculate slope on grid-based terrains (CSV) where normals are uniform.
+- **Scientific Consistency**: Integrated `SlopeHelper` into `SoilAnalysisService` to ensure that rasterization for Patch Analysis yields results identical to the visual simulation.
+- **Soil ID Shift**: Shifted `SiBCSOrder` enum values to start at 1 (reserving 0 for Unknown/NoData), resolving a bug where Latossolos were skipped during 3D point cloud loading.
+- **Raster Metadata**: Enhanced `SoilSimPanel` to save `origin` and `cell_size` in CSV headers, allowing perfect reconstruction of grids in the 3D viewer.
+- **ObjLoader**: Corrected default normal initialization to `(0, 0, 1)` for Z-up compatibility.
+
 ## [v1.9.4] - 2026-02-02
 ### Added
 - **DTO Boundary Reinforcement**: Added DTOs and application services for Soil, Vegetation, and Spatial Pattern UI flows.

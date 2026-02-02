@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include "core/domain/shared/SlopeHelper.hpp"
 
 namespace Core::Domain::Soils {
 
@@ -28,14 +29,31 @@ void SoilSystem::process(std::vector<Core::ValueObjects::TerrainVertex>& vertice
     lastClassMap_.assign(vertices.size(), SiBCSClassification{});
     std::vector<SiBCSClassification> frameClasses; 
 
-    for (size_t i = 0; i < vertices.size(); ++i) {
-        auto& v = vertices[i];
-        float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
-        float slopeDeg = glm::degrees(std::acos(dot));
+    // 1.5 Detect if we need a height-based fallback (e.g. for Point Clouds/CSVs with uniform normals)
+    auto gridInfo = Core::Domain::Shared::SlopeHelper::detectGrid(vertices);
+    bool useHeightFallback = gridInfo.isValid && Core::Domain::Shared::SlopeHelper::areNormalsUniformUp(vertices);
+
+    if (useHeightFallback) {
+        std::cout << "[SoilSystem] Uniform normals detected with grid structure. Using height-based slope fallback." << std::endl;
+    }
+
+    for (size_t idx = 0; idx < vertices.size(); ++idx) {
+        auto& v = vertices[idx];
+        float slopeDeg = 0.0f;
+
+        if (useHeightFallback) {
+            int gx = static_cast<int>(idx / static_cast<size_t>(gridInfo.height));
+            int gy = static_cast<int>(idx % static_cast<size_t>(gridInfo.height));
+            slopeDeg = Core::Domain::Shared::SlopeHelper::calculateSlopeDeg(vertices, gridInfo, gx, gy);
+        } else {
+            float dot = std::clamp(v.normal.z, -1.0f, 1.0f);
+            slopeDeg = glm::degrees(std::acos(dot));
+        }
+
         float relElev = (v.pos.z - minZ) / (maxZ - minZ);
 
         auto classification = predict(params, slopeDeg, v.pos.z, relElev);
-        lastClassMap_[i] = classification;
+        lastClassMap_[idx] = classification;
         
         // Filter Check
         if (!SiBCSHelper::matches(classification, filter)) {
