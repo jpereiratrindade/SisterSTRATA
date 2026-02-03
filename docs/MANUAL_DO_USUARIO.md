@@ -18,6 +18,20 @@ As instruções detalhadas de compilação e instalação de pacotes encontram-s
 ### Configuração da IA (Ollama)
 Para usar as funcionalidades de análise discursiva e hermenêutica, é necessário ter o **Ollama** instalado e rodando o modelo `qwen2.5` (7b ou 14b). Sem isso, as ferramentas de IA permanecerão desativadas ou em modo de simulação limitada.
 
+### Modo CPU (No-GPU)
+Quando não há GPU Vulkan disponível, é possível iniciar o SisterSTRATA no modo CPU (visualização 2D simplificada).
+
+```bash
+./bin/SisterSTRATA --no-gpu
+```
+
+Atalhos no modo CPU:
+*   **W / A / S / D**: Navegação do plano.
+*   **Setas**: Navegação do plano.
+*   **Scroll (Roda)**: Zoom.
+*   **TAB**: Alternar vista (XY/XZ/YZ).
+*   **F**: Ajustar conteúdo à tela.
+
 ---
 
 ## 2. Controles e Navegação 3D

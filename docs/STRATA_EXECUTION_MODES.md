@@ -16,6 +16,12 @@ This document defines the architectural boundaries for the multiple execution mo
 -   **Components**: Core + Application + Infrastructure + World3D (Vulkan).
 -   **Use Case**: Research, Presentation, Data Exploration.
 
+### Mode C: Hybrid (CPU / No-GPU)
+-   **Target**: `SisterSTRATA --no-gpu` (or `--cpu`, `--hybrid`)
+-   **Capabilities**: 2D CPU visualization + GUI overlay, navigation and data inspection without Vulkan.
+-   **Components**: Core + Application + Infrastructure + UI + Hybrid2DView (SDL software renderer).
+-   **Use Case**: Field laptops, CI nodes, or environments without Vulkan/GPU.
+
 ### Mode B: Headless (CLI)
 -   **Target**: `SisterSTRATA_cli`
 -   **Capabilities**: Batch Processing, Simulation Pipeline, Automated Reporting.

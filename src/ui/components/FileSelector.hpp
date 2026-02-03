@@ -186,7 +186,9 @@ public:
                 );
 
                 if (clicked) {
-                    if (ImGui::IsMouseDoubleClicked(0)) {
+                    if (selectDirectoriesOnly_ && !isDir) {
+                        // Ignore files when selecting directories only.
+                    } else if (ImGui::IsMouseDoubleClicked(0)) {
                         if (isDir) {
                             nextDir = entry.pathStr;
                             navigateToDir = true;

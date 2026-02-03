@@ -50,6 +50,7 @@ private:
     bool showSaveAsDialog = false;
     bool showProjectDialog = false;
     bool isNewProjectMode = false;
+    bool projectDialogOpenRequested = false;
     
     UI::Components::FileSelector openFileSelector{"Open File"};
     UI::Components::FileSelector saveFileSelector{"Save As"};

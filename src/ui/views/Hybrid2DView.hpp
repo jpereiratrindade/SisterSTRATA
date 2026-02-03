@@ -52,6 +52,7 @@ private:
     void drawTopDownView();
     void drawSideView();
     void updateCachedPoints(); // Move flattening logic here
+    void syncRendererSize();
 
     struct Point2D {
         int x, y;

@@ -4,6 +4,9 @@
 ### Fixed
 - **Project Menu**: Resolved ID collision issue that caused "Project" menu options to be unresponsive.
 - **File Browser**: Added "New Folder" capability to the internal file browser, allowing users to create project directories directly from the UI.
+- **Project Dialog**: Deferred the project directory dialog open to avoid menu-closing conflicts in ImGui.
+- **File Browser (Dirs)**: Ignored file selections when in directory-only mode to prevent no-op confirmations.
+- **No-GPU View**: Reset SDL renderer viewport/clip/scale each frame to ensure full-screen CPU rendering.
 
 ## [v1.9.5] - 2026-02-02
 ### Fixed

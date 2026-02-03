@@ -24,10 +24,8 @@ void Hybrid2DView::init(SDL_Window* window) {
         std::cerr << "[Hybrid2DView] Failed to create software renderer: " << SDL_GetError() << std::endl;
     }
     
-    // High-DPI Fix: Force Logical Size to match Window
-    // This tells SDL to scale our 1920x1080 buffer to whatever 4K/Retina surface exists.
-    SDL_GetWindowSize(window, &width_, &height_);
-    SDL_RenderSetLogicalSize(renderer_, width_, height_);
+    // High-DPI Fix: Force Logical Size to match the actual renderer output size.
+    syncRendererSize();
     
     // Center view
     offsetX_ = 0.0f;
@@ -52,12 +50,7 @@ void Hybrid2DView::handleEvent(const SDL_Event& event) {
         updateCachedPoints();
     } else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
         // Update Logical Size on Resize
-        int newW = event.window.data1;
-        int newH = event.window.data2;
-        if (renderer_) SDL_RenderSetLogicalSize(renderer_, newW, newH);
-        
-        width_ = newW;
-        height_ = newH;
+        syncRendererSize();
         fitToScreen();
     }
 }
@@ -72,11 +65,7 @@ void Hybrid2DView::fitToScreen() {
     if (!lastState_ || lastState_->entities.empty()) return;
     
     // Always sync with renderer size for High-DPI correctness
-    if (renderer_) {
-        SDL_GetRendererOutputSize(renderer_, &width_, &height_);
-    } else if (window_) {
-        SDL_GetWindowSize(window_, &width_, &height_);
-    }
+    syncRendererSize();
 
     // Calculate Bounds
     float minX = 1e9f, maxX = -1e9f;
@@ -172,6 +161,11 @@ void Hybrid2DView::clear() {
 
 void Hybrid2DView::render() {
     if (!renderer_) return;
+    // Ensure full viewport and neutral scaling (ImGui may change these).
+    syncRendererSize();
+    SDL_RenderSetViewport(renderer_, nullptr);
+    SDL_RenderSetClipRect(renderer_, nullptr);
+    SDL_RenderSetScale(renderer_, 1.0f, 1.0f);
 
     // Clear background (Dark Grey)
     SDL_SetRenderDrawColor(renderer_, 30, 30, 30, 255);
@@ -188,6 +182,26 @@ void Hybrid2DView::render() {
 
     SDL_RenderDrawLine(renderer_, width_/2, 0, width_/2, height_); // Z-Axis
     SDL_RenderDrawLine(renderer_, 0, height_/2, width_, height_/2); // X-Axis
+}
+
+void Hybrid2DView::syncRendererSize() {
+    if (renderer_) {
+        int outW = 0;
+        int outH = 0;
+        if (SDL_GetRendererOutputSize(renderer_, &outW, &outH) == 0 && outW > 0 && outH > 0) {
+            width_ = outW;
+            height_ = outH;
+            SDL_RenderSetLogicalSize(renderer_, outW, outH);
+            return;
+        }
+    }
+
+    if (window_) {
+        SDL_GetWindowSize(window_, &width_, &height_);
+    }
+    if (renderer_) {
+        SDL_RenderSetLogicalSize(renderer_, width_, height_);
+    }
 }
 
 } // namespace UI::Views

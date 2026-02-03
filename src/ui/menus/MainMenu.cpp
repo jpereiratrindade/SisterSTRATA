@@ -45,12 +45,12 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("New Project Folder...")) {
                 showProjectDialog = true;
                 isNewProjectMode = true;
-                projectBrowser.Open(true); // Directory only
+                projectDialogOpenRequested = true; // Defer popup open to avoid menu-closing conflicts
             }
             if (ImGui::MenuItem("Open Project Folder...")) {
                 showProjectDialog = true;
                 isNewProjectMode = false;
-                projectBrowser.Open(true); // Directory only
+                projectDialogOpenRequested = true; // Defer popup open to avoid menu-closing conflicts
             }
             ImGui::EndMenu();
         }
@@ -159,6 +159,13 @@ void MainMenu::drawSaveFileDialog() {
 
 void MainMenu::drawProjectDialog() {
     if (showProjectDialog) {
+        if (projectDialogOpenRequested) {
+            if (!lastProjectPath.empty()) {
+                projectBrowser.SetCurrentPath(lastProjectPath);
+            }
+            projectBrowser.Open(true); // Directory only
+            projectDialogOpenRequested = false;
+        }
         std::vector<std::string> chosen;
         if (projectBrowser.Render(chosen)) {
             if (!chosen.empty()) {
