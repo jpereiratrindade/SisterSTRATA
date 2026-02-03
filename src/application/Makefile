@@ -205,12 +205,26 @@ application/fast:
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/application/CMakeFiles/application.dir/build.make src/application/CMakeFiles/application.dir/build
 .PHONY : application/fast
 
+# Convenience name for target.
+src/application/CMakeFiles/application_host.dir/rule:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/application/CMakeFiles/application_host.dir/rule
+.PHONY : src/application/CMakeFiles/application_host.dir/rule
+
+# Convenience name for target.
+application_host: src/application/CMakeFiles/application_host.dir/rule
+.PHONY : application_host
+
+# fast build rule for target.
+application_host/fast:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/application/CMakeFiles/application_host.dir/build.make src/application/CMakeFiles/application_host.dir/build
+.PHONY : application_host/fast
+
 Application.o: Application.cpp.o
 .PHONY : Application.o
 
 # target to build an object file
 Application.cpp.o:
-	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/application/CMakeFiles/application.dir/build.make src/application/CMakeFiles/application.dir/Application.cpp.o
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/application/CMakeFiles/application_host.dir/build.make src/application/CMakeFiles/application_host.dir/Application.cpp.o
 .PHONY : Application.cpp.o
 
 Application.i: Application.cpp.i
@@ -218,7 +232,7 @@ Application.i: Application.cpp.i
 
 # target to preprocess a source file
 Application.cpp.i:
-	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/application/CMakeFiles/application.dir/build.make src/application/CMakeFiles/application.dir/Application.cpp.i
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/application/CMakeFiles/application_host.dir/build.make src/application/CMakeFiles/application_host.dir/Application.cpp.i
 .PHONY : Application.cpp.i
 
 Application.s: Application.cpp.s
@@ -226,7 +240,7 @@ Application.s: Application.cpp.s
 
 # target to generate assembly for a file
 Application.cpp.s:
-	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/application/CMakeFiles/application.dir/build.make src/application/CMakeFiles/application.dir/Application.cpp.s
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/application/CMakeFiles/application_host.dir/build.make src/application/CMakeFiles/application_host.dir/Application.cpp.s
 .PHONY : Application.cpp.s
 
 Session.o: Session.cpp.o
@@ -269,6 +283,7 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... application"
+	@echo "... application_host"
 	@echo "... Application.o"
 	@echo "... Application.i"
 	@echo "... Application.s"

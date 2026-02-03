@@ -244,6 +244,19 @@ application/fast:
 .PHONY : application/fast
 
 #=============================================================================
+# Target rules for targets named application_host
+
+# Build rule for target.
+application_host: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 application_host
+.PHONY : application_host
+
+# fast build rule for target.
+application_host/fast:
+	$(MAKE) $(MAKESILENT) -f src/application/CMakeFiles/application_host.dir/build.make src/application/CMakeFiles/application_host.dir/build
+.PHONY : application_host/fast
+
+#=============================================================================
 # Target rules for targets named world3d
 
 # Build rule for target.
@@ -413,6 +426,19 @@ veg_vector_tests/fast:
 .PHONY : veg_vector_tests/fast
 
 #=============================================================================
+# Target rules for targets named slope_fix_tests
+
+# Build rule for target.
+slope_fix_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 slope_fix_tests
+.PHONY : slope_fix_tests
+
+# fast build rule for target.
+slope_fix_tests/fast:
+	$(MAKE) $(MAKESILENT) -f tests/core/CMakeFiles/slope_fix_tests.dir/build.make tests/core/CMakeFiles/slope_fix_tests.dir/build
+.PHONY : slope_fix_tests/fast
+
+#=============================================================================
 # Target rules for targets named observational_tests_legacy
 
 # Build rule for target.
@@ -477,6 +503,19 @@ infrastructure_tests/fast:
 	$(MAKE) $(MAKESILENT) -f tests/infrastructure/CMakeFiles/infrastructure_tests.dir/build.make tests/infrastructure/CMakeFiles/infrastructure_tests.dir/build
 .PHONY : infrastructure_tests/fast
 
+#=============================================================================
+# Target rules for targets named sister_strata_cli
+
+# Build rule for target.
+sister_strata_cli: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 sister_strata_cli
+.PHONY : sister_strata_cli
+
+# fast build rule for target.
+sister_strata_cli/fast:
+	$(MAKE) $(MAKESILENT) -f src/cli/CMakeFiles/sister_strata_cli.dir/build.make src/cli/CMakeFiles/sister_strata_cli.dir/build
+.PHONY : sister_strata_cli/fast
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -519,6 +558,7 @@ help:
 	@echo "... Shaders"
 	@echo "... SisterSTRATA"
 	@echo "... application"
+	@echo "... application_host"
 	@echo "... application_mapper_tests"
 	@echo "... application_tests"
 	@echo "... core"
@@ -533,6 +573,8 @@ help:
 	@echo "... observational_tests_legacy"
 	@echo "... patch_analysis_tests"
 	@echo "... patch_trajectory_test"
+	@echo "... sister_strata_cli"
+	@echo "... slope_fix_tests"
 	@echo "... soil_rasterizer_tests"
 	@echo "... trajectory_lod_tests"
 	@echo "... ui"

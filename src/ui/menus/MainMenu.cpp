@@ -35,13 +35,26 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("Close File")) {
                 if (onCloseFile) onCloseFile();
             }
-            ImGui::Separator();
             if (ImGui::MenuItem("Exit")) {
                 if (onExit) onExit();
             }
             ImGui::EndMenu();
         }
         
+        if (ImGui::BeginMenu("Project")) {
+            if (ImGui::MenuItem("New Project Folder...")) {
+                showProjectDialog = true;
+                isNewProjectMode = true;
+                projectBrowser.Open(true); // Directory only
+            }
+            if (ImGui::MenuItem("Open Project Folder...")) {
+                showProjectDialog = true;
+                isNewProjectMode = false;
+                projectBrowser.Open(true); // Directory only
+            }
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Welcome Panel", nullptr, &showWelcome);
             ImGui::Separator();
@@ -52,6 +65,7 @@ void MainMenu::draw() {
         }
         
         if (ImGui::BeginMenu("Tools")) {
+            // ... (Tools items unchanged, truncated for brevity in replace block)
             if (ImGui::MenuItem("Settings")) {
                 showSettings = true;
             }
@@ -80,7 +94,10 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("Recommendation Trajectory Context")) {
                 showRecommendationPanel = true;
             }
-
+            if (ImGui::MenuItem("Strategic Global Synthesis")) {
+                if (showGlobalSynthesis) *showGlobalSynthesis = true;
+            }
+            ImGui::Separator();
             if (ImGui::MenuItem("Patch Analysis (CSV)")) {
                 showPatchAnalysis = true;
             }
@@ -96,11 +113,17 @@ void MainMenu::draw() {
             ImGui::EndMenu();
         }
         
+        
+        // Project Path Indicator (Right aligned if possible, or just after Tools)
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Project: %s", currentProjectPath.empty() ? "[No Project]" : currentProjectPath.c_str());
+
         ImGui::EndMainMenuBar();
     }
 
     drawOpenFileDialog();
     drawSaveFileDialog();
+    drawProjectDialog();
 }
 
 void MainMenu::drawOpenFileDialog() {
@@ -130,6 +153,29 @@ void MainMenu::drawSaveFileDialog() {
                  lastSavePath = selectedPath.parent_path().string();
              }
              showSaveAsDialog = false;
+        }
+    }
+}
+
+void MainMenu::drawProjectDialog() {
+    if (showProjectDialog) {
+        std::vector<std::string> chosen;
+        if (projectBrowser.Render(chosen)) {
+            if (!chosen.empty()) {
+                std::string path = chosen.front();
+                if (isNewProjectMode) {
+                    // Start fresh in this folder
+                    // We might want to create a subfolder "SisterSTRATA_Project" or just use as root?
+                    // Let's use as root for flexibility. user creates folder.
+                    if (onNewProject) onNewProject(path);
+                } else {
+                    if (onOpenProject) onOpenProject(path);
+                }
+                lastProjectPath = path;
+                showProjectDialog = false;
+            }
+        } else if (!projectBrowser.IsOpen()) {
+            showProjectDialog = false;
         }
     }
 }

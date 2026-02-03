@@ -13,7 +13,11 @@ void WelcomePanel::draw(bool* open, const Application::DTO::UIData& data) {
     ImGui::SetNextWindowSize(ImVec2(320.0f, 200.0f), ImGuiCond_FirstUseEver); // Allow resize
     
     if (ImGui::Begin("Welcome to SisterSTRATA", open)) {
-        ImGui::Text("Scientific Data Platform - VULKAN BACKEND");
+        std::string backend = (data.startMessage.find("CPU") != std::string::npos) ? "CPU BACKEND" : "VULKAN BACKEND";
+        if (data.startMessage.find("View:") != std::string::npos) {
+            backend += " " + data.startMessage.substr(data.startMessage.find("View:"));
+        }
+        ImGui::Text("Scientific Data Platform - %s", backend.c_str());
         ImGui::Separator();
         
         // Use DTO Data

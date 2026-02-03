@@ -11,7 +11,7 @@
 #include <cctype>
 #include <glm/glm.hpp>
 
-namespace World3D::Loader {
+namespace Infrastructure::IO {
 
 struct PointCloudData {
     std::vector<Core::ValueObjects::Vector3> points;
@@ -290,4 +290,4 @@ public:
     }
 };
 
-} // namespace World3D::Loader
+} // namespace Infrastructure::IO

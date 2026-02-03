@@ -22,7 +22,7 @@ namespace fs = std::filesystem;
  */
 class FileBrowser {
 public:
-    FileBrowser() = default;
+    FileBrowser(const std::string& id = "File Browser") : id_(id) {}
 
     /**
      * @brief Whether the browser popup is open.
@@ -48,7 +48,7 @@ public:
         selectDirectoriesOnly_ = directoriesOnly;
         EnsureValidCurrentPath();
         Refresh();
-        ImGui::OpenPopup("File Browser");
+        ImGui::OpenPopup(id_.c_str());
     }
 
     /**
@@ -63,7 +63,39 @@ public:
         EnsureValidCurrentPath();
         ImGui::SetNextWindowSize(ImVec2(800, 520), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSizeConstraints(ImVec2(400, 300), ImVec2(FLT_MAX, FLT_MAX));
-        if (ImGui::BeginPopupModal("File Browser", &isOpen_, ImGuiWindowFlags_NoSavedSettings)) {
+        if (ImGui::BeginPopupModal(id_.c_str(), &isOpen_, ImGuiWindowFlags_NoSavedSettings)) {
+            // New Folder Modal
+            if (showNewFolderData_) {
+                ImGui::OpenPopup("New Folder");
+                showNewFolderData_ = false;
+            }
+            if (ImGui::BeginPopupModal("New Folder", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                 ImGui::Text("Enter folder name:");
+                 static char newFolderBuf[256] = "";
+                 bool enterPressed = ImGui::InputText("##newfolder", newFolderBuf, sizeof(newFolderBuf), ImGuiInputTextFlags_EnterReturnsTrue);
+                 
+                 auto createAction = [&]() {
+                    if (newFolderBuf[0] != '\0') {
+                        fs::path p = fs::path(currentPathStr_) / newFolderBuf;
+                        std::error_code ec;
+                        if (fs::create_directory(p, ec)) {
+                            Refresh();
+                        }
+                    }
+                    newFolderBuf[0] = '\0';
+                    ImGui::CloseCurrentPopup();
+                 };
+
+                 if (ImGui::Button("Create") || enterPressed) {
+                     createAction();
+                 }
+                 ImGui::SameLine();
+                 if (ImGui::Button("Cancel")) {
+                     newFolderBuf[0] = '\0';
+                     ImGui::CloseCurrentPopup();
+                 }
+                 ImGui::EndPopup();
+            }
             // Navigation Buttons
             if (ImGui::Button("Root (/)")) {
                 currentPathStr_ = "/";
@@ -76,6 +108,10 @@ public:
                     currentPathStr_ = parent.string();
                     Refresh();
                 }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("New Folder...")) {
+                 showNewFolderData_ = true;
             }
             ImGui::SameLine();
 
@@ -182,19 +218,26 @@ public:
                 Refresh();
             }
 
-            if (ImGui::Button("Open")) {
+            const char* actionLabel = selectDirectoriesOnly_ ? (selectedEntries_.empty() ? "Select Current Folder" : "Select Folder") : "Open";
+            if (ImGui::Button(actionLabel)) {
                 std::vector<std::string> valid;
-                for (const auto& p : selectedEntries_) {
-                    std::error_code ec;
-                    fs::path sel(p);
-                    if (selectDirectoriesOnly_) {
-                        if (fs::exists(sel, ec) && fs::is_directory(sel, ec)) {
+                
+                if (selectDirectoriesOnly_ && selectedEntries_.empty()) {
+                    valid.push_back(currentPathStr_);
+                } else {
+                    for (const auto& p : selectedEntries_) {
+                        std::error_code ec;
+                        fs::path sel(p);
+                        if (selectDirectoriesOnly_) {
+                            if (fs::exists(sel, ec) && fs::is_directory(sel, ec)) {
+                                valid.push_back(p);
+                            }
+                        } else if (fs::exists(sel, ec) && !fs::is_directory(sel, ec)) {
                             valid.push_back(p);
                         }
-                    } else if (fs::exists(sel, ec) && !fs::is_directory(sel, ec)) {
-                        valid.push_back(p);
                     }
                 }
+                
                 if (!valid.empty()) {
                     outPaths = valid;
                     confirmed = true;
@@ -313,6 +356,8 @@ private:
     bool selectDirectoriesOnly_ = false;
     bool sortByDate_ = false;
     bool sortAscending_ = true;
+    std::string id_ = "File Browser";
+    bool showNewFolderData_ = false;
 
     bool IsSelected(const std::string& path) const {
         return std::find(selectedEntries_.begin(), selectedEntries_.end(), path) != selectedEntries_.end();
@@ -333,7 +378,7 @@ private:
  */
 class FileSelector {
 public:
-    FileSelector(const std::string& title = "Select File") : title_(title) {}
+    FileSelector(const std::string& title = "Select File") : title_(title), browser_(title + "##Browser") {}
 
     /**
      * @brief Request opening the selector at a given path.

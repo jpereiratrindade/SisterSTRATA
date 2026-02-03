@@ -21,12 +21,14 @@ add_subdirectory(src/world3d)
 add_subdirectory(src/ui)
 add_subdirectory(src/observational)
 add_subdirectory(tests)
+add_subdirectory(src/cli)
 
 # Entry point
 add_executable(SisterSTRATA src/main.cpp)
 
 # Link modules to executable
 target_link_libraries(SisterSTRATA PRIVATE
+    application_host
     core
     application
     infrastructure

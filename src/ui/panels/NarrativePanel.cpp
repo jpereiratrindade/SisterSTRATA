@@ -120,8 +120,15 @@ void NarrativePanel::draw(bool* open) {
 
             if (ImGui::BeginTabItem("Epistemic Memory")) {
                 auto snapshots = session_->getInterpretationSnapshots();
-                std::reverse(snapshots.begin(), snapshots.end());
-                UI::Components::InterpretationHistory::Draw(snapshots);
+                std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> filtered;
+                
+                // Filter for Narrative Context (Theme Analysis)
+                std::copy_if(snapshots.begin(), snapshots.end(), std::back_inserter(filtered), [](const auto& s){
+                    return s.intent == "theme_analysis";
+                });
+                
+                std::reverse(filtered.begin(), filtered.end());
+                UI::Components::InterpretationHistory::Draw(filtered);
                 ImGui::EndTabItem();
             }
 

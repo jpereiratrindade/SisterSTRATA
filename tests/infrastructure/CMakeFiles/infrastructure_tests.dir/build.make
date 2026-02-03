@@ -98,12 +98,8 @@ bin/infrastructure_tests: tests/infrastructure/CMakeFiles/infrastructure_tests.d
 bin/infrastructure_tests: tests/infrastructure/CMakeFiles/infrastructure_tests.dir/compiler_depend.ts
 bin/infrastructure_tests: lib/libinfrastructure.a
 bin/infrastructure_tests: lib/libapplication.a
-bin/infrastructure_tests: lib/libworld3d.a
-bin/infrastructure_tests: lib/libui.a
 bin/infrastructure_tests: lib/libinfrastructure.a
 bin/infrastructure_tests: lib/libapplication.a
-bin/infrastructure_tests: lib/libworld3d.a
-bin/infrastructure_tests: lib/libui.a
 bin/infrastructure_tests: /usr/lib64/libSDL2main.a
 bin/infrastructure_tests: /usr/lib64/libSDL2-2.0.so.0.3200.56
 bin/infrastructure_tests: /usr/lib64/libbrotlicommon.so
@@ -113,12 +109,6 @@ bin/infrastructure_tests: /usr/lib64/libz.so
 bin/infrastructure_tests: /usr/lib64/libssl.so
 bin/infrastructure_tests: /usr/lib64/libcrypto.so
 bin/infrastructure_tests: lib/libcore.a
-bin/infrastructure_tests: /lib64/libvulkan.so
-bin/infrastructure_tests: /usr/lib64/libSDL2main.a
-bin/infrastructure_tests: /usr/lib64/libSDL2-2.0.so.0.3200.56
-bin/infrastructure_tests: /usr/lib64/libSDL2main.a
-bin/infrastructure_tests: /usr/lib64/libSDL2-2.0.so.0.3200.56
-bin/infrastructure_tests: /lib64/libvulkan.so
 bin/infrastructure_tests: tests/infrastructure/CMakeFiles/infrastructure_tests.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable ../../bin/infrastructure_tests"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/infrastructure && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/infrastructure_tests.dir/link.txt --verbose=$(VERBOSE)

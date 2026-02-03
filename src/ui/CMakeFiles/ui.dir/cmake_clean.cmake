@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/ui.dir/UI.cpp.o.d"
   "CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o"
   "CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o.d"
+  "CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o"
+  "CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o.d"
   "CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o"
   "CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o.d"
   "CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o"
@@ -21,6 +23,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o.d"
   "CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o"
   "CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o.d"
+  "CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o"
+  "CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o.d"
   "CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o"
   "CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o.d"
   "CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o"
@@ -37,10 +41,14 @@ file(REMOVE_RECURSE
   "CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o.d"
   "CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o"
   "CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o.d"
+  "CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o"
+  "CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o.d"
   "CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o"
   "CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o.d"
   "CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o"
   "CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o.d"
+  "CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o"
+  "CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o.d"
 )
 
 # Per-language clean rules from dependency scanning.

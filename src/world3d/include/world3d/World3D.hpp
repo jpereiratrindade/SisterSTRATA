@@ -14,6 +14,7 @@
 #include "core/domain/hydro/HydrologyReport.hpp"
 #include "core/domain/hydro/HydroGrid.hpp"
 #include "core/domain/vegetation/VegetationOriginal.hpp"
+#include "application/ports/IWorldView.hpp"
 
 
 struct SDL_Window;
@@ -23,6 +24,8 @@ namespace World3D {
 void init(SDL_Window* window);
 void shutdown();
 void clear();
+
+Application::Ports::IWorldView* getWorldView();
 
 // Accessors for Main Loop Integration
 vk::Instance getInstance();

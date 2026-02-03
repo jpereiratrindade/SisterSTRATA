@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = -DCPPHTTPLIB_BROTLI_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -DCPPHTTPLIB_ZLIB_SUPPORT
 
-CXX_INCLUDES = -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/backends -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d/include -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/external -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/json-src/include -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA -isystem /usr/include/SDL2 -isystem /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-src
+CXX_INCLUDES = -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/backends -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/json-src/include -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/world3d/include -I/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/external -isystem /usr/include/SDL2 -isystem /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/httplib-src
 
 CXX_FLAGS = -std=c++20
 

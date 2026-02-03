@@ -76,8 +76,15 @@ void RecommendationTrajectoryPanel::draw(bool* open) {
 
             if (ImGui::BeginTabItem("Epistemic Memory", nullptr, targetTab_ == 2 ? ImGuiTabItemFlags_SetSelected : 0)) {
                 auto snapshots = session_->getInterpretationSnapshots();
-                std::reverse(snapshots.begin(), snapshots.end());
-                UI::Components::InterpretationHistory::Draw(snapshots);
+                std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> filtered;
+
+                // Filter for Recommendation Context
+                std::copy_if(snapshots.begin(), snapshots.end(), std::back_inserter(filtered), [](const auto& s){
+                    return s.intent == "trajectory_reading";
+                });
+
+                std::reverse(filtered.begin(), filtered.end());
+                UI::Components::InterpretationHistory::Draw(filtered);
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();

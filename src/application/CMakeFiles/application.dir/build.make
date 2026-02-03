@@ -86,33 +86,17 @@ src/application/CMakeFiles/application.dir/Session.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/application.dir/Session.cpp.s"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.cpp -o CMakeFiles/application.dir/Session.cpp.s
 
-src/application/CMakeFiles/application.dir/Application.cpp.o: src/application/CMakeFiles/application.dir/flags.make
-src/application/CMakeFiles/application.dir/Application.cpp.o: src/application/Application.cpp
-src/application/CMakeFiles/application.dir/Application.cpp.o: src/application/CMakeFiles/application.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object src/application/CMakeFiles/application.dir/Application.cpp.o"
-	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/application/CMakeFiles/application.dir/Application.cpp.o -MF CMakeFiles/application.dir/Application.cpp.o.d -o CMakeFiles/application.dir/Application.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp
-
-src/application/CMakeFiles/application.dir/Application.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/application.dir/Application.cpp.i"
-	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp > CMakeFiles/application.dir/Application.cpp.i
-
-src/application/CMakeFiles/application.dir/Application.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/application.dir/Application.cpp.s"
-	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp -o CMakeFiles/application.dir/Application.cpp.s
-
 # Object files for target application
 application_OBJECTS = \
-"CMakeFiles/application.dir/Session.cpp.o" \
-"CMakeFiles/application.dir/Application.cpp.o"
+"CMakeFiles/application.dir/Session.cpp.o"
 
 # External object files for target application
 application_EXTERNAL_OBJECTS =
 
 lib/libapplication.a: src/application/CMakeFiles/application.dir/Session.cpp.o
-lib/libapplication.a: src/application/CMakeFiles/application.dir/Application.cpp.o
 lib/libapplication.a: src/application/CMakeFiles/application.dir/build.make
 lib/libapplication.a: src/application/CMakeFiles/application.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX static library ../../lib/libapplication.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library ../../lib/libapplication.a"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application && $(CMAKE_COMMAND) -P CMakeFiles/application.dir/cmake_clean_target.cmake
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/application.dir/link.txt --verbose=$(VERBOSE)
 

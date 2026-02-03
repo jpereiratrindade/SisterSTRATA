@@ -1,7 +1,9 @@
 #include "ui/UI.hpp"
 #include "imgui.h"
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_vulkan.h"
+#include <imgui_impl_sdl2.h>
+#include <imgui_impl_vulkan.h>
+#include <imgui_impl_sdlrenderer2.h>
+#include <iostream>
 #include <SDL2/SDL_vulkan.h>
 #include <algorithm>
 #include <cmath>
@@ -165,6 +167,8 @@ void UserInterface::init(SDL_Window* window, const VulkanInitInfo& info) {
     
     // Link Panels
     soilSimPanel_.setPatchAnalysisPanel(&patchAnalysisPanel_);
+
+    isVulkan_ = true;
 }
 
 void UserInterface::setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory, Application::Ports::ILLMService* llmService) {
@@ -172,14 +176,20 @@ void UserInterface::setupFourthDimension(Core::Domain::FourthDimension::Trajecto
 }
 
 void UserInterface::setupObservational(Application::Session* session) {
+    session_ = session; // Store locally
     narrativePanel_.setSession(session);
     discursiveSystemPanel_.setSession(session);
     recommendationTrajectoryPanel_.setSession(session);
     timelinePanel_.setSession(session);
+    globalSynthesisPanel_.setSession(session);
 }
 
 void UserInterface::shutdown() {
-    ImGui_ImplVulkan_Shutdown();
+    if (isVulkan_) {
+        ImGui_ImplVulkan_Shutdown();
+    } else {
+        ImGui_ImplSDLRenderer2_Shutdown();
+    }
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
     window_ = nullptr;
@@ -190,7 +200,11 @@ void UserInterface::processEvent(const SDL_Event* event) {
 }
 
 void UserInterface::beginFrame() {
-    ImGui_ImplVulkan_NewFrame();
+    if (isVulkan_) {
+        ImGui_ImplVulkan_NewFrame();
+    } else {
+        ImGui_ImplSDLRenderer2_NewFrame();
+    }
     ImGui_ImplSDL2_NewFrame();
 
     if (window_) {
@@ -214,6 +228,25 @@ void UserInterface::beginFrame() {
     ImGui::NewFrame();
 }
 
+void UserInterface::initHybrid(SDL_Window* window, SDL_Renderer* renderer) {
+    window_ = window;
+    sdlRenderer_ = renderer;
+    isVulkan_ = false;
+
+    // 1. Setup Context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    // 2. Setup Style
+    ImGui::StyleColorsDark();
+
+    // 3. Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer2_Init(renderer);
+}
 
 void UserInterface::draw(const Application::DTO::UIData& data) {
     // 1. Update Callback Links (every frame or strictly on change? frame is safer for lambda captures if any)
@@ -222,8 +255,16 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     mainMenu_.onLoadDemo = onLoadDemo;
     mainMenu_.onOpenFile = onOpenFile;
     mainMenu_.onSaveFile = onSaveFile; // Link
+    mainMenu_.onOpenProject = onOpenProject; // Link
+    mainMenu_.onNewProject = onNewProject; // Link
     mainMenu_.onCloseFile = onCloseFile;
-    mainMenu_.onExit = onExit;
+    mainMenu_.onExit = onExit; // Restore missing exit
+    mainMenu_.showGlobalSynthesis = &showGlobalSynthesisPanel; // New link
+    
+    if (session_) {
+        mainMenu_.currentProjectPath = session_->getProjectRoot();
+    }
+
 
     // 2. Draw Main Menu
     mainMenu_.draw();
@@ -242,12 +283,21 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     narrativePanel_.draw(&mainMenu_.showNarrativePanel);
     discursiveSystemPanel_.draw(&mainMenu_.showDiscursivePanel);
     recommendationTrajectoryPanel_.draw(&mainMenu_.showRecommendationPanel);
+    globalSynthesisPanel_.draw(&showGlobalSynthesisPanel); // New
 }
 
-
 void UserInterface::render(vk::CommandBuffer cmd) {
-    ImGui::Render();
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+    if (isVulkan_) {
+        ImGui::Render();
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+    }
+}
+
+void UserInterface::renderHybrid() {
+    if (!isVulkan_) {
+        ImGui::Render();
+        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), sdlRenderer_);
+    }
 }
 
 void UserInterface::endFrame() {

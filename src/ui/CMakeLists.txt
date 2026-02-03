@@ -9,6 +9,7 @@ FetchContent_MakeAvailable(imgui)
 
 add_library(ui
     UI.cpp
+    views/Hybrid2DView.cpp
     menus/MainMenu.cpp
     panels/AnalysisPanel.cpp
     panels/PatchAnalysisPanel.cpp
@@ -23,6 +24,7 @@ add_library(ui
     panels/NarrativePanel.cpp # Observational
     panels/DiscursiveSystemPanel.cpp
     panels/RecommendationTrajectoryPanel.cpp
+    panels/GlobalSynthesisPanel.cpp
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
     ${imgui_SOURCE_DIR}/imgui_tables.cpp
@@ -30,6 +32,7 @@ add_library(ui
     # ${imgui_SOURCE_DIR}/imgui_demo.cpp # Disabled for Production
     ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer2.cpp
 )
 
 find_package(Vulkan REQUIRED)

@@ -11,8 +11,8 @@
 #include <future>
 #include <cmath>
 #include <algorithm>
-#include "world3d/loader/ObjLoader.hpp"
-#include "world3d/loader/CsvLoader.hpp"
+#include "infrastructure/io/ObjLoader.hpp"
+#include "infrastructure/io/CsvLoader.hpp"
 #include "world3d/generators/TerrainGenerator.hpp"
 #include "world3d/exporter/ObjExporter.hpp"
 #include "world3d/exporter/CsvExporter.hpp"
@@ -70,6 +70,73 @@ void Engine::init(SDL_Window* window) {
     uploadReferenceGrid(); // Persistent
 
     std::cout << "[Engine] Initialized." << std::endl;
+}
+
+void Engine::onWorldLoaded(const Core::Domain::WorldState& state) {
+    // Clear scene but keep grid?
+    scene_.clear();
+    uploadReferenceGrid();
+    
+    for (const auto& entity : state.entities) {
+        onEntityUpdated(entity);
+    }
+}
+
+void Engine::onEntityUpdated(const Core::Domain::WorldEntity& entity) {
+    if (entity.points.empty()) return;
+
+    // Convert to GPU Vertex
+    std::vector<Rendering::Vertex> vertices;
+    vertices.reserve(entity.points.size());
+    
+    for(size_t i=0; i<entity.points.size(); ++i) {
+        Rendering::Vertex v;
+        // Basic mapping. Real mapping needs offset/ScientificAdapter
+        // But WorldEntity is supposed to be relatively positioned?
+        // Or we use 0,0,0 as origin here because WorldState has absolute coords?
+        // ScientificAdapter::convert handles large UTM by subtracting origin.
+        // We need an origin. For now assume entity.points are raw.
+        // Let's use 0,0,0 origin for the conversion helper or just manual copy
+        // if we assume WorldState is already "Render Ready"? 
+        // No, WorldState is scientific. High precision doubles.
+        // GPU needs floats.
+        
+        // We reuse ScientificAdapter if available or do it manually.
+        // Since I don't want to add huge dependencies, I'll copy manually.
+        const auto& p = entity.points[i];
+        v.pos = glm::vec3(p.x, p.y, p.z); // Potential precision loss warning
+        
+        if (i < entity.colors.size()) v.color = entity.colors[i];
+        else v.color = glm::vec3(1,1,1);
+        
+        v.normal = glm::vec3(0,0,1);
+        vertices.push_back(v);
+    }
+    
+    // Upload logic (similar to loadPointCloud)
+    commandQueue_.push([this, vertices = std::move(vertices), type = entity.type, id = entity.id]() {
+         if (!context_ || !renderer_) return;
+
+         RenderObject obj;
+         if (type == "polyline") obj.topology = vk::PrimitiveTopology::eLineList;
+         else if (type == "mesh")  obj.topology = vk::PrimitiveTopology::eTriangleList;
+         else obj.topology = vk::PrimitiveTopology::ePointList;
+         
+         obj.vertexCount = static_cast<uint32_t>(vertices.size());
+         vk::DeviceSize size = sizeof(Rendering::Vertex) * vertices.size();
+         
+         Rendering::Buffer staging(*context_, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+         staging.copyTo(vertices.data(), size);
+         
+         obj.vertexBuffer = std::make_shared<Rendering::Buffer>(*context_, size, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+         renderer_->copyBuffer(staging.getHandle(), obj.vertexBuffer->getHandle(), size);
+         
+         scene_.addObject(obj);
+         
+         // Update active references for tools
+         // activeVertices_ = ... (Shared Ptr issue, need to persist)
+         // For now, simple visualization.
+    });
 }
 
 void Engine::clear() {
@@ -413,7 +480,7 @@ void Engine::loadFile(const std::string& path) {
         
         // --- CSV / XYZ / TXT (Point Clouds) ---
         if (ext == ".csv" || ext == ".xyz" || ext == ".txt") {
-            auto polyData = Loader::CsvLoader::loadPolylines(path);
+            auto polyData = Infrastructure::IO::CsvLoader::loadPolylines(path);
             if (!polyData.points.empty()) {
                 Core::ValueObjects::Vector3 origin(0.0, 0.0, 0.0);
                 double maxVal = 0.0;
@@ -467,7 +534,7 @@ void Engine::loadFile(const std::string& path) {
                 return;
             }
 
-            auto data = Loader::CsvLoader::load(path);
+            auto data = Infrastructure::IO::CsvLoader::load(path);
             if (data.points.empty()) return;
 
             // Determine Origin strategy:
@@ -535,10 +602,23 @@ void Engine::loadFile(const std::string& path) {
         } else if (ext == ".obj") {
              auto verticesPtr = std::make_shared<std::vector<Rendering::Vertex>>(); // Non-indexed
              bool isPointCloud = false;
-             if (Loader::ObjLoader::load(path, *verticesPtr, &isPointCloud)) {
-                 if (verticesPtr->empty()) {
-                     std::cerr << "[Engine] OBJ has no vertices: " << path << std::endl;
-                     return;
+             
+             auto objData = Infrastructure::IO::ObjLoader::load(path, &isPointCloud);
+             if (!objData.positions.empty()) {
+                 
+                 // Convert Data to Vertices
+                 verticesPtr->reserve(objData.positions.size());
+                 for(size_t i=0; i<objData.positions.size(); ++i) {
+                     Rendering::Vertex v;
+                     v.pos = objData.positions[i];
+                     if (i < objData.colors.size()) v.color = objData.colors[i];
+                     else v.color = glm::vec3(0.8f);
+                     
+                     if (i < objData.normals.size()) v.normal = objData.normals[i];
+                     else v.normal = glm::vec3(0,0,1);
+                     
+                     v.uv = glm::vec2(0);
+                     verticesPtr->push_back(v);
                  }
 
                  if (!isPointCloud) {

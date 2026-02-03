@@ -86,10 +86,24 @@ src/ui/CMakeFiles/ui.dir/UI.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/ui.dir/UI.cpp.s"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/UI.cpp -o CMakeFiles/ui.dir/UI.cpp.s
 
+src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
+src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o: src/ui/views/Hybrid2DView.cpp
+src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o -MF CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o.d -o CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/views/Hybrid2DView.cpp
+
+src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/ui.dir/views/Hybrid2DView.cpp.i"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/views/Hybrid2DView.cpp > CMakeFiles/ui.dir/views/Hybrid2DView.cpp.i
+
+src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/ui.dir/views/Hybrid2DView.cpp.s"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/views/Hybrid2DView.cpp -o CMakeFiles/ui.dir/views/Hybrid2DView.cpp.s
+
 src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.o: src/ui/menus/MainMenu.cpp
 src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.o -MF CMakeFiles/ui.dir/menus/MainMenu.cpp.o.d -o CMakeFiles/ui.dir/menus/MainMenu.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/menus/MainMenu.cpp
 
 src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.i: cmake_force
@@ -103,7 +117,7 @@ src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o: src/ui/panels/AnalysisPanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o -MF CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/AnalysisPanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.i: cmake_force
@@ -117,7 +131,7 @@ src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o: src/ui/panels/PatchAnalysisPanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o -MF CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/PatchAnalysisPanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.i: cmake_force
@@ -131,7 +145,7 @@ src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o: src/ui/panels/SettingsPanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o -MF CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/SettingsPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/SettingsPanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.i: cmake_force
@@ -145,7 +159,7 @@ src/ui/CMakeFiles/ui.dir/panels/SettingsPanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o: src/ui/panels/WelcomePanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o -MF CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o.d -o CMakeFiles/ui.dir/panels/WelcomePanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/WelcomePanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/WelcomePanel.cpp.i: cmake_force
@@ -159,7 +173,7 @@ src/ui/CMakeFiles/ui.dir/panels/WelcomePanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o: src/ui/panels/SoilSimPanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o -MF CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/SoilSimPanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.i: cmake_force
@@ -173,7 +187,7 @@ src/ui/CMakeFiles/ui.dir/panels/SoilSimPanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o: src/ui/panels/VegetationDeclarationPanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o -MF CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/VegetationDeclarationPanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.i: cmake_force
@@ -187,7 +201,7 @@ src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o: src/ui/panels/TerrainGeneratorPanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o -MF CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/TerrainGeneratorPanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.i: cmake_force
@@ -201,7 +215,7 @@ src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o: src/ui/panels/HydrologyPanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o -MF CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/HydrologyPanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.i: cmake_force
@@ -215,7 +229,7 @@ src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o: src/ui/panels/TimelinePanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o -MF CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o.d -o CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/TimelinePanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.i: cmake_force
@@ -226,10 +240,24 @@ src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/ui.dir/panels/TimelinePanel.cpp.s"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/TimelinePanel.cpp -o CMakeFiles/ui.dir/panels/TimelinePanel.cpp.s
 
+src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
+src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o: src/ui/panels/TimelinePanelHelpers.cpp
+src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o -MF CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o.d -o CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/TimelinePanelHelpers.cpp
+
+src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.i"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/TimelinePanelHelpers.cpp > CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.i
+
+src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.s"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/TimelinePanelHelpers.cpp -o CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.s
+
 src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o: src/ui/panels/NarrativePanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o -MF CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o.d -o CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/NarrativePanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.i: cmake_force
@@ -243,7 +271,7 @@ src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o: src/ui/panels/DiscursiveSystemPanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o -MF CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/DiscursiveSystemPanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.i: cmake_force
@@ -257,7 +285,7 @@ src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o: src/ui/panels/RecommendationTrajectoryPanel.cpp
 src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o -MF CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/RecommendationTrajectoryPanel.cpp
 
 src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.i: cmake_force
@@ -268,10 +296,24 @@ src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.s"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/RecommendationTrajectoryPanel.cpp -o CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.s
 
+src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
+src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o: src/ui/panels/GlobalSynthesisPanel.cpp
+src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o -MF CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o.d -o CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/GlobalSynthesisPanel.cpp
+
+src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.i"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/GlobalSynthesisPanel.cpp > CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.i
+
+src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.s"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui/panels/GlobalSynthesisPanel.cpp -o CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.s
+
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o: _deps/imgui-src/imgui.cpp
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o -MF CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o.d -o CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/imgui.cpp
 
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.i: cmake_force
@@ -285,7 +327,7 @@ src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o: _deps/imgui-src/imgui_draw.cpp
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o -MF CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o.d -o CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/imgui_draw.cpp
 
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.i: cmake_force
@@ -299,7 +341,7 @@ src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o: _deps/imgui-src/imgui_tables.cpp
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o -MF CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o.d -o CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/imgui_tables.cpp
 
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.i: cmake_force
@@ -313,7 +355,7 @@ src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o: _deps/imgui-src/imgui_widgets.cpp
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o -MF CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o.d -o CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/imgui_widgets.cpp
 
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.i: cmake_force
@@ -327,7 +369,7 @@ src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.s: cmake_force
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o: _deps/imgui-src/backends/imgui_impl_sdl2.cpp
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o -MF CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o.d -o CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/backends/imgui_impl_sdl2.cpp
 
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.i: cmake_force
@@ -341,7 +383,7 @@ src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.s: c
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o: _deps/imgui-src/backends/imgui_impl_vulkan.cpp
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o -MF CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o.d -o CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/backends/imgui_impl_vulkan.cpp
 
 src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.i: cmake_force
@@ -352,9 +394,24 @@ src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.s:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.s"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/backends/imgui_impl_vulkan.cpp -o CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.s
 
+src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o: src/ui/CMakeFiles/ui.dir/flags.make
+src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o: _deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp
+src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o: src/ui/CMakeFiles/ui.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o -MF CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o.d -o CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o -c /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp
+
+src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.i"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp > CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.i
+
+src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.s"
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp -o CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.s
+
 # Object files for target ui
 ui_OBJECTS = \
 "CMakeFiles/ui.dir/UI.cpp.o" \
+"CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o" \
 "CMakeFiles/ui.dir/menus/MainMenu.cpp.o" \
 "CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o" \
 "CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o" \
@@ -365,20 +422,24 @@ ui_OBJECTS = \
 "CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o" \
 "CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o" \
 "CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o" \
+"CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o" \
 "CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o" \
 "CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o" \
 "CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o" \
+"CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o" \
 "CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o" \
 "CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o" \
 "CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o" \
 "CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o" \
 "CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o" \
-"CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o"
+"CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o" \
+"CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o"
 
 # External object files for target ui
 ui_EXTERNAL_OBJECTS =
 
 lib/libui.a: src/ui/CMakeFiles/ui.dir/UI.cpp.o
+lib/libui.a: src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/menus/MainMenu.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/AnalysisPanel.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/PatchAnalysisPanel.cpp.o
@@ -389,18 +450,21 @@ lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/VegetationDeclarationPanel.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/TerrainGeneratorPanel.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/HydrologyPanel.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.o
+lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/NarrativePanel.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/RecommendationTrajectoryPanel.cpp.o
+lib/libui.a: src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_draw.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_tables.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/imgui_widgets.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o
+lib/libui.a: src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o
 lib/libui.a: src/ui/CMakeFiles/ui.dir/build.make
 lib/libui.a: src/ui/CMakeFiles/ui.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Linking CXX static library ../../lib/libui.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Linking CXX static library ../../lib/libui.a"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && $(CMAKE_COMMAND) -P CMakeFiles/ui.dir/cmake_clean_target.cmake
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/ui && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/ui.dir/link.txt --verbose=$(VERBOSE)
 

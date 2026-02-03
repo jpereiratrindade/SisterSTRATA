@@ -243,6 +243,54 @@ Engine.cpp.s:
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/world3d/CMakeFiles/world3d.dir/build.make src/world3d/CMakeFiles/world3d.dir/Engine.cpp.s
 .PHONY : Engine.cpp.s
 
+EngineHydrology.o: EngineHydrology.cpp.o
+.PHONY : EngineHydrology.o
+
+# target to build an object file
+EngineHydrology.cpp.o:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/world3d/CMakeFiles/world3d.dir/build.make src/world3d/CMakeFiles/world3d.dir/EngineHydrology.cpp.o
+.PHONY : EngineHydrology.cpp.o
+
+EngineHydrology.i: EngineHydrology.cpp.i
+.PHONY : EngineHydrology.i
+
+# target to preprocess a source file
+EngineHydrology.cpp.i:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/world3d/CMakeFiles/world3d.dir/build.make src/world3d/CMakeFiles/world3d.dir/EngineHydrology.cpp.i
+.PHONY : EngineHydrology.cpp.i
+
+EngineHydrology.s: EngineHydrology.cpp.s
+.PHONY : EngineHydrology.s
+
+# target to generate assembly for a file
+EngineHydrology.cpp.s:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/world3d/CMakeFiles/world3d.dir/build.make src/world3d/CMakeFiles/world3d.dir/EngineHydrology.cpp.s
+.PHONY : EngineHydrology.cpp.s
+
+EngineSoil.o: EngineSoil.cpp.o
+.PHONY : EngineSoil.o
+
+# target to build an object file
+EngineSoil.cpp.o:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/world3d/CMakeFiles/world3d.dir/build.make src/world3d/CMakeFiles/world3d.dir/EngineSoil.cpp.o
+.PHONY : EngineSoil.cpp.o
+
+EngineSoil.i: EngineSoil.cpp.i
+.PHONY : EngineSoil.i
+
+# target to preprocess a source file
+EngineSoil.cpp.i:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/world3d/CMakeFiles/world3d.dir/build.make src/world3d/CMakeFiles/world3d.dir/EngineSoil.cpp.i
+.PHONY : EngineSoil.cpp.i
+
+EngineSoil.s: EngineSoil.cpp.s
+.PHONY : EngineSoil.s
+
+# target to generate assembly for a file
+EngineSoil.cpp.s:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/world3d/CMakeFiles/world3d.dir/build.make src/world3d/CMakeFiles/world3d.dir/EngineSoil.cpp.s
+.PHONY : EngineSoil.cpp.s
+
 ScientificAdapter.o: ScientificAdapter.cpp.o
 .PHONY : ScientificAdapter.o
 
@@ -575,6 +623,12 @@ help:
 	@echo "... Engine.o"
 	@echo "... Engine.i"
 	@echo "... Engine.s"
+	@echo "... EngineHydrology.o"
+	@echo "... EngineHydrology.i"
+	@echo "... EngineHydrology.s"
+	@echo "... EngineSoil.o"
+	@echo "... EngineSoil.i"
+	@echo "... EngineSoil.s"
 	@echo "... ScientificAdapter.o"
 	@echo "... ScientificAdapter.i"
 	@echo "... ScientificAdapter.s"

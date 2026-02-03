@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.9.6] - 2026-02-03
+### Fixed
+- **Project Menu**: Resolved ID collision issue that caused "Project" menu options to be unresponsive.
+- **File Browser**: Added "New Folder" capability to the internal file browser, allowing users to create project directories directly from the UI.
+
 ## [v1.9.5] - 2026-02-02
 ### Fixed
 - **Slope Analysis**: Implemented a robust "Height-Based Fallback" in `SoilSystem` and `Engine` to correctly calculate slope on grid-based terrains (CSV) where normals are uniform.

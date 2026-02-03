@@ -16,3 +16,5 @@ add_test([=[CoreTrajectoryLODTest]=] "/run/media/jpereiratrindade/labeco10T/dev/
 set_tests_properties([=[CoreTrajectoryLODTest]=] PROPERTIES  _BACKTRACE_TRIPLES "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/core/CMakeLists.txt;29;add_test;/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/core/CMakeLists.txt;0;")
 add_test([=[CoreVegVectorTest]=] "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/bin/veg_vector_tests")
 set_tests_properties([=[CoreVegVectorTest]=] PROPERTIES  _BACKTRACE_TRIPLES "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/core/CMakeLists.txt;35;add_test;/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/core/CMakeLists.txt;0;")
+add_test([=[CoreSlopeFixTest]=] "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/bin/slope_fix_tests")
+set_tests_properties([=[CoreSlopeFixTest]=] PROPERTIES  _BACKTRACE_TRIPLES "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/core/CMakeLists.txt;41;add_test;/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/core/CMakeLists.txt;0;")

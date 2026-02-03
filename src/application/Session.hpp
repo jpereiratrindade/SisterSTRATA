@@ -17,19 +17,23 @@
 #include "src/observational/interpretation/aggregates/InterpretationRepository.hpp"
 #include "src/observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp"
 #include "src/application/mappers/ImpactProfileMapper.hpp"
-#include "world3d/World3D.hpp"
+#include "src/application/mappers/ImpactProfileMapper.hpp"
+// #include "world3d/World3D.hpp" // Removed for architectural purity (Headless)
+#include "core/domain/world/WorldState.hpp"
+#include "application/ports/IWorldView.hpp"
+#include "infrastructure/io/ObjLoader.hpp"
+#include "infrastructure/io/CsvLoader.hpp"
 #include <memory>
 #include <vector>
+#include <filesystem>
+#include <iostream>
 
 namespace Application {
 
 class Session {
 public:
     // Persistence Config
-    inline static const std::string DISCURSIVE_DB_PATH = "assets/data/user_db/discursive_systems.json";
-    inline static const std::string NARRATIVE_DB_PATH = "assets/data/user_db/narrative_history.json";
-    inline static const std::string RECOMMENDATION_DB_PATH = "assets/data/user_db/recommendation_trajectory.json";
-    inline static const std::string INTERPRETATION_DB_PATH = "assets/data/user_db/interpretation_memory.json";
+    std::filesystem::path projectRoot_ = "assets/data/user_db";
 
     Session() 
         : workspace_(std::make_unique<Core::Domain::Workspace>()),
@@ -37,11 +41,28 @@ public:
           discursiveSystemRepository_(std::make_unique<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository>()),
           interpretationRepository_(std::make_unique<SisterSTRATA::Observational::Interpretation::InterpretationRepository>()),
           llmService_(nullptr),
-          cognitiveService_(std::make_unique<Application::Services::Cognitive::CognitiveAssistanceService>(nullptr))
+          cognitiveService_(std::make_unique<Application::Services::Cognitive::CognitiveAssistanceService>(nullptr)),
+          worldState_(std::make_unique<Core::Domain::WorldState>()) // Init WorldState
     {
         // Ensure standard persistence directories exist
-        std::filesystem::create_directories("assets/data/user_db");
+        std::filesystem::create_directories(projectRoot_);
         initializePersistence();
+    }
+
+    void setProjectRoot(const std::string& path) {
+        projectRoot_ = path;
+        std::filesystem::create_directories(projectRoot_);
+        
+        // Reload data for the new project
+        // 1. Clear current state
+        newSession();
+        
+        // 2. Load from new path
+        initializePersistence();
+    }
+
+    [[nodiscard]] std::string getProjectRoot() const {
+        return projectRoot_.string();
     }
 
     [[nodiscard]] Core::Domain::Workspace& getWorkspace() const {
@@ -251,6 +272,91 @@ public:
         return Application::Mappers::ImpactProfileMapper::toNaturalLanguage(profile);
     }
 
+    // --- World Management ---
+    
+    void setWorldView(Ports::IWorldView* view) {
+        worldView_ = view;
+    }
+
+    void loadWorld(const std::string& path) {
+        std::cout << "[Session] Loading world from: " << path << std::endl;
+        
+        // 1. Clear previous
+        worldState_->clear();
+        if (worldView_) worldView_->clear();
+
+        // 2. Determine Loader
+        std::string ext = std::filesystem::path(path).extension().string();
+        
+        if (ext == ".obj") {
+            bool isPointCloud = false;
+            auto data = Infrastructure::IO::ObjLoader::load(path, &isPointCloud);
+            
+            Core::Domain::WorldEntity entity;
+            entity.type = isPointCloud ? "point_cloud" : "mesh";
+            entity.id = path;
+            
+            // Map Infrastructure Data -> Domain IO (or just copy)
+            // WorldState uses Core::ValueObjects::Vector3 (double)
+            // ObjLoader uses glm::vec3 (float)
+            // Need conversion.
+            entity.points.reserve(data.positions.size());
+            entity.colors.reserve(data.colors.size());
+            
+            for(size_t i=0; i<data.positions.size(); ++i) {
+                entity.points.push_back({
+                    (double)data.positions[i].x, 
+                    (double)data.positions[i].y, 
+                    (double)data.positions[i].z
+                });
+                
+                if (i < data.colors.size()) entity.colors.push_back(data.colors[i]);
+                else entity.colors.push_back({0.8, 0.8, 0.8});
+            }
+            
+            worldState_->addEntity(entity);
+            
+        } else if (ext == ".csv" || ext == ".xyz" || ext == ".txt") {
+             // Basic Check if polyline or pointcloud
+             // For now assume pointcloud unless specialized loader called
+             // CsvLoader handles this internally via different methods?
+             // Let's use the generic load() for points.
+             auto data = Infrastructure::IO::CsvLoader::load(path);
+             
+             Core::Domain::WorldEntity entity;
+             entity.type = "point_cloud";
+             entity.id = path;
+             entity.points = data.points; // Direct copy (Vector3)
+             entity.colors = data.colors;
+             
+             worldState_->addEntity(entity);
+        }
+        
+        // 3. Notify View
+        if (worldView_) {
+            worldView_->onWorldLoaded(*worldState_);
+        }
+        
+        // 4. Load Sidecars
+        loadSidecarData(path);
+    }
+    
+    void loadSidecarData(const std::string& path) {
+         try {
+            getNarrativeSystem().deserialize(path + ".json");
+            std::cout << "[Session] Sidecar: Narrative loaded." << std::endl;
+        } catch (...) {}
+        try {
+            getDiscursiveSystemRepository().deserialize(path + ".discursive.json");
+            std::cout << "[Session] Sidecar: Discursive loaded." << std::endl;
+        } catch (...) {}
+        try {
+            getRecommendationTrajectory().deserialize(path + ".recommendation.json");
+            std::cout << "[Session] Sidecar: Recommendation loaded." << std::endl;
+        } catch (...) {}
+    }
+
+
     // --- Simulation Tools ---
     enum class SimulationType {
         Stability,
@@ -268,7 +374,9 @@ public:
             
             // Fix: Create physical mesh for visualization (Ghost Mode requires vertices)
             // Use Type::Showcase (4) to ensure terrain has slopes/drainage context, avoiding "All Green" flat fallback.
-            World3D::generateTerrain("simulation_mesh.obj", 100, 100, 2.0f, 4, true);
+            // TODO: Move Terrain Generation to Core/Infrastructure
+            // World3D::generateTerrain("simulation_mesh.obj", 100, 100, 2.0f, 4, true);
+            std::cerr << "[Session] Warning: Terrain Generation currently unavailable in Headless/Session context." << std::endl;
         }
 
         if (!world) return; // Should not happen
@@ -332,56 +440,68 @@ private:
     Core::Domain::FourthDimension::Trajectory trajectory_;
 
     // Persistence Helpers
+    // Persistence Helpers
     void initializePersistence() {
-        if (std::filesystem::exists(DISCURSIVE_DB_PATH)) {
+        std::filesystem::path discursivePath = projectRoot_ / "discursive_systems.json";
+        if (std::filesystem::exists(discursivePath)) {
             try {
-                discursiveSystemRepository_->deserialize(DISCURSIVE_DB_PATH);
+                discursiveSystemRepository_->deserialize(discursivePath.string());
             } catch (...) {
                 // Ignore load errors on init, start fresh or log
             }
         }
-        if (std::filesystem::exists(NARRATIVE_DB_PATH)) {
+
+        std::filesystem::path narrativePath = projectRoot_ / "narrative_history.json";
+        if (std::filesystem::exists(narrativePath)) {
             try {
-                narrativeSystem_->deserialize(NARRATIVE_DB_PATH);
+                narrativeSystem_->deserialize(narrativePath.string());
             } catch (...) {
                 // Ignore load errors on init
             }
         }
-        if (std::filesystem::exists(RECOMMENDATION_DB_PATH)) {
+
+        std::filesystem::path recPath = projectRoot_ / "recommendation_trajectory.json";
+        if (std::filesystem::exists(recPath)) {
             try {
-                recommendationTrajectory_.deserialize(RECOMMENDATION_DB_PATH);
+                recommendationTrajectory_.deserialize(recPath.string());
             } catch (...) {}
         }
-        if (std::filesystem::exists(INTERPRETATION_DB_PATH)) {
+        
+        std::filesystem::path interpPath = projectRoot_ / "interpretation_memory.json";
+        if (std::filesystem::exists(interpPath)) {
             try {
-                interpretationRepository_->deserialize(INTERPRETATION_DB_PATH);
+                interpretationRepository_->deserialize(interpPath.string());
             } catch (...) {}
         }
     }
 
     void autoSaveDiscursive() {
         try {
-            discursiveSystemRepository_->serialize(DISCURSIVE_DB_PATH);
+            discursiveSystemRepository_->serialize((projectRoot_ / "discursive_systems.json").string());
         } catch (...) {}
     }
 
     void autoSaveNarrative() {
          try {
-            narrativeSystem_->serialize(NARRATIVE_DB_PATH);
+            narrativeSystem_->serialize((projectRoot_ / "narrative_history.json").string());
         } catch (...) {}
     }
 
     void autoSaveRecommendation() {
         try {
-            recommendationTrajectory_.serialize(RECOMMENDATION_DB_PATH);
+            recommendationTrajectory_.serialize((projectRoot_ / "recommendation_trajectory.json").string());
         } catch (...) {}
     }
 
     void autoSaveInterpretation() {
         try {
-            interpretationRepository_->serialize(INTERPRETATION_DB_PATH);
+            interpretationRepository_->serialize((projectRoot_ / "interpretation_memory.json").string());
         } catch (...) {}
     }
+    
+    // World State Owner
+    std::unique_ptr<Core::Domain::WorldState> worldState_;
+    Ports::IWorldView* worldView_ = nullptr;
 };
 
 } // namespace Application

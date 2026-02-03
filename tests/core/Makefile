@@ -275,6 +275,20 @@ veg_vector_tests/fast:
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f tests/core/CMakeFiles/veg_vector_tests.dir/build.make tests/core/CMakeFiles/veg_vector_tests.dir/build
 .PHONY : veg_vector_tests/fast
 
+# Convenience name for target.
+tests/core/CMakeFiles/slope_fix_tests.dir/rule:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/core/CMakeFiles/slope_fix_tests.dir/rule
+.PHONY : tests/core/CMakeFiles/slope_fix_tests.dir/rule
+
+# Convenience name for target.
+slope_fix_tests: tests/core/CMakeFiles/slope_fix_tests.dir/rule
+.PHONY : slope_fix_tests
+
+# fast build rule for target.
+slope_fix_tests/fast:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f tests/core/CMakeFiles/slope_fix_tests.dir/build.make tests/core/CMakeFiles/slope_fix_tests.dir/build
+.PHONY : slope_fix_tests/fast
+
 PatchAnalysisTest.o: PatchAnalysisTest.cpp.o
 .PHONY : PatchAnalysisTest.o
 
@@ -322,6 +336,30 @@ PatchTrajectoryTest.s: PatchTrajectoryTest.cpp.s
 PatchTrajectoryTest.cpp.s:
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f tests/core/CMakeFiles/patch_trajectory_test.dir/build.make tests/core/CMakeFiles/patch_trajectory_test.dir/PatchTrajectoryTest.cpp.s
 .PHONY : PatchTrajectoryTest.cpp.s
+
+SlopeFixTest.o: SlopeFixTest.cpp.o
+.PHONY : SlopeFixTest.o
+
+# target to build an object file
+SlopeFixTest.cpp.o:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f tests/core/CMakeFiles/slope_fix_tests.dir/build.make tests/core/CMakeFiles/slope_fix_tests.dir/SlopeFixTest.cpp.o
+.PHONY : SlopeFixTest.cpp.o
+
+SlopeFixTest.i: SlopeFixTest.cpp.i
+.PHONY : SlopeFixTest.i
+
+# target to preprocess a source file
+SlopeFixTest.cpp.i:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f tests/core/CMakeFiles/slope_fix_tests.dir/build.make tests/core/CMakeFiles/slope_fix_tests.dir/SlopeFixTest.cpp.i
+.PHONY : SlopeFixTest.cpp.i
+
+SlopeFixTest.s: SlopeFixTest.cpp.s
+.PHONY : SlopeFixTest.s
+
+# target to generate assembly for a file
+SlopeFixTest.cpp.s:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f tests/core/CMakeFiles/slope_fix_tests.dir/build.make tests/core/CMakeFiles/slope_fix_tests.dir/SlopeFixTest.cpp.s
+.PHONY : SlopeFixTest.cpp.s
 
 SoilRasterizerTest.o: SoilRasterizerTest.cpp.o
 .PHONY : SoilRasterizerTest.o
@@ -437,6 +475,7 @@ help:
 	@echo "... core_tests"
 	@echo "... patch_analysis_tests"
 	@echo "... patch_trajectory_test"
+	@echo "... slope_fix_tests"
 	@echo "... soil_rasterizer_tests"
 	@echo "... trajectory_lod_tests"
 	@echo "... veg_vector_tests"
@@ -446,6 +485,9 @@ help:
 	@echo "... PatchTrajectoryTest.o"
 	@echo "... PatchTrajectoryTest.i"
 	@echo "... PatchTrajectoryTest.s"
+	@echo "... SlopeFixTest.o"
+	@echo "... SlopeFixTest.i"
+	@echo "... SlopeFixTest.s"
 	@echo "... SoilRasterizerTest.o"
 	@echo "... SoilRasterizerTest.i"
 	@echo "... SoilRasterizerTest.s"

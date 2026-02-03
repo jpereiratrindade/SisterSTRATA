@@ -7,4 +7,4 @@
 add_test([=[ObservationalNarrativeTestLegacy]=] "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/bin/observational_tests_legacy")
 set_tests_properties([=[ObservationalNarrativeTestLegacy]=] PROPERTIES  _BACKTRACE_TRIPLES "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/observational/CMakeLists.txt;11;add_test;/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/observational/CMakeLists.txt;0;")
 add_test([=[ObservationalImpactTest]=] "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/bin/observational_impact_tests")
-set_tests_properties([=[ObservationalImpactTest]=] PROPERTIES  _BACKTRACE_TRIPLES "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/observational/CMakeLists.txt;25;add_test;/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/observational/CMakeLists.txt;0;")
+set_tests_properties([=[ObservationalImpactTest]=] PROPERTIES  _BACKTRACE_TRIPLES "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/observational/CMakeLists.txt;26;add_test;/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/observational/CMakeLists.txt;0;")

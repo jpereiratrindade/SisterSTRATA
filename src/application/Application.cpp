@@ -8,7 +8,9 @@
 
 namespace SisterSTRATA {
 
-Application::Application() {
+Application::Application() : Application(Config{}) {}
+
+Application::Application(const Config& config) : config_(config) {
     init();
 }
 
@@ -22,26 +24,38 @@ void Application::init() {
     // 1. Initialize Window
     window_ = std::make_unique<Infrastructure::Windowing::Window>("SisterSTRATA - Scientific Engine for Layered Landscapes", 1280, 720);
 
-    // 2. Initialize World3D (Vulkan)
-    // Critical: Must be done before UI because UI depends on Vulkan Context
-    World3D::init(window_->getNativeWindow());
+    if (!config_.useHybridMode) {
+        // 2. Initialize World3D (Vulkan)
+        World3D::init(window_->getNativeWindow());
 
-    // 3. Initialize UI
-    ::UI::VulkanInitInfo info;
-    info.instance = World3D::getInstance();
-    info.physicalDevice = World3D::getPhysicalDevice();
-    info.device = World3D::getDevice();
-    info.queue = World3D::getGraphicsQueue();
-    info.queueFamily = World3D::getGraphicsQueueFamilyIndex();
-    info.descriptorPool = World3D::getDescriptorPool();
-    info.renderPass = World3D::getRenderPass();
-    info.minImageCount = World3D::getMinImageCount();
-    info.imageCount = World3D::getImageCount();
+        // 3. Initialize UI (Vulkan)
+        ::UI::VulkanInitInfo info;
+        info.instance = World3D::getInstance();
+        info.physicalDevice = World3D::getPhysicalDevice();
+        info.device = World3D::getDevice();
+        info.queue = World3D::getGraphicsQueue();
+        info.queueFamily = World3D::getGraphicsQueueFamilyIndex();
+        info.descriptorPool = World3D::getDescriptorPool();
+        info.renderPass = World3D::getRenderPass();
+        info.minImageCount = World3D::getMinImageCount();
+        info.imageCount = World3D::getImageCount();
+        
+        ui_ = std::make_unique<::UI::UserInterface>();
+        ui_->init(window_->getNativeWindow(), info);
+    } else {
+        std::cout << "[Application] Initializing Hybrid View (CPU)..." << std::endl;
+        hybridView_ = std::make_unique<::UI::Views::Hybrid2DView>();
+        hybridView_->init(window_->getNativeWindow());
+        
+        // Initialize UI for Hybrid Mode
+        ui_ = std::make_unique<::UI::UserInterface>();
+        ui_->initHybrid(window_->getNativeWindow(), hybridView_->getRenderer());
+    }
 
-    // 4. Initialize Session (First, so UI can link to it)
+    // 4. Initialize Session
     session_ = std::make_unique<::Application::Session>();
     
-    // LLM Service setup
+    // ... LLM Service Setup (unchanged) ...
     auto realLLM = std::make_unique<::Infrastructure::LLM::OllamaAdapter>();
     if (realLLM->isAvailable()) {
         std::cout << "[Application] Ollama detected. Using " << realLLM->getModelName() << "." << std::endl;
@@ -51,84 +65,89 @@ void Application::init() {
         session_->setLLMService(std::make_unique<::Infrastructure::LLM::OllamaMockAdapter>());
     }
 
-    ui_ = std::make_unique<::UI::UserInterface>();
+    // Wire Session to World View
+    if (config_.useHybridMode) {
+       session_->setWorldView(hybridView_.get());
+    } else {
+       session_->setWorldView(World3D::getWorldView());
+    }
     
-    // Bind UI Callbacks
-    ui_->onLoadDemo = []() { World3D::loadDemoCloud(); };
-    ui_->onOpenFile = [this](std::string path) { 
-        World3D::loadFile(path); 
-        // Sidecar Load
-        try {
-            this->session_->getNarrativeSystem().deserialize(path + ".json");
-            std::cout << "[Application] Narrative data loaded from " << path << ".json" << std::endl;
-        } catch (const std::exception& e) {
-            std::cerr << "[Application] Warning: Could not load narrative data: " << e.what() << std::endl;
-        }
-        try {
-            this->session_->getDiscursiveSystemRepository().deserialize(path + ".discursive.json");
-            std::cout << "[Application] Discursive data loaded from " << path << ".discursive.json" << std::endl;
-        } catch (const std::exception& e) {
-            std::cerr << "[Application] Warning: Could not load discursive data: " << e.what() << std::endl;
-        }
-        try {
-            this->session_->getRecommendationTrajectory().deserialize(path + ".recommendation.json");
-            std::cout << "[Application] Recommendation data loaded from " << path << ".recommendation.json" << std::endl;
-        } catch (const std::exception& e) {
-            std::cerr << "[Application] Warning: Could not load recommendation data: " << e.what() << std::endl;
-        }
-    };
-    ui_->onSaveFile = [this](std::string path) { 
-        if (World3D::saveFile(path)) {
-            // Sidecar Save
-            try {
-                this->session_->getNarrativeSystem().serialize(path + ".json");
-                std::cout << "[Application] Narrative data saved to " << path << ".json" << std::endl;
-            } catch (const std::exception& e) {
-                std::cerr << "[Application] Error saving narrative data: " << e.what() << std::endl;
+    if (ui_) {
+        // Bind UI Callbacks (Shared between modes)
+        ui_->onLoadDemo = [this]() { 
+            if (!config_.useHybridMode) World3D::loadDemoCloud(); 
+            else std::cout << "[Application] Load Demo ignored in CPU mode." << std::endl;
+        };
+        
+        ui_->onOpenFile = [this](std::string path) { 
+            if (this->session_) {
+                this->session_->loadWorld(path);
             }
-            try {
-                this->session_->getDiscursiveSystemRepository().serialize(path + ".discursive.json");
-                std::cout << "[Application] Discursive data saved to " << path << ".discursive.json" << std::endl;
-            } catch (const std::exception& e) {
-                std::cerr << "[Application] Error saving discursive data: " << e.what() << std::endl;
-            }
-            try {
-                this->session_->getRecommendationTrajectory().serialize(path + ".recommendation.json");
-                std::cout << "[Application] Recommendation data saved to " << path << ".recommendation.json" << std::endl;
-            } catch (const std::exception& e) {
-                std::cerr << "[Application] Error saving recommendation data: " << e.what() << std::endl;
-            }
-        }
-    }; 
-    ui_->onCloseFile = [this]() { 
-        World3D::clear(); 
-        this->session_->getNarrativeSystem().clear();
-        this->session_->getDiscursiveSystemRepository().clear();
-        this->session_->getRecommendationTrajectory().clear();
-    }; 
-    ui_->onExit = [this]() { this->running_ = false; };
+        };
 
-    ui_->init(window_->getNativeWindow(), info);
-    
-    // Link Fourth Dimension System
-    // Link Fourth Dimension System
-    ui_->setupFourthDimension(&session_->getTrajectory(), session_->getLLMService());
-    
-    // Link Observational System
-    ui_->setupObservational(session_.get());
+        ui_->onSaveFile = [this](std::string path) { 
+            bool baseSuccess = false;
+            if (!config_.useHybridMode) {
+                baseSuccess = World3D::saveFile(path);
+            } else {
+                baseSuccess = true; // Allow sidecar save even if 3D is missing
+            }
+
+            if (baseSuccess) {
+                // Sidecar Save (Always allowed)
+                try {
+                    this->session_->getNarrativeSystem().serialize(path + ".json");
+                } catch (...) {}
+                try {
+                    this->session_->getDiscursiveSystemRepository().serialize(path + ".discursive.json");
+                } catch (...) {}
+                try {
+                    this->session_->getRecommendationTrajectory().serialize(path + ".recommendation.json");
+                } catch (...) {}
+                std::cout << "[Application] Observational data saved to sidecars." << std::endl;
+            }
+        }; 
+
+        ui_->onCloseFile = [this]() { 
+            if (!config_.useHybridMode) World3D::clear(); 
+            this->session_->getNarrativeSystem().clear();
+            this->session_->getDiscursiveSystemRepository().clear();
+            this->session_->getRecommendationTrajectory().clear();
+        }; 
+        
+        // Project Management Bindings (Crucial for SGS)
+        ui_->onNewProject = [this](std::string path) {
+            std::cout << "[Application] Creating New Project at: " << path << std::endl;
+            this->session_->setProjectRoot(path);
+        };
+
+        ui_->onOpenProject = [this](std::string path) {
+            std::cout << "[Application] Opening Project from: " << path << std::endl;
+            this->session_->setProjectRoot(path);
+        };
+
+        ui_->onExit = [this]() { this->running_ = false; };
+        
+        // Link Systems (both modes)
+        ui_->setupFourthDimension(&session_->getTrajectory(), session_->getLLMService());
+        ui_->setupObservational(session_.get());
+    }
 
     std::cout << "[Application] Initialization Complete." << std::endl;
 }
 
 void Application::shutdown() {
     if (window_) {
-        // Ensure GPU is idle before destroying resources
-        World3D::getDevice().waitIdle();
-        
-        ui_->shutdown();
-        World3D::shutdown();
+        if (ui_) ui_->shutdown();
+
+        if (!config_.useHybridMode) {
+            // Ensure GPU is idle before destroying resources
+            World3D::getDevice().waitIdle();
+            World3D::shutdown();
+        }
         
         ui_.reset();
+        hybridView_.reset();
         window_.reset();
         session_.reset();
     }
@@ -148,38 +167,64 @@ void Application::mainLoop() {
 
         processEvents();
 
-        // --- Render Phase ---
-        
-        // 1. Prepare 3D Frame
-        World3D::beginFrame();
-        
-        // 2. Update UI Logic
-        ui_->beginFrame();
-        
-        ::Application::DTO::UIData uiData;
-        uiData.framerate = (deltaTime > 0.0f) ? (1.0f / deltaTime) : 0.0f;
-        uiData.frameTimeMs = deltaTime * 1000.0f;
-        uiData.startMessage = "System Ready";
-        
-        ui_->draw(uiData);
-        
-        // 3. Present (Render 3D + UI Overlay)
-        World3D::endFrame([this](vk::CommandBuffer cmd) {
-            this->ui_->render(cmd);
-        });
-        
-        ui_->endFrame();
+        if (config_.useHybridMode) {
+            // Hybrid Render
+            if (hybridView_) hybridView_->render();
+            
+            // Draw UI over Hybrid
+            if (ui_) {
+                ui_->beginFrame();
+                ::Application::DTO::UIData uiData;
+                uiData.framerate = (deltaTime > 0.0f) ? (1.0f / deltaTime) : 0.0f;
+                uiData.frameTimeMs = deltaTime * 1000.0f;
+                uiData.startMessage = "System Ready (CPU Mode)";
+                if (hybridView_) {
+                     uiData.startMessage += " [View: " + hybridView_->getViewName() + " (TAB)]";
+                }
+                ui_->draw(uiData);
+                ui_->renderHybrid();
+                ui_->endFrame();
+            }
+
+            // Final Presentation for Hybrid Mode
+            if (hybridView_) {
+                SDL_RenderPresent(hybridView_->getRenderer());
+            }
+        } else {
+            // Vulkan Render
+            // 1. Prepare 3D Frame
+            World3D::beginFrame();
+            
+            // 2. Update UI Logic
+            if (ui_) {
+                ui_->beginFrame();
+                ::Application::DTO::UIData uiData;
+                uiData.framerate = (deltaTime > 0.0f) ? (1.0f / deltaTime) : 0.0f;
+                uiData.frameTimeMs = deltaTime * 1000.0f;
+                uiData.startMessage = "System Ready";
+                ui_->draw(uiData);
+            }
+            
+            // 3. Present (Render 3D + UI Overlay)
+            World3D::endFrame([this](vk::CommandBuffer cmd) {
+                if (this->ui_) this->ui_->render(cmd);
+            });
+            
+            if (ui_) ui_->endFrame();
+        }
     }
 }
 
 void Application::processEvents() {
     window_->pollEvents([this](const SDL_Event& event) {
         // 1. Pass to UI first
-        ui_->processEvent(&event);
+        if (ui_) {
+            ui_->processEvent(&event);
+        }
         
         // 2. Determine if 3D World should receive input
-        bool uiMouse = ui_->wantsToCaptureMouse();
-        bool uiKeyboard = ui_->wantsToCaptureKeyboard();
+        bool uiMouse = ui_ ? ui_->wantsToCaptureMouse() : false;
+        bool uiKeyboard = ui_ ? ui_->wantsToCaptureKeyboard() : false;
 
         // 3. Input Routing Logic
         bool isMouseEvent = (event.type == SDL_MOUSEMOTION || 
@@ -190,13 +235,32 @@ void Application::processEvents() {
         bool isKeyboardEvent = (event.type == SDL_KEYDOWN || 
                               event.type == SDL_KEYUP);
 
-        if (isMouseEvent && uiMouse) return;
-        
-        // Allow keyboard shortcuts (WASD) unless text input is active
-        if (isKeyboardEvent && ui_->wantsTextInput()) return;
+        if (!config_.useHybridMode) {
+             if (isMouseEvent && uiMouse) return;
+             // Allow keyboard shortcuts (WASD) unless text input is active
+             if (isKeyboardEvent && ui_ && ui_->wantsTextInput()) return;
+             
+             // 4. Pass to World3D
+             World3D::processEvent(event);
+        } else {
+            // Hybrid Input
+            if (hybridView_) hybridView_->handleEvent(event);
 
-        // 4. Pass to World3D
-        World3D::processEvent(event);
+            if (ui_) {
+                 // Forward to UI first
+                 ui_->processEvent(&event);
+                 if (ui_->wantsToCaptureMouse() || ui_->wantsToCaptureKeyboard()) return;
+            }
+
+            if (event.type == SDL_KEYDOWN) {
+                 if (event.key.keysym.sym == SDLK_ESCAPE) this->running_ = false;
+                 // Demo load trigger for Hybrid?
+                 if (event.key.keysym.sym == SDLK_l) {
+                     // Trigger simple load
+                     session_->loadWorld("demo.obj"); // Dummy
+                 }
+            }
+        }
     });
 }
 

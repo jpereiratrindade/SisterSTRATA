@@ -18,8 +18,10 @@ public:
 
     // Callbacks to trigger Application/UI actions
     std::function<void()> onLoadDemo;
-    std::function<void(std::string)> onOpenFile;
-    std::function<void(std::string)> onSaveFile; // New
+    std::function<void(std::string)> onOpenFile; // Path
+    std::function<void(std::string)> onSaveFile; // Path
+    std::function<void(std::string)> onOpenProject; // Path
+    std::function<void(std::string)> onNewProject; // Path
     std::function<void()> onCloseFile;
     std::function<void()> onExit;
 
@@ -37,25 +39,25 @@ public:
     bool showNarrativePanel = false; // New (Observational)
     bool showDiscursivePanel = false;
     bool showRecommendationPanel = false;
+    bool* showGlobalSynthesis = nullptr; // New: Pointer to UserInterface state
+    std::string currentProjectPath; // New: Cached path for display
 private:
+    void drawOpenFileDialog();
+    void drawSaveFileDialog(); // New
+    void drawProjectDialog();
+
     bool showOpenDialog = false;
-    bool showSaveAsDialog = false; 
+    bool showSaveAsDialog = false;
+    bool showProjectDialog = false;
+    bool isNewProjectMode = false;
     
     UI::Components::FileSelector openFileSelector{"Open File"};
     UI::Components::FileSelector saveFileSelector{"Save As"};
+    UI::Components::FileBrowser projectBrowser{"Project Browser"};
     
-    char filePathBuf[256] = ""; // Legacy/Temp buffer if needed, or remove? Keeping for robust fallback if selector fails? No, simpler to use selector results.
-    // Actually, FileSelector handles the path internally but returns string.
-    
-    // char filePathBuf... -> Removed in favor of direct string passing? 
-    // Wait, MainMenu.cpp uses filePathBuf. I will refactor MainMenu.cpp to use local strings or the selector's return.
-    // For now, I'll keep them as members if I want to pre-fill them, OR just rely on logic.
-    // Let's remove them to clean up.
     std::string lastOpenPath = "assets/data/";
     std::string lastSavePath = "assets/data/meshexport.obj";
-
-    void drawOpenFileDialog();
-    void drawSaveFileDialog(); // New
+    std::string lastProjectPath = "assets/data/user_db";
 };
 
 } // namespace UI::Menus

@@ -1,8 +1,6 @@
 file(REMOVE_RECURSE
   "../../lib/libapplication.a"
   "../../lib/libapplication.pdb"
-  "CMakeFiles/application.dir/Application.cpp.o"
-  "CMakeFiles/application.dir/Application.cpp.o.d"
   "CMakeFiles/application.dir/Session.cpp.o"
   "CMakeFiles/application.dir/Session.cpp.o.d"
 )

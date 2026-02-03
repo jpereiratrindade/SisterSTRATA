@@ -23,6 +23,10 @@ void init(SDL_Window* window) {
     }
 }
 
+Application::Ports::IWorldView* getWorldView() {
+    return g_Engine.get();
+}
+
 void shutdown() {
     g_Engine->shutdown();
     g_Engine.reset();

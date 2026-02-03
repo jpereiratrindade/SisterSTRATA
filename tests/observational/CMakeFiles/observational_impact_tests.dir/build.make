@@ -112,6 +112,7 @@ bin/observational_impact_tests: tests/observational/CMakeFiles/observational_imp
 bin/observational_impact_tests: tests/observational/CMakeFiles/observational_impact_tests.dir/impact_profile/TrajectoryImpactAnalyzerTest.cpp.o
 bin/observational_impact_tests: tests/observational/CMakeFiles/observational_impact_tests.dir/build.make
 bin/observational_impact_tests: tests/observational/CMakeFiles/observational_impact_tests.dir/compiler_depend.ts
+bin/observational_impact_tests: lib/libcore.a
 bin/observational_impact_tests: lib/libgtest_main.a
 bin/observational_impact_tests: lib/libgtest.a
 bin/observational_impact_tests: tests/observational/CMakeFiles/observational_impact_tests.dir/link.txt

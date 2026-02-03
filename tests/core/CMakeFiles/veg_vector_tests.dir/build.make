@@ -100,14 +100,8 @@ bin/veg_vector_tests: lib/libcore.a
 bin/veg_vector_tests: lib/libworld3d.a
 bin/veg_vector_tests: lib/libinfrastructure.a
 bin/veg_vector_tests: lib/libapplication.a
-bin/veg_vector_tests: lib/libui.a
-bin/veg_vector_tests: lib/libworld3d.a
 bin/veg_vector_tests: lib/libinfrastructure.a
 bin/veg_vector_tests: lib/libapplication.a
-bin/veg_vector_tests: lib/libui.a
-bin/veg_vector_tests: /lib64/libvulkan.so
-bin/veg_vector_tests: /usr/lib64/libSDL2main.a
-bin/veg_vector_tests: /usr/lib64/libSDL2-2.0.so.0.3200.56
 bin/veg_vector_tests: /usr/lib64/libSDL2main.a
 bin/veg_vector_tests: /usr/lib64/libSDL2-2.0.so.0.3200.56
 bin/veg_vector_tests: /usr/lib64/libbrotlicommon.so
@@ -117,9 +111,9 @@ bin/veg_vector_tests: /usr/lib64/libz.so
 bin/veg_vector_tests: /usr/lib64/libssl.so
 bin/veg_vector_tests: /usr/lib64/libcrypto.so
 bin/veg_vector_tests: lib/libcore.a
+bin/veg_vector_tests: /lib64/libvulkan.so
 bin/veg_vector_tests: /usr/lib64/libSDL2main.a
 bin/veg_vector_tests: /usr/lib64/libSDL2-2.0.so.0.3200.56
-bin/veg_vector_tests: /lib64/libvulkan.so
 bin/veg_vector_tests: tests/core/CMakeFiles/veg_vector_tests.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable ../../bin/veg_vector_tests"
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/tests/core && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/veg_vector_tests.dir/link.txt --verbose=$(VERBOSE)

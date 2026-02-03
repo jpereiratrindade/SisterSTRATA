@@ -1,24 +1,28 @@
-#pragma once
-
-#include "world3d/rendering/Vertex.hpp"
+#include "core/value_objects/Vector3.hpp"
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <glm/glm.hpp>
 
-namespace World3D::Loader {
+namespace Infrastructure::IO {
+
+struct ObjData {
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec3> colors;
+    // We can add indices later if needed, currently ObjLoader flattens.
+};
 
 class ObjLoader {
 public:
     /**
-     * @brief Load an OBJ file, supporting faces and point-only geometry.
-     * @param path File path.
-     * @param vertices Output vertex buffer.
-     * @param isPointCloud Optional flag set to true when geometry is point-only.
-     * @return true if any vertices were loaded.
+     * @brief Load an OBJ file.
+     * @return ObjData struct with flattened arrays.
      */
-    static bool load(const std::string& path, std::vector<Rendering::Vertex>& vertices, bool* isPointCloud = nullptr) {
+    static ObjData load(const std::string& path, bool* isPointCloud = nullptr) {
+        ObjData data;
         std::vector<glm::vec3> temp_positions;
         std::vector<glm::vec3> temp_normals;
         std::vector<glm::vec2> temp_uvs;
@@ -29,7 +33,7 @@ public:
         std::ifstream file(path);
         if (!file.is_open()) {
             std::cerr << "Failed to open OBJ: " << path << std::endl;
-            return false;
+            return data;
         }
 
         std::string line;
@@ -134,50 +138,43 @@ public:
             for (size_t i = 0; i < pointIndices.size(); ++i) {
                 unsigned int idx = pointIndices[i];
                 if (idx == 0 || idx > temp_positions.size()) continue;
-                Rendering::Vertex vertex;
-                vertex.pos = temp_positions[idx - 1];
+                
+                data.positions.push_back(temp_positions[idx - 1]);
+                
                 if (idx - 1 < temp_colors.size()) {
-                    vertex.color = temp_colors[idx - 1];
+                    data.colors.push_back(temp_colors[idx - 1]);
                 } else {
-                    vertex.color = glm::vec3(0.8f, 0.8f, 0.8f);
+                    data.colors.push_back(glm::vec3(0.8f, 0.8f, 0.8f));
                 }
-                vertex.normal = glm::vec3(0.0f, 0.0f, 1.0f);
-                vertex.uv = glm::vec2(0.0f, 0.0f);
-                vertices.push_back(vertex);
+                data.normals.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
             }
-            std::cout << "Loaded OBJ: " << path << " (" << vertices.size() << " points)" << std::endl;
-            return !vertices.empty();
+            std::cout << "Loaded OBJ: " << path << " (" << data.positions.size() << " points)" << std::endl;
+            return data;
         }
 
         // Processing indices
         for (size_t i = 0; i < vertexIndices.size(); i++) {
-            Rendering::Vertex vertex;
-            
             // Positions (1-based in OBJ)
-            vertex.pos = temp_positions[vertexIndices[i] - 1];
+            data.positions.push_back(temp_positions[vertexIndices[i] - 1]);
             
             // Color (White default)
             if (vertexIndices[i] - 1 < temp_colors.size()) {
-                vertex.color = temp_colors[vertexIndices[i] - 1];
+                data.colors.push_back(temp_colors[vertexIndices[i] - 1]);
             } else {
-                vertex.color = glm::vec3(0.8f, 0.8f, 0.8f);
+                data.colors.push_back(glm::vec3(0.8f, 0.8f, 0.8f));
             }
 
             // Normals
             if (!temp_normals.empty() && i < normalIndices.size()) {
-                vertex.normal = temp_normals[normalIndices[i] - 1];
+                data.normals.push_back(temp_normals[normalIndices[i] - 1]);
             } else {
-                vertex.normal = glm::vec3(0.0f, 0.0f, 1.0f);
+                data.normals.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
             }
-            
-            vertex.uv = glm::vec2(0.0f, 0.0f);
-
-            vertices.push_back(vertex);
         }
 
-        std::cout << "Loaded OBJ: " << path << " (" << vertices.size() << " vertices)" << std::endl;
-        return !vertices.empty();
+        std::cout << "Loaded OBJ: " << path << " (" << data.positions.size() << " vertices)" << std::endl;
+        return data;
     }
 };
 
-} // namespace World3D::Loader
+} // namespace Infrastructure::IO

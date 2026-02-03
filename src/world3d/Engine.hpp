@@ -22,17 +22,17 @@
 #include "core/domain/hydro/HydrologyReport.hpp"
 #include "core/value_objects/Vector3.hpp"
 #include "core/domain/vegetation/VegetationOriginal.hpp"
+#include "application/ports/IWorldView.hpp" // New Port
 
 namespace World3D {
 
-class Engine {
+class Engine : public Application::Ports::IWorldView {
 public:
     Engine();
     ~Engine();
 
     void init(SDL_Window* window);
     void shutdown();
-    void clear(); // Clear scene
     
     void processEvent(const SDL_Event& event);
     void update(float deltaTime);
@@ -76,6 +76,10 @@ public:
 
 
 
+    // IWorldView Implementation
+    void onWorldLoaded(const Core::Domain::WorldState& state) override;
+    void onEntityUpdated(const Core::Domain::WorldEntity& entity) override;
+    void clear() override;
 
 // ...
 

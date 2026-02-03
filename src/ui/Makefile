@@ -253,6 +253,30 @@ __/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.s:
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.s
 .PHONY : __/__/_deps/imgui-src/backends/imgui_impl_sdl2.cpp.s
 
+__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.o: __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o
+.PHONY : __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.o
+
+# target to build an object file
+__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o
+.PHONY : __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.o
+
+__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.i: __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.i
+.PHONY : __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.i
+
+# target to preprocess a source file
+__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.i:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.i
+.PHONY : __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.i
+
+__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.s: __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.s
+.PHONY : __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.s
+
+# target to generate assembly for a file
+__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.s:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/__/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.s
+.PHONY : __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.cpp.s
+
 __/__/_deps/imgui-src/backends/imgui_impl_vulkan.o: __/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o
 .PHONY : __/__/_deps/imgui-src/backends/imgui_impl_vulkan.o
 
@@ -444,6 +468,30 @@ panels/DiscursiveSystemPanel.s: panels/DiscursiveSystemPanel.cpp.s
 panels/DiscursiveSystemPanel.cpp.s:
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/panels/DiscursiveSystemPanel.cpp.s
 .PHONY : panels/DiscursiveSystemPanel.cpp.s
+
+panels/GlobalSynthesisPanel.o: panels/GlobalSynthesisPanel.cpp.o
+.PHONY : panels/GlobalSynthesisPanel.o
+
+# target to build an object file
+panels/GlobalSynthesisPanel.cpp.o:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.o
+.PHONY : panels/GlobalSynthesisPanel.cpp.o
+
+panels/GlobalSynthesisPanel.i: panels/GlobalSynthesisPanel.cpp.i
+.PHONY : panels/GlobalSynthesisPanel.i
+
+# target to preprocess a source file
+panels/GlobalSynthesisPanel.cpp.i:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.i
+.PHONY : panels/GlobalSynthesisPanel.cpp.i
+
+panels/GlobalSynthesisPanel.s: panels/GlobalSynthesisPanel.cpp.s
+.PHONY : panels/GlobalSynthesisPanel.s
+
+# target to generate assembly for a file
+panels/GlobalSynthesisPanel.cpp.s:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/panels/GlobalSynthesisPanel.cpp.s
+.PHONY : panels/GlobalSynthesisPanel.cpp.s
 
 panels/HydrologyPanel.o: panels/HydrologyPanel.cpp.o
 .PHONY : panels/HydrologyPanel.o
@@ -637,6 +685,30 @@ panels/TimelinePanel.cpp.s:
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/panels/TimelinePanel.cpp.s
 .PHONY : panels/TimelinePanel.cpp.s
 
+panels/TimelinePanelHelpers.o: panels/TimelinePanelHelpers.cpp.o
+.PHONY : panels/TimelinePanelHelpers.o
+
+# target to build an object file
+panels/TimelinePanelHelpers.cpp.o:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.o
+.PHONY : panels/TimelinePanelHelpers.cpp.o
+
+panels/TimelinePanelHelpers.i: panels/TimelinePanelHelpers.cpp.i
+.PHONY : panels/TimelinePanelHelpers.i
+
+# target to preprocess a source file
+panels/TimelinePanelHelpers.cpp.i:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.i
+.PHONY : panels/TimelinePanelHelpers.cpp.i
+
+panels/TimelinePanelHelpers.s: panels/TimelinePanelHelpers.cpp.s
+.PHONY : panels/TimelinePanelHelpers.s
+
+# target to generate assembly for a file
+panels/TimelinePanelHelpers.cpp.s:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/panels/TimelinePanelHelpers.cpp.s
+.PHONY : panels/TimelinePanelHelpers.cpp.s
+
 panels/VegetationDeclarationPanel.o: panels/VegetationDeclarationPanel.cpp.o
 .PHONY : panels/VegetationDeclarationPanel.o
 
@@ -685,6 +757,30 @@ panels/WelcomePanel.cpp.s:
 	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/panels/WelcomePanel.cpp.s
 .PHONY : panels/WelcomePanel.cpp.s
 
+views/Hybrid2DView.o: views/Hybrid2DView.cpp.o
+.PHONY : views/Hybrid2DView.o
+
+# target to build an object file
+views/Hybrid2DView.cpp.o:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.o
+.PHONY : views/Hybrid2DView.cpp.o
+
+views/Hybrid2DView.i: views/Hybrid2DView.cpp.i
+.PHONY : views/Hybrid2DView.i
+
+# target to preprocess a source file
+views/Hybrid2DView.cpp.i:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.i
+.PHONY : views/Hybrid2DView.cpp.i
+
+views/Hybrid2DView.s: views/Hybrid2DView.cpp.s
+.PHONY : views/Hybrid2DView.s
+
+# target to generate assembly for a file
+views/Hybrid2DView.cpp.s:
+	cd /run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA && $(MAKE) $(MAKESILENT) -f src/ui/CMakeFiles/ui.dir/build.make src/ui/CMakeFiles/ui.dir/views/Hybrid2DView.cpp.s
+.PHONY : views/Hybrid2DView.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -707,6 +803,9 @@ help:
 	@echo "... __/__/_deps/imgui-src/backends/imgui_impl_sdl2.o"
 	@echo "... __/__/_deps/imgui-src/backends/imgui_impl_sdl2.i"
 	@echo "... __/__/_deps/imgui-src/backends/imgui_impl_sdl2.s"
+	@echo "... __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.o"
+	@echo "... __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.i"
+	@echo "... __/__/_deps/imgui-src/backends/imgui_impl_sdlrenderer2.s"
 	@echo "... __/__/_deps/imgui-src/backends/imgui_impl_vulkan.o"
 	@echo "... __/__/_deps/imgui-src/backends/imgui_impl_vulkan.i"
 	@echo "... __/__/_deps/imgui-src/backends/imgui_impl_vulkan.s"
@@ -731,6 +830,9 @@ help:
 	@echo "... panels/DiscursiveSystemPanel.o"
 	@echo "... panels/DiscursiveSystemPanel.i"
 	@echo "... panels/DiscursiveSystemPanel.s"
+	@echo "... panels/GlobalSynthesisPanel.o"
+	@echo "... panels/GlobalSynthesisPanel.i"
+	@echo "... panels/GlobalSynthesisPanel.s"
 	@echo "... panels/HydrologyPanel.o"
 	@echo "... panels/HydrologyPanel.i"
 	@echo "... panels/HydrologyPanel.s"
@@ -755,12 +857,18 @@ help:
 	@echo "... panels/TimelinePanel.o"
 	@echo "... panels/TimelinePanel.i"
 	@echo "... panels/TimelinePanel.s"
+	@echo "... panels/TimelinePanelHelpers.o"
+	@echo "... panels/TimelinePanelHelpers.i"
+	@echo "... panels/TimelinePanelHelpers.s"
 	@echo "... panels/VegetationDeclarationPanel.o"
 	@echo "... panels/VegetationDeclarationPanel.i"
 	@echo "... panels/VegetationDeclarationPanel.s"
 	@echo "... panels/WelcomePanel.o"
 	@echo "... panels/WelcomePanel.i"
 	@echo "... panels/WelcomePanel.s"
+	@echo "... views/Hybrid2DView.o"
+	@echo "... views/Hybrid2DView.i"
+	@echo "... views/Hybrid2DView.s"
 .PHONY : help
 
 

@@ -8,7 +8,6 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Application.cpp" "src/application/CMakeFiles/application.dir/Application.cpp.o" "gcc" "src/application/CMakeFiles/application.dir/Application.cpp.o.d"
   "/run/media/jpereiratrindade/labeco10T/dev/cpp/SisterSTRATA/src/application/Session.cpp" "src/application/CMakeFiles/application.dir/Session.cpp.o" "gcc" "src/application/CMakeFiles/application.dir/Session.cpp.o.d"
   )
 

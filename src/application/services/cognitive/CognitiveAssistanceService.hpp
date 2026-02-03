@@ -17,7 +17,8 @@ enum class InterpretationMode {
     ThemeAnalysis,
     DiscursiveDraft,
     TrajectoryReading,
-    CoherenceCheck
+    CoherenceCheck,
+    GlobalSynthesis
 };
 
 /**
@@ -107,6 +108,13 @@ private:
             case InterpretationMode::CoherenceCheck:
                 prompt += "Evaluate the coherence between the narratives, discursive systems, and recommendations. Are the proposed actions consistent with the observed problems?";
                 break;
+            case InterpretationMode::GlobalSynthesis:
+                prompt += "Perform a Strategic Global Synthesis. Evaluate the alignment across all observational layers:\n"
+                          "- Do the [NARRATIVE OBSERVATIONS] justify the [DISCURSIVE SYSTEMS]?\n"
+                          "- Do the [RECOMMENDATION TRAJECTORY] actions logically follow from the identified mechanisms?\n"
+                          "- Identify any 'blind spots' where an observation has no corresponding system/action, or vice-versa.\n"
+                          "Provide a high-level strategic assessment of the project's coherence.";
+                break;
         }
 
         return prompt;
@@ -118,6 +126,7 @@ private:
             case InterpretationMode::DiscursiveDraft: return "discursive_draft";
             case InterpretationMode::TrajectoryReading: return "trajectory_reading";
             case InterpretationMode::CoherenceCheck: return "coherence_check";
+            case InterpretationMode::GlobalSynthesis: return "global_synthesis";
             default: return "unknown";
         }
     }
