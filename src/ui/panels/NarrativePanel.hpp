@@ -69,6 +69,7 @@ private:
     bool showExportDialog_ = false;
     std::string lastImportPath_ = "assets/data/";
     std::string lastExportPath_ = "assets/data/";
+    std::string importLastError_;
 
     void drawIngestionForm();
     void drawObservationList();

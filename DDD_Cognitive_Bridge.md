@@ -63,7 +63,7 @@ Every interaction with the LLM must be preceded by this "contractual" prompt:
 | Case | Input | AI Task |
 |---|---|---|
 | **Theme Extraction** | `NarrativeStates` | Identify dominant themes and explicit contradictions. |
-| **System Drafting** | `NarrativeStates` | Propose a rascunho of `DiscursiveSystem` (Problem/Action/Mechanism/Effect) to be reviewed by a human. |
+| **System Drafting** | `DiscursiveSystems` | Refine or consolidate a draft of `DiscursiveSystem` (Problem/Action/Mechanism/Effect) to be reviewed by a human. |
 | **Trajectory Reading** | `RecommendationSnapshots` | Identify focus shifts or persistence in technical recommendations over time. |
 | **Consistency Audit** | `Observational Summaries` | Evaluate if the narrative and discursive readings are consistent with each other. |
 

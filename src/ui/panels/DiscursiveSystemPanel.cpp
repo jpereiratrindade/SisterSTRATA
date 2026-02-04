@@ -114,15 +114,15 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::SameLine(ImGui::GetWindowWidth() - 500);
     
     if (ImGui::Button(aiRequestPending_ ? "Waiting..." : "Ask Qwen to Propose System", ImVec2(240, 60))) {
-        auto narratives = session_->getNarrativeHistoryDTO();
-        if (!narratives.empty()) {
+        auto systems = session_->getDiscursiveSystemDTOs();
+        if (!systems.empty()) {
             try {
-                // Pre-validation: Ensure narratives are valid
-                bool validSources = std::all_of(narratives.begin(), narratives.end(), [](const auto& n){ return !n.id.empty(); });
+                // Pre-validation: Ensure discursive systems are valid
+                bool validSources = std::all_of(systems.begin(), systems.end(), [](const auto& s){ return !s.id.empty(); });
                 
                 if (validSources) {
                     aiRequestPending_ = true;
-                    auto bundle = Application::Mappers::Cognitive::createBundle("discursive_draft", narratives);
+                    auto bundle = Application::Mappers::Cognitive::createBundle("discursive_draft", {}, systems);
                     
                     // Inject Analytical Profile
                     bundle.trajectoryImpactProfile = session_->generateImpactProfileText();
@@ -143,7 +143,7 @@ void DiscursiveSystemPanel::drawIngestionForm() {
                 ImGui::OpenPopup("AIAnalysisError"); 
             }
         } else {
-            ImGui::OpenPopup("NarrativesEmptyError");
+            ImGui::OpenPopup("DiscursiveContextEmptyError");
         }
     }
 
@@ -176,10 +176,10 @@ void DiscursiveSystemPanel::drawIngestionForm() {
         }
     }
     
-    if (ImGui::BeginPopupModal("NarrativesEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Narratives Found");
-        ImGui::Text("The 'Propose System' tool needs Narrative Observations to generate a structured system.");
-        ImGui::Text("Alternatively, use 'Evaluate Coherence' if you already have systems registered.");
+    if (ImGui::BeginPopupModal("DiscursiveContextEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Discursive Systems Found");
+        ImGui::Text("The 'Propose System' tool uses registered Discursive Systems for synthesis.");
+        ImGui::Text("Please load an example or add a system manually first.");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }

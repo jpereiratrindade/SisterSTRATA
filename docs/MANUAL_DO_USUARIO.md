@@ -115,7 +115,7 @@ O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como
 > **Manual Técnico**: [Integração Qwen](TECHNICAL_MANUAL_QWEN_INTEGRATION.md) | [Arquitetura Vetorial](Arquitetura_Vetorial_Hipoteses.md)
 
 *   **Ingestão de Sistema Discursivo (Aba "Ingestion")**:
-    *   **Ask Qwen to Propose System**: Preenche automaticamente um formulário de Sistema Discursivo lendo todas as observações narrativas registradas até o momento. Ideal para criar uma primeira versão estruturada a partir de anotações soltas.
+    *   **Ask Qwen to Propose System**: Sintetiza um rascunho estruturado a partir dos **Sistemas Discursivos registrados** (ingest). Ideal para consolidar problemas, ações, mecanismos e efeitos já declarados.
     *   **Evaluate Logical Coherence**: Analisa o sistema discursivo *já cadastrado* (lista abaixo do formulário) em busca de falhas lógicas (ex: Problema sem Ação correspondente, Mecanismo sem Efeito). Gera um relatório de consistência interna.
 *   **Trajectory Impact Profile**: Analisa todo o histórico de mudanças (Trajetória Completa) para gerar um relatório de impacto ambiental.
     > **Detalhes do Modelo**: [Impact Profile](SCIENTIFIC_TRAJECTORY_IMPACT_PROFILE.md)

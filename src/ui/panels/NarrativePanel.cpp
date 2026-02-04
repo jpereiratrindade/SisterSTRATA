@@ -304,7 +304,8 @@ void NarrativePanel::drawIngestionForm() {
                 lastImportPath_ = selected.parent_path().string();
             }
             ImGui::OpenPopup("NarrativeImportSuccess");
-        } catch (const std::exception&) {
+        } catch (const std::exception& e) {
+            importLastError_ = e.what();
             ImGui::OpenPopup("NarrativeImportError");
         }
         showImportDialog_ = false;
@@ -332,6 +333,7 @@ void NarrativePanel::drawIngestionForm() {
     }
     if (ImGui::BeginPopupModal("NarrativeImportError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Failed to import narrative observations.");
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "%s", importLastError_.c_str());
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }

@@ -172,7 +172,7 @@ A resposta gerada deve seguir estritamente o formato de lista de verificação:
 | Painel | Modo de Interpretação | Fonte de Dados (ContextBundle) |
 | :--- | :--- | :--- |
 | **Narrative (NOC)** | `ThemeAnalysis` | Histórico de observações manuais. |
-| **Discursive (DSC)** | `DiscursiveDraft` | Relação entre narrativas e sistemas de ação. |
+| **Discursive (DSC)** | `DiscursiveDraft` | Sistemas discursivos registrados (ingest) como base de síntese. |
 | **Timeline (4D)** | `CoherenceCheck` | Índices SSI e distribuição de classes entre estados. |
 | **Timeline (4D)** | `TrajectoryReading` | Resumo qualitativo da evolução de manchas e fragmentação. |
 

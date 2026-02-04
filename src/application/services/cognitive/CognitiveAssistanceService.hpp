@@ -100,7 +100,8 @@ private:
                 prompt += "Based on the provided narratives, identify the dominant themes and explicit contradictions. Highlight tensions between different viewpoints.";
                 break;
             case InterpretationMode::DiscursiveDraft:
-                prompt += "Based on the narratives, propose a draft for a Discursive System following the format: PROBLEM -> ACTION -> MECHANISM -> EFFECT. State your reasoning clearly.";
+                prompt += "Based on the provided Discursive Systems, propose a refined draft following the format: PROBLEM -> ACTION -> MECHANISM -> EFFECT. "
+                          "Do not introduce external facts; keep the structure consistent with the provided context.";
                 break;
             case InterpretationMode::TrajectoryReading:
                 prompt += "Analyze the recommendation trajectory. Identify if there are major shifts in focus or persistent themes over time.";

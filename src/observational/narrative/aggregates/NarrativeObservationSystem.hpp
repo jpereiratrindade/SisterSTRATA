@@ -68,12 +68,7 @@ public:
     void deserialize(const std::string& filepath) {
         std::ifstream ifs(filepath);
         if (!ifs.is_open()) {
-            // It's acceptable if the file doesn't exist yet (new project), but we should warn or handle.
-            // For now, if file missing, we assume empty or throw. 
-            // Better behavior: clear history? Or just return if file not found?
-            // "Replace current state" implies clear.
-            // If file doesn't exist, maybe do nothing (or clear to match 'empty file').
-            return; 
+             throw std::runtime_error("Failed to open file: " + filepath);
         }
 
         nlohmann::json j;
@@ -81,6 +76,8 @@ public:
             ifs >> j;
             if (j.contains("history")) {
                 m_history = j["history"].get<std::vector<NarrativeState>>();
+            } else {
+                throw std::runtime_error("JSON format error: Missing root 'history' array.");
             }
         } catch (const nlohmann::json::parse_error& e) {
             // Corrupt file or empty
