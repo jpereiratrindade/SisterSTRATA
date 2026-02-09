@@ -261,6 +261,9 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     mainMenu_.onExit = onExit; // Restore missing exit
     mainMenu_.onImportIW = onImportIW; // Link
     mainMenu_.showGlobalSynthesis = &showGlobalSynthesisPanel; // New link
+    mainMenu_.onScanProject = [this]() { 
+        if (session_) session_->scanForIngestion(); 
+    };
     
     if (session_) {
         mainMenu_.currentProjectPath = session_->getProjectRoot();

@@ -25,6 +25,7 @@ public:
     std::function<void()> onCloseFile;
     std::function<void()> onExit;
     std::function<void(std::string)> onImportIW; // New
+    std::function<void()> onScanProject; // Batch Ingestion Trigger
 
     // State control for other panels
     bool showSettings = false;

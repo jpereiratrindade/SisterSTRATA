@@ -252,6 +252,34 @@ public:
         }
     }
 
+    void scanForIngestion() {
+        std::cout << "[Session] Scanning project for inputs..." << std::endl;
+        
+        std::filesystem::path inputsDir = projectRoot_ / "inputs";
+        if (!std::filesystem::exists(inputsDir)) {
+            // Create structure if it doesn't exist to guide user
+            try {
+                std::filesystem::create_directories(inputsDir / "narratives");
+                std::filesystem::create_directories(inputsDir / "discursive");
+                std::cout << "[Session] Created input directories at " << inputsDir << std::endl;
+            } catch (...) {}
+            return;
+        }
+
+        auto scanDir = [&](const std::filesystem::path& dir) {
+             if (!std::filesystem::exists(dir)) return;
+             for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+                 if (entry.is_regular_file() && entry.path().extension() == ".json") {
+                     ingestFromIW(entry.path().string());
+                 }
+             }
+        };
+
+        scanDir(inputsDir / "narratives");
+        scanDir(inputsDir / "discursive");
+        // We could scan recursively or other folders, but sticking to specific input folders is cleaner.
+    }
+
     [[nodiscard]] size_t getDiscursiveSystemCount() const {
         return discursiveSystemRepository_->getSystems().size();
     }
@@ -525,6 +553,9 @@ private:
                 interpretationRepository_->deserialize(interpPath.string());
             } catch (...) {}
         }
+        
+        // Auto-ingest inputs on load
+        scanForIngestion();
     }
 
     void autoSaveDiscursive() {
