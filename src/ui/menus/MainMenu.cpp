@@ -47,9 +47,6 @@ void MainMenu::draw() {
             }
             if (ImGui::MenuItem("Scan Project Inputs (Batch)")) {
                  // Trigger session scan
-                 // We need access to session. MainMenu usually has a reference or access via Service/Application singleton?
-                 // Checking MainMenu.hpp... For now assuming we can signal or call application.
-                 // Actually MainMenu constructor might take session? Or we need a callback.
                  if (onScanProject) onScanProject();
             }
             ImGui::EndMenu();
