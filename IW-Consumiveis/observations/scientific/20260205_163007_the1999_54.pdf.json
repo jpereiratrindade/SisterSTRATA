@@ -1,0 +1,83 @@
+{
+  "allegedMechanisms": [],
+  "baselineAssumptions": [
+    {
+      "baselineType": "fixed",
+      "context": "Page 2",
+      "description": "The authors assume that the null hypothesis is true for permuted data, which follows a random distribution."
+    }
+  ],
+  "discursiveContext": {
+    "epistemicRole": "discursive-reading",
+    "frames": [
+      {
+        "description": "The discourse emphasizes the importance of rigorous statistical methods in ecological research, highlighting the need for valid tests to identify significant patterns.",
+        "evidenceSnippet": "A method is presented that provides a means to rigorously test the significance of ordination axes (page 1).",
+        "label": "Methodological Rigor",
+        "valence": "normative"
+      }
+    ]
+  },
+  "discursiveSystem": {
+    "declaredActions": [
+      {
+        "statement": "The authors propose a method for assessing the significance of ordination axes.",
+        "status": "proposed"
+      }
+    ],
+    "declaredProblems": [
+      {
+        "context": "Introduction",
+        "statement": "Identifying significant patterns in ecological data can be challenging due to random variation."
+      }
+    ],
+    "expectedEffects": [
+      {
+        "likelihood": "high",
+        "statement": "This method can help researchers validate their findings and improve the robustness of ecological analyses."
+      }
+    ]
+  },
+  "interpretationLayers": {
+    "authorInterpretations": [
+      "The proposed method can help researchers determine if observed patterns in ecological data are significant or could be due to chance.",
+      "By comparing original ordination results with those from permuted data, the authors aim to validate their analysis."
+    ],
+    "observedStatements": [
+      "The authors present a methodology for assessing the significance of ordination axes.",
+      "The method involves Procrustean adjustments and random permutations."
+    ],
+    "possibleReadings": [
+      "The study offers a practical tool for ecologists working with multivariate data.",
+      "The method may need further validation across different ecological contexts and datasets."
+    ]
+  },
+  "narrativeObservations": [],
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_163007_the1999_54.pdf",
+    "contentHash": "70344_1770319485660927656",
+    "extractionMethod": "pdftotext",
+    "filename": "the1999_54.pdf",
+    "ingestedAt": "2026-02-05T19:30:35Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/the1999_54.pdf"
+  },
+  "sourceProfile": {
+    "contextNotes": "The study focuses on a theoretical framework for analyzing the significance of ordination axes in multivariate ecological data analysis.",
+    "ecosystemType": "terrestrial",
+    "evidenceType": "empirical",
+    "limitations": "The methodology requires computational resources and may not be straightforward to apply without prior knowledge of statistical methods.",
+    "studyType": "theoretical",
+    "temporalScale": "unknown",
+    "transferability": "medium"
+  },
+  "temporalWindowReferences": [],
+  "trajectoryAnalogies": [
+    {
+      "analogy": "The method can be seen as an analogy to other statistical tests where null hypotheses are compared against observed results.",
+      "justification": "By comparing ordination axes, the method aims to identify significant patterns in ecological data.",
+      "scope": "statistical testing"
+    }
+  ]
+}

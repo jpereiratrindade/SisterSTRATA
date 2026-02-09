@@ -1,0 +1,41 @@
+{
+  "systems": [
+    {
+      "allegedMechanisms": [],
+      "declaredActions": [
+        {
+          "statement": "The authors propose a method for assessing the significance of ordination axes."
+        }
+      ],
+      "declaredProblems": [
+        {
+          "statement": "Identifying significant patterns in ecological data can be challenging due to random variation."
+        }
+      ],
+      "expectedEffects": [
+        {
+          "statement": "This method can help researchers validate their findings and improve the robustness of ecological analyses."
+        }
+      ],
+      "id": "ds_candidate_20260205_163007_the1999_54.pdf",
+      "interpretationMetadata": {
+        "context": "scientific_ingestion",
+        "discursiveContext": "{\"epistemicRole\":\"discursive-reading\",\"frames\":[{\"description\":\"The discourse emphasizes the importance of rigorous statistical methods in ecological research, highlighting the need for valid tests to identify significant patterns.\",\"evidenceSnippet\":\"A method is presented that provides a means to rigorously test the significance of ordination axes (page 1).\",\"label\":\"Methodological Rigor\",\"valence\":\"normative\"}]}",
+        "filename": "the1999_54.pdf",
+        "model": "qwen2.5:7b"
+      },
+      "sourceReferences": [
+        {
+          "author": "unknown",
+          "productionDate": "2026-02-05T19:30:35Z",
+          "sourceId": "20260205_163007_the1999_54.pdf",
+          "type": 4
+        }
+      ],
+      "temporalContext": {
+        "category": 3,
+        "label": "general"
+      }
+    }
+  ]
+}

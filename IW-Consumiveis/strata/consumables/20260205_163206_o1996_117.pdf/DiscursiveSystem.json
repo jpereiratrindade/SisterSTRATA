@@ -1,0 +1,41 @@
+{
+  "systems": [
+    {
+      "allegedMechanisms": [],
+      "declaredActions": [
+        {
+          "statement": "Developing optimal sample size strategies for vegetation studies."
+        }
+      ],
+      "declaredProblems": [
+        {
+          "statement": "Inaccurate sampling methods can lead to misinterpretation of ecological relationships in forested environments."
+        }
+      ],
+      "expectedEffects": [
+        {
+          "statement": "Improved accuracy and reliability in ecological studies of forested environments."
+        }
+      ],
+      "id": "ds_candidate_20260205_163206_o1996_117.pdf",
+      "interpretationMetadata": {
+        "context": "scientific_ingestion",
+        "discursiveContext": "{\"epistemicRole\":\"discursive-reading\",\"frames\":[{\"description\":\"The study aims to understand the ecological dynamics of vegetation under changing light conditions, emphasizing the importance of accurate sampling methods.\",\"evidenceSnippet\":\"Optimal sample size is a critical aspect for accurate ecosystem studies.\",\"label\":\"Ecosystem Dynamics and Management\",\"valence\":\"normative\"}]}",
+        "filename": "o1996_117.pdf",
+        "model": "qwen2.5:7b"
+      },
+      "sourceReferences": [
+        {
+          "author": "unknown",
+          "productionDate": "2026-02-05T19:32:36Z",
+          "sourceId": "20260205_163206_o1996_117.pdf",
+          "type": 4
+        }
+      ],
+      "temporalContext": {
+        "category": 3,
+        "label": "general"
+      }
+    }
+  ]
+}

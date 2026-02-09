@@ -1,0 +1,13 @@
+{
+  "discursiveContext": {
+    "epistemicRole": "discursive-reading",
+    "frames": [
+      {
+        "description": "关注如何通过理解和管理土壤种子库来维持或恢复当地的植物多样性。",
+        "evidenceSnippet": "本研究旨在为制定有效的土地管理和保护策略提供科学依据（p. 1）",
+        "label": "生态管理",
+        "valence": "normative"
+      }
+    ]
+  }
+}

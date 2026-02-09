@@ -1,0 +1,41 @@
+{
+  "systems": [
+    {
+      "allegedMechanisms": [],
+      "declaredActions": [
+        {
+          "statement": "Sustainable land management practices should be implemented to preserve biodiversity."
+        }
+      ],
+      "declaredProblems": [
+        {
+          "statement": "Native grasslands are threatened by management practices such as grazing and fire."
+        }
+      ],
+      "expectedEffects": [
+        {
+          "statement": "Implementing sustainable management can maintain or restore native grassland ecosystems."
+        }
+      ],
+      "id": "ds_candidate_20260205_163450_campos2009_67.pdf",
+      "interpretationMetadata": {
+        "context": "scientific_ingestion",
+        "discursiveContext": "{\"epistemicRole\":\"discursive-reading\",\"frames\":[{\"description\":\"A frame focusing on the ecological consequences of grazing and fire.\",\"evidenceSnippet\":\"The effects of livestock grazing (Pillar et al., 2005) and frequent burning (Souza Castilhos & Jacques, 2017) on native grasslands are well documented.\",\"label\":\"ecological impact of management practices\",\"valence\":\"descriptive\"}]}",
+        "filename": "campos2009_67.pdf",
+        "model": "qwen2.5:7b"
+      },
+      "sourceReferences": [
+        {
+          "author": "unknown",
+          "productionDate": "2026-02-05T19:35:17Z",
+          "sourceId": "20260205_163450_campos2009_67.pdf",
+          "type": 4
+        }
+      ],
+      "temporalContext": {
+        "category": 3,
+        "label": "general"
+      }
+    }
+  ]
+}

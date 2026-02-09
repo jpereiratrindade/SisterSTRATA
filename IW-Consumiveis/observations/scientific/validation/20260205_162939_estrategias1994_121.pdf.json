@@ -1,0 +1,16 @@
+{
+  "checks": {
+    "baseline": "ok",
+    "contextuality": "error",
+    "language": "ok",
+    "layer": "ok",
+    "mechanisms": "ok",
+    "temporal": "warning"
+  },
+  "errors": [
+    "NarrativeObservation sem contextuality.",
+    "AllegedMechanism sem contextuality."
+  ],
+  "status": "block",
+  "warnings": []
+}

@@ -1,0 +1,22 @@
+{
+  "files": [
+    "SourceProfile.json",
+    "AllegedMechanisms.json",
+    "TemporalWindowReference.json",
+    "BaselineAssumptions.json",
+    "TrajectoryAnalogies.json",
+    "InterpretationLayers.json",
+    "DiscursiveContext.json",
+    "DiscursiveSystem.json"
+  ],
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_163206_o1996_117.pdf",
+    "contentHash": "190831_1770319489342921227",
+    "extractionMethod": "pdftotext",
+    "filename": "o1996_117.pdf",
+    "ingestedAt": "2026-02-05T19:32:36Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/o1996_117.pdf"
+  }
+}

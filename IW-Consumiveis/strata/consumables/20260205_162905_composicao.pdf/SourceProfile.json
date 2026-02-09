@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_162905_composicao.pdf",
+    "contentHash": "92608_1770319485368928157",
+    "extractionMethod": "pdftotext",
+    "filename": "composicao.pdf",
+    "ingestedAt": "2026-02-05T19:29:38Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/composicao.pdf"
+  },
+  "sourceProfile": {
+    "contextNotes": "Contexto específico do estado do Rio Grande do Sul, Brasil.",
+    "ecosystemType": "terrestrial",
+    "evidenceType": "empirical",
+    "limitations": "A análise está limitada aos bancos de sementes no solo e a dinâmica vegetal apenas para uma região específica.",
+    "studyType": "observational",
+    "temporalScale": "unknown",
+    "transferability": "medium"
+  }
+}

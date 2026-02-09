@@ -1,0 +1,22 @@
+{
+  "files": [
+    "SourceProfile.json",
+    "AllegedMechanisms.json",
+    "TemporalWindowReference.json",
+    "BaselineAssumptions.json",
+    "TrajectoryAnalogies.json",
+    "InterpretationLayers.json",
+    "DiscursiveContext.json",
+    "DiscursiveSystem.json"
+  ],
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_163007_the1999_54.pdf",
+    "contentHash": "70344_1770319485660927656",
+    "extractionMethod": "pdftotext",
+    "filename": "the1999_54.pdf",
+    "ingestedAt": "2026-02-05T19:30:35Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/the1999_54.pdf"
+  }
+}

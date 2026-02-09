@@ -1,0 +1,81 @@
+{
+  "allegedMechanisms": [],
+  "baselineAssumptions": [
+    {
+      "baselineType": "fixed",
+      "context": "Ecological studies focusing on vegetation organization.",
+      "description": "The method assumes a fixed minimum sample size threshold for achieving structural stability in ecological analyses."
+    }
+  ],
+  "discursiveContext": {
+    "epistemicRole": "discursive-reading",
+    "frames": [
+      {
+        "description": "Frame focusing on the methods and concepts used in ecological analysis, particularly for community organization.",
+        "evidenceSnippet": "\"This method and this concept are illustrated by two examples: the first is relative to the determination of the optimal sample size in a vegetation study and the second, to the verification of the value of this choice.\" (Resumo)",
+        "label": "Ecological Analysis",
+        "valence": "descriptive"
+      }
+    ]
+  },
+  "discursiveSystem": {
+    "declaredActions": [
+      {
+        "statement": "Illustrating the method and concept through two examples: determining optimal sample size and verifying its value.",
+        "status": "implemented"
+      }
+    ],
+    "declaredProblems": [
+      {
+        "context": "Vegetation studies in boreal ecosystems.",
+        "statement": "Determining an appropriate sample size for ecological analyses."
+      }
+    ],
+    "expectedEffects": [
+      {
+        "likelihood": "high",
+        "statement": "Improved accuracy and reliability of ecological analyses in vegetation studies."
+      }
+    ]
+  },
+  "interpretationLayers": {
+    "authorInterpretations": [
+      "This method and this concept are illustrated by two examples: the first is relative to the determination of the optimal sample size in a vegetation study and the second, to the verification of the value of this choice."
+    ],
+    "observedStatements": [
+      "Taille minimale pour laquelle la structure de l'échantillon commence à atteindre la stabilité est proposée comme limite inférieure pour !a taille d'un échantillon dans l'anayse des écosystames."
+    ],
+    "possibleReadings": [
+      "The study provides guidelines for determining an appropriate sample size to ensure structural stability in ecological analyses.",
+      "The method can be used to both determine the minimum required sample size and validate its effectiveness in different vegetation studies."
+    ]
+  },
+  "narrativeObservations": [],
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_163415_on1989_65.pdf",
+    "contentHash": "223509_1770319487247924890",
+    "extractionMethod": "ocr-hybrid (ocrmypdf)",
+    "filename": "on1989_65.pdf",
+    "ingestedAt": "2026-02-05T19:34:49Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/on1989_65.pdf"
+  },
+  "sourceProfile": {
+    "contextNotes": "Ecosystem surveys in boreal vegetation studies.",
+    "ecosystemType": "terrestrial",
+    "evidenceType": "empirical",
+    "limitations": "N/A",
+    "studyType": "observational",
+    "temporalScale": "unknown",
+    "transferability": "high"
+  },
+  "temporalWindowReferences": [],
+  "trajectoryAnalogies": [
+    {
+      "analogy": "Echantillonnage croissant de la taille des échantillons et stabilité croissante de l'analyse des écosystèmes.",
+      "justification": "The summary indicates that the method is relevant for both determining optimal sample size and verifying its effectiveness.",
+      "scope": "Broad, applicable to various types of vegetation studies and ecological analyses."
+    }
+  ]
+}

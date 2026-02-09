@@ -41,6 +41,14 @@ void MainMenu::draw() {
             ImGui::EndMenu();
         }
         
+        if (ImGui::BeginMenu("Import")) {
+            if (ImGui::MenuItem("From IdeaWalker (IW-Consumiveis)...")) {
+                showImportIWDialog = true;
+                importIWSelector.Open(lastImportIWPath);
+            }
+            ImGui::EndMenu();
+        }
+        
         if (ImGui::BeginMenu("Project")) {
             if (ImGui::MenuItem("New Project Folder...")) {
                 showProjectDialog = true;
@@ -124,6 +132,21 @@ void MainMenu::draw() {
     drawOpenFileDialog();
     drawSaveFileDialog();
     drawProjectDialog();
+    drawImportIWDialog();
+}
+
+void MainMenu::drawImportIWDialog() {
+    if (showImportIWDialog) {
+        std::string result;
+        if (importIWSelector.draw(&showImportIWDialog, result, ".json")) {
+             if (onImportIW) onImportIW(result);
+             std::filesystem::path selectedPath(result);
+             if (selectedPath.has_parent_path()) {
+                 lastImportIWPath = selectedPath.parent_path().string();
+             }
+             showImportIWDialog = false;
+        }
+    }
 }
 
 void MainMenu::drawOpenFileDialog() {

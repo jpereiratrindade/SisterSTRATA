@@ -1,0 +1,48 @@
+{
+  "history": [
+    {
+      "axes": [
+        {
+          "description": "The study demonstrates that the method can effectively identify and quantify environmental factors related to vegetation variation in natural fields, providing a useful tool for ecosystem analysis.",
+          "label": "extracted_theme",
+          "level": 0
+        }
+      ],
+      "id": "candidate_2026-02-05T19:34:13Z",
+      "intent": {
+        "type": 0
+      },
+      "metadata": {
+        "artifactId": "20260205_163340_on1996_61.pdf",
+        "confidence": "high",
+        "contentHash": "43025_1770319486138926820",
+        "context": "A field survey of a natural field with known environmental gradients was conducted.",
+        "contextuality": "site-specific",
+        "evidence": "direct",
+        "evidenceSnippet": "Pillar, V.D.P. & Orlóci, L. 1993a. Character-based community analysis; The theory and an application program. SPB Academic Publishing, The Hague.",
+        "filename": "on1996_61.pdf",
+        "ingestedAt": "2026-02-05T19:34:13Z",
+        "limits": "The results are specific to the particular conditions of the studied field.",
+        "model": "qwen2.5:7b",
+        "observation": "The study demonstrates that the method can effectively identify and quantify environmental factors related to vegetation variation in natural fields, providing a useful tool for ecosystem analysis.",
+        "pageRange": "pp. 20-25",
+        "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/on1996_61.pdf",
+        "schemaVersion": "4",
+        "sourceSection": "Results"
+      },
+      "source": {
+        "author": "unknown",
+        "productionDate": "2026-02-05T19:34:13Z",
+        "sourceId": "20260205_163340_on1996_61.pdf",
+        "type": 3
+      },
+      "spatialScope": {
+        "type": 0
+      },
+      "temporalContext": {
+        "category": 3,
+        "label": "A field survey of a natural field with known environmental gradients was conducted."
+      }
+    }
+  ]
+}

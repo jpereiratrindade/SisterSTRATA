@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_163340_on1996_61.pdf",
+    "contentHash": "43025_1770319486138926820",
+    "extractionMethod": "pdftotext",
+    "filename": "on1996_61.pdf",
+    "ingestedAt": "2026-02-05T19:34:13Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/on1996_61.pdf"
+  },
+  "sourceProfile": {
+    "contextNotes": "The study focuses on a specific field site in Uruguay, but the methodology and results could be applicable to similar ecosystems.",
+    "ecosystemType": "terrestrial",
+    "evidenceType": "empirical",
+    "limitations": "The study is limited by the specific conditions of the field site.",
+    "studyType": "observational",
+    "temporalScale": "short",
+    "transferability": "high"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "allegedMechanisms": [],
+  "baselineAssumptions": [
+    {
+      "baselineType": "dynamic",
+      "context": "讨论部分（p. 7-8）",
+      "description": "土壤种子库的组成和密度随着时间推移而变化。"
+    }
+  ],
+  "discursiveContext": {
+    "epistemicRole": "discursive-reading",
+    "frames": [
+      {
+        "description": "关注如何通过理解和管理土壤种子库来维持或恢复当地的植物多样性。",
+        "evidenceSnippet": "本研究旨在为制定有效的土地管理和保护策略提供科学依据（p. 1）",
+        "label": "生态管理",
+        "valence": "normative"
+      }
+    ]
+  },
+  "discursiveSystem": {
+    "declaredActions": [
+      {
+        "context": "结论部分（p. 9-10）",
+        "statement": "进行长期的生态监测和实验研究，以深入了解土壤种子库动态。",
+        "status": "proposed"
+      }
+    ],
+    "declaredProblems": [
+      {
+        "context": "研究引言部分（p. 1）",
+        "statement": "如何更好地理解土壤种子库的作用及其对植物群落的影响？"
+      }
+    ],
+    "expectedEffects": [
+      {
+        "context": "结论部分（p. 9-10）",
+        "likelihood": "high",
+        "statement": "通过持续的研究，可以为当地土地管理政策提供科学依据，并促进生态恢复和保护工作。"
+      }
+    ]
+  },
+  "interpretationLayers": {
+    "authorInterpretations": [
+      "研究结果表明，土壤种子库的存在和变化直接影响了当地的植物多样性和群落组成。",
+      "需要考虑长期环境条件变化对土壤种子库的影响，从而更好地理解未来植被发展的潜力。"
+    ],
+    "observedStatements": [
+      "土壤种子库对植物群落结构有显著影响。",
+      "环境条件的变化会影响土壤种子库的动态。"
+    ],
+    "possibleReadings": [
+      "这些发现可能有助于制定更有效的土地管理策略以保护当地生态系统。",
+      "了解土壤种子库的作用可以帮助预测和预防外来物种入侵。"
+    ]
+  },
+  "narrativeObservations": [],
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_162905_composicao.pdf",
+    "contentHash": "92608_1770319485368928157",
+    "extractionMethod": "pdftotext",
+    "filename": "composicao.pdf",
+    "ingestedAt": "2026-02-05T19:29:38Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/composicao.pdf"
+  },
+  "sourceProfile": {
+    "contextNotes": "Contexto específico do estado do Rio Grande do Sul, Brasil.",
+    "ecosystemType": "terrestrial",
+    "evidenceType": "empirical",
+    "limitations": "A análise está limitada aos bancos de sementes no solo e a dinâmica vegetal apenas para uma região específica.",
+    "studyType": "observational",
+    "temporalScale": "unknown",
+    "transferability": "medium"
+  },
+  "temporalWindowReferences": [],
+  "trajectoryAnalogies": [
+    {
+      "analogy": "通过分析土壤种子库的变化，可以推测未来植物群落的发展趋势。",
+      "justification": "基于当前土壤种子库的组成和密度，可以推断出将来可能发生的植物种类变化。",
+      "scope": "未来预测"
+    }
+  ]
+}

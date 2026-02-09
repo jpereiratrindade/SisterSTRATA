@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_163105_character-based1993_77.pdf",
+    "contentHash": "1378816_1770319488825922131",
+    "extractionMethod": "pdftotext",
+    "filename": "character-based1993_77.pdf",
+    "ingestedAt": "2026-02-05T19:31:32Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/character-based1993_77.pdf"
+  },
+  "sourceProfile": {
+    "contextNotes": "Study conducted in the Brazilian Cerrado biome, focusing on vegetation structures.",
+    "ecosystemType": "terrestrial",
+    "evidenceType": "empirical",
+    "limitations": "Limited to specific environmental conditions of the study area.",
+    "studyType": "observational",
+    "temporalScale": "unknown",
+    "transferability": "high"
+  }
+}

@@ -81,6 +81,7 @@ void Application::init() {
         
         ui_->onOpenFile = [this](std::string path) { 
             if (this->session_) {
+                if (!config_.useHybridMode) World3D::getDevice().waitIdle();
                 this->session_->loadWorld(path);
             }
         };
@@ -118,16 +119,24 @@ void Application::init() {
         // Project Management Bindings (Crucial for SGS)
         ui_->onNewProject = [this](std::string path) {
             std::cout << "[Application] Creating New Project at: " << path << std::endl;
+            if (!config_.useHybridMode) World3D::getDevice().waitIdle();
             this->session_->setProjectRoot(path);
         };
 
         ui_->onOpenProject = [this](std::string path) {
             std::cout << "[Application] Opening Project from: " << path << std::endl;
+            if (!config_.useHybridMode) World3D::getDevice().waitIdle();
             this->session_->setProjectRoot(path);
         };
 
         ui_->onExit = [this]() { this->running_ = false; };
         
+        ui_->onImportIW = [this](std::string path) {
+            if (this->session_) {
+                this->session_->ingestFromIW(path);
+            }
+        };
+
         // Link Systems (both modes)
         ui_->setupFourthDimension(&session_->getTrajectory(), session_->getLLMService());
         ui_->setupObservational(session_.get());

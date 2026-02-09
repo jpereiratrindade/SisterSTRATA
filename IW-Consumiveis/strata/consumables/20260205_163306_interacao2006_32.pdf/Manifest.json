@@ -1,0 +1,22 @@
+{
+  "files": [
+    "SourceProfile.json",
+    "AllegedMechanisms.json",
+    "TemporalWindowReference.json",
+    "BaselineAssumptions.json",
+    "TrajectoryAnalogies.json",
+    "InterpretationLayers.json",
+    "DiscursiveContext.json",
+    "DiscursiveSystem.json"
+  ],
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_163306_interacao2006_32.pdf",
+    "contentHash": "545445_1770319485252928380",
+    "extractionMethod": "pdftotext",
+    "filename": "interacao2006_32.pdf",
+    "ingestedAt": "2026-02-05T19:33:40Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/interacao2006_32.pdf"
+  }
+}

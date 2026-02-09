@@ -23,10 +23,13 @@
 #include "application/ports/IWorldView.hpp"
 #include "infrastructure/io/ObjLoader.hpp"
 #include "infrastructure/io/CsvLoader.hpp"
+#include "infrastructure/io/CsvLoader.hpp"
+#include "src/application/mappers/IWMapper.hpp"
 #include <memory>
 #include <vector>
 #include <filesystem>
 #include <iostream>
+#include <fstream>
 
 namespace Application {
 
@@ -198,6 +201,55 @@ public:
 
     void saveRecommendationTrajectoryToFile(const std::string& path) const {
         recommendationTrajectory_.serialize(path);
+    }
+
+    void ingestFromIW(const std::string& filepath) {
+        std::cout << "[Session] Ingesting from IW: " << filepath << std::endl;
+        try {
+            std::ifstream f(filepath);
+            if (!f.is_open()) {
+                std::cerr << "Failed to open IW file: " << filepath << std::endl;
+                return;
+            }
+            nlohmann::json j;
+            f >> j;
+
+            // 1. Discursive System
+            auto discDTO = Application::Mappers::IW::IWMapper::toDiscursiveSystemDTO(j);
+            // Generate a unique ID if empty
+            if (discDTO.id.empty()) {
+                discDTO.id = "DS-IW-" + std::to_string(getDiscursiveSystemCount() + 1);
+            }
+            // Only register if it has content
+            if (!discDTO.declaredProblems.empty() || !discDTO.declaredActions.empty()) {
+                 registerDiscursiveSystemDTO(discDTO);
+                 std::cout << " -> Ingested Discursive System: " << discDTO.id << std::endl;
+            }
+
+            // 2. Narrative Observations
+            auto narrDTOs = Application::Mappers::IW::IWMapper::toNarrativeStateDTOs(j);
+            for (auto& narrDTO : narrDTOs) {
+                if (narrDTO.id.empty()) {
+                    narrDTO.id = "OBS-IW-" + std::to_string(narrativeSystem_->getHistory().size() + 1);
+                }
+                registerNarrativeStateDTO(narrDTO);
+            }
+            if (!narrDTOs.empty()) {
+                std::cout << " -> Ingested " << narrDTOs.size() << " Narrative Observations." << std::endl;
+            }
+
+            // 3. Recommendation Snapshot (Trajectory Analogy)
+            auto recOpt = Application::Mappers::IW::IWMapper::toRecommendationSnapshotDTO(j);
+            if (recOpt.has_value()) {
+                auto recDTO = recOpt.value();
+                recDTO.id = "REC-IW-" + std::to_string(getRecommendationSnapshotCount() + 1);
+                addRecommendationSnapshotDTO(recDTO);
+                std::cout << " -> Ingested Recommendation Snapshot: " << recDTO.id << std::endl;
+            }
+
+        } catch (const std::exception& e) {
+            std::cerr << "Error ingesting IW file: " << e.what() << std::endl;
+        }
     }
 
     [[nodiscard]] size_t getDiscursiveSystemCount() const {

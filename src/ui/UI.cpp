@@ -259,6 +259,7 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     mainMenu_.onNewProject = onNewProject; // Link
     mainMenu_.onCloseFile = onCloseFile;
     mainMenu_.onExit = onExit; // Restore missing exit
+    mainMenu_.onImportIW = onImportIW; // Link
     mainMenu_.showGlobalSynthesis = &showGlobalSynthesisPanel; // New link
     
     if (session_) {

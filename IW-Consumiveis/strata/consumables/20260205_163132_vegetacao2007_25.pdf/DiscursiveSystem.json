@@ -1,0 +1,41 @@
+{
+  "systems": [
+    {
+      "allegedMechanisms": [],
+      "declaredActions": [
+        {
+          "statement": "Implementing management strategies to mitigate the effects of Brachiaria plantaginea infestation."
+        }
+      ],
+      "declaredProblems": [
+        {
+          "statement": "The negative impact of Brachiaria plantaginea on soybean yield in no-till systems."
+        }
+      ],
+      "expectedEffects": [
+        {
+          "statement": "Improved soybean yield and sustainable agricultural practices."
+        }
+      ],
+      "id": "ds_candidate_20260205_163132_vegetacao2007_25.pdf",
+      "interpretationMetadata": {
+        "context": "scientific_ingestion",
+        "discursiveContext": "{\"epistemicRole\":\"discursive-reading\",\"frames\":[{\"description\":\"Focus on the economic and ecological impacts of agricultural practices on soybean yield.\",\"evidenceSnippet\":\"O estudo avaliou a produtividade de soja sob diferentes sistemas de cultivo no Rio Grande do Sul, Brasil (Pillar, 2004b).\",\"label\":\"Agricultural productivity\",\"valence\":\"descriptive\"}]}",
+        "filename": "vegetacao2007_25.pdf",
+        "model": "qwen2.5:7b"
+      },
+      "sourceReferences": [
+        {
+          "author": "unknown",
+          "productionDate": "2026-02-05T19:32:06Z",
+          "sourceId": "20260205_163132_vegetacao2007_25.pdf",
+          "type": 4
+        }
+      ],
+      "temporalContext": {
+        "category": 3,
+        "label": "general"
+      }
+    }
+  ]
+}

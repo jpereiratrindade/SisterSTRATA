@@ -1,0 +1,13 @@
+{
+  "discursiveContext": {
+    "epistemicRole": "discursive-reading",
+    "frames": [
+      {
+        "description": "A frame focusing on the ecological consequences of grazing and fire.",
+        "evidenceSnippet": "The effects of livestock grazing (Pillar et al., 2005) and frequent burning (Souza Castilhos & Jacques, 2017) on native grasslands are well documented.",
+        "label": "ecological impact of management practices",
+        "valence": "descriptive"
+      }
+    ]
+  }
+}

@@ -24,6 +24,7 @@ public:
     std::function<void(std::string)> onNewProject; // Path
     std::function<void()> onCloseFile;
     std::function<void()> onExit;
+    std::function<void(std::string)> onImportIW; // New
 
     // State control for other panels
     bool showSettings = false;
@@ -45,20 +46,24 @@ private:
     void drawOpenFileDialog();
     void drawSaveFileDialog(); // New
     void drawProjectDialog();
+    void drawImportIWDialog(); // New
 
     bool showOpenDialog = false;
     bool showSaveAsDialog = false;
     bool showProjectDialog = false;
+    bool showImportIWDialog = false; // New
     bool isNewProjectMode = false;
     bool projectDialogOpenRequested = false;
     
     UI::Components::FileSelector openFileSelector{"Open File"};
     UI::Components::FileSelector saveFileSelector{"Save As"};
+    UI::Components::FileSelector importIWSelector{"Import from IdeaWalker"}; // New
     UI::Components::FileBrowser projectBrowser{"Project Browser"};
     
     std::string lastOpenPath = "assets/data/";
     std::string lastSavePath = "assets/data/meshexport.obj";
     std::string lastProjectPath = "assets/data/user_db";
+    std::string lastImportIWPath = "IW-Consumiveis/"; // Default hint
 };
 
 } // namespace UI::Menus

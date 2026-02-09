@@ -1,0 +1,22 @@
+{
+  "files": [
+    "SourceProfile.json",
+    "AllegedMechanisms.json",
+    "TemporalWindowReference.json",
+    "BaselineAssumptions.json",
+    "TrajectoryAnalogies.json",
+    "InterpretationLayers.json",
+    "DiscursiveContext.json",
+    "DiscursiveSystem.json"
+  ],
+  "schemaVersion": 4,
+  "source": {
+    "artifactId": "20260205_163132_vegetacao2007_25.pdf",
+    "contentHash": "517860_1770319485066928695",
+    "extractionMethod": "pdftotext",
+    "filename": "vegetacao2007_25.pdf",
+    "ingestedAt": "2026-02-05T19:32:06Z",
+    "model": "qwen2.5:7b",
+    "path": "/run/media/jpereiratrindade/labeco10T/Teste/ecoqua/inbox/scientific/vegetacao2007_25.pdf"
+  }
+}

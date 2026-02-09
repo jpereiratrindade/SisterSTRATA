@@ -10,6 +10,7 @@ add_test(NAME ApplicationUseCasesTest COMMAND application_tests)
 
 add_executable(application_mapper_tests
     ImpactProfileMapperTest.cpp
+    IWMapperTest.cpp
 )
 target_link_libraries(application_mapper_tests 
     PRIVATE 

@@ -50,6 +50,7 @@ public:
     std::function<void(std::string)> onOpenProject; // New
     std::function<void(std::string)> onNewProject; // New
     std::function<void()> onExit;
+    std::function<void(std::string)> onImportIW; // New
     
     void beginFrame();
     void draw(const Application::DTO::UIData& data);
