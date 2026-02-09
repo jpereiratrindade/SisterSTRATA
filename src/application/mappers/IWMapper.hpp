@@ -137,17 +137,18 @@ public:
                 // If the array is empty in example, we can't infer much structure.
                 // Assuming standard keys similar to internal DTO if populated.
                 
-                if (item.contains("observation")) dto.content = normalizeField(item["observation"]);
-                else if (item.contains("evidenceSnippet")) dto.content = normalizeField(item["evidenceSnippet"]);
+                if (item.contains("observation")) dto.metadata["observation"] = normalizeField(item["observation"]);
+                else if (item.contains("evidenceSnippet")) dto.metadata["evidenceSnippet"] = normalizeField(item["evidenceSnippet"]);
                 
-                if (item.contains("context")) dto.context = normalizeField(item["context"]);
+                if (item.contains("context")) dto.metadata["context"] = normalizeField(item["context"]);
                 
-                // Map contextuality to DTO fields if they exist, or just append to context
+                // Map contextuality to metadata
                 if (item.contains("contextuality")) {
-                    std::string ctx = normalizeField(item["contextuality"]);
-                    if (!dto.context.empty()) dto.context += " | Mode: " + ctx;
-                    else dto.context = "Mode: " + ctx;
+                    dto.metadata["contextuality"] = normalizeField(item["contextuality"]);
                 }
+
+                // Set default intent
+                dto.intent.intentType = "Observation";
 
                 dtos.push_back(dto);
             }
