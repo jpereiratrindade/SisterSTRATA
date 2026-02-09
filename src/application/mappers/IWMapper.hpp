@@ -14,6 +14,43 @@ using json = nlohmann::json;
 
 class IWMapper {
 public:
+    // Helper: Normalize diverse JSON inputs into a single string
+    static std::string normalizeField(const json& element) {
+        if (element.is_string()) {
+            std::string val = element.get<std::string>();
+            // Handle pipe-separated values (e.g. "theoretical|simulation")
+            // Strategy: Take the first one, or "mixed" if it seems appropriate, 
+            // but for now let's just take the first one to be safe and canonical.
+            if (val.find('|') != std::string::npos) {
+                std::cout << "[IWMapper] Warning: Normalizing pipe-separated value: " << val << " -> ";
+                val = val.substr(0, val.find('|'));
+                std::cout << val << std::endl;
+            }
+            return val;
+        }
+        
+        // Handle vector of candidates (future proofing)
+        // Expected format: [ { "value": "A", "confidence": 0.9 }, ... ] OR simple strings
+        if (element.is_array() && !element.empty()) {
+            // If array of strings, take first
+            if (element[0].is_string()) {
+                return normalizeField(element[0]); 
+            }
+            // If array of objects with "value"
+            if (element[0].is_object() && element[0].contains("value")) {
+                // Ideally pick highest confidence, but for now picker first is stable
+                return normalizeField(element[0]["value"]);
+            }
+        }
+        
+        // Handle object with "value" directly
+        if (element.is_object() && element.contains("value")) {
+             return normalizeField(element["value"]);
+        }
+
+        return "";
+    }
+
     static Application::DTO::DiscursiveSystemDTO toDiscursiveSystemDTO(const json& j) {
         Application::DTO::DiscursiveSystemDTO dto;
 
@@ -28,32 +65,26 @@ public:
             if (ds.contains("declaredProblems")) {
                 for (const auto& item : ds["declaredProblems"]) {
                     if (item.contains("statement")) {
-                        dto.declaredProblems.push_back(item["statement"].get<std::string>());
+                        dto.declaredProblems.push_back(normalizeField(item["statement"]));
                     }
                 }
             }
             if (ds.contains("declaredActions")) {
                 for (const auto& item : ds["declaredActions"]) {
                     if (item.contains("statement")) {
-                        dto.declaredActions.push_back(item["statement"].get<std::string>());
+                        dto.declaredActions.push_back(normalizeField(item["statement"]));
                     }
                 }
             }
-             if (ds.contains("allegedMechanisms")) { // Note: Might be at root or inside?
-                // In example JSON, "allegedMechanisms" is at root, but sometimes might be in discursiveSystem object?
-                // Let's check root too in a safe way below.
-             }
         }
         
         // Check root-level arrays as per example `composicao.pdf.json`
         if (j.contains("allegedMechanisms") && j["allegedMechanisms"].is_array()) {
              for (const auto& item : j["allegedMechanisms"]) {
-                 // Assuming string or object with statement? Example was empty array `[]`.
-                 // If it's like others, it's object "statement". If string, handle that.
                  if (item.is_string()) {
-                     dto.allegedMechanisms.push_back(item.get<std::string>());
+                     dto.allegedMechanisms.push_back(normalizeField(item));
                  } else if (item.contains("statement")) {
-                     dto.allegedMechanisms.push_back(item["statement"].get<std::string>());
+                     dto.allegedMechanisms.push_back(normalizeField(item["statement"]));
                  }
              }
         }
@@ -61,7 +92,7 @@ public:
         if (j.contains("discursiveSystem") && j["discursiveSystem"].contains("expectedEffects")) {
              for (const auto& item : j["discursiveSystem"]["expectedEffects"]) {
                  if (item.contains("statement")) {
-                     dto.expectedEffects.push_back(item["statement"].get<std::string>());
+                     dto.expectedEffects.push_back(normalizeField(item["statement"]));
                  }
              }
         }
@@ -70,10 +101,15 @@ public:
         if (j.contains("source")) {
             Application::DTO::SourceReferenceDTO src;
             src.sourceType = "SCIENTIFIC_ARTICLE"; // Default for IW-Consumiveis/scientific
-            if (j["source"].contains("artifactId")) src.sourceId = j["source"]["artifactId"].get<std::string>();
-            else if (j["source"].contains("filename")) src.sourceId = j["source"]["filename"].get<std::string>();
             
-            // Production Date? Not in example, fallback to empty
+            if (j["source"].contains("artifactId")) 
+                src.sourceId = normalizeField(j["source"]["artifactId"]);
+            else if (j["source"].contains("filename")) 
+                src.sourceId = normalizeField(j["source"]["filename"]);
+            
+            if (j["source"].contains("sourceType")) {
+                 src.sourceType = normalizeField(j["source"]["sourceType"]);
+            }
             
             dto.sourceReferences.push_back(src);
         }
@@ -81,6 +117,12 @@ public:
         // 3. Temporal Context (Try to deduce)
         dto.temporalContext.category = "CONTEMPORARY"; // Default
         dto.temporalContext.label = "Extracted from Scientific Literature";
+        
+        // Attempt to extract temporal scale from source profile if present
+        if (j.contains("sourceProfile") && j["sourceProfile"].contains("temporalScale")) {
+             std::string scale = normalizeField(j["sourceProfile"]["temporalScale"]);
+             if (!scale.empty()) dto.temporalContext.label += " (" + scale + ")";
+        }
 
         return dto;
     }
@@ -94,9 +136,20 @@ public:
                 
                 // If the array is empty in example, we can't infer much structure.
                 // Assuming standard keys similar to internal DTO if populated.
-                // For now, if empty, we return empty list.
                 
-                // Placeholder for future extraction
+                if (item.contains("observation")) dto.content = normalizeField(item["observation"]);
+                else if (item.contains("evidenceSnippet")) dto.content = normalizeField(item["evidenceSnippet"]);
+                
+                if (item.contains("context")) dto.context = normalizeField(item["context"]);
+                
+                // Map contextuality to DTO fields if they exist, or just append to context
+                if (item.contains("contextuality")) {
+                    std::string ctx = normalizeField(item["contextuality"]);
+                    if (!dto.context.empty()) dto.context += " | Mode: " + ctx;
+                    else dto.context = "Mode: " + ctx;
+                }
+
+                dtos.push_back(dto);
             }
         }
         
@@ -111,18 +164,18 @@ public:
             dto.id = "REC-IW-AUTO";
             
             if (item.contains("analogy")) 
-                dto.recommendationText = item["analogy"].get<std::string>();
+                dto.recommendationText = normalizeField(item["analogy"]);
             
             if (item.contains("justification"))
-                dto.expectedOutcome = item["justification"].get<std::string>();
+                dto.expectedOutcome = normalizeField(item["justification"]);
 
             if (item.contains("scope"))
-                dto.contextConditions.push_back(item["scope"].get<std::string>());
+                dto.contextConditions.push_back(normalizeField(item["scope"]));
             
             // Source
             if (j.contains("source")) {
                  if (j["source"].contains("artifactId")) 
-                    dto.sourceReference.sourceId = j["source"]["artifactId"].get<std::string>();
+                    dto.sourceReference.sourceId = normalizeField(j["source"]["artifactId"]);
             }
             
             return dto;
