@@ -1,0 +1,57 @@
+#include <gtest/gtest.h>
+
+#include "src/application/services/cognitive/CognitiveAssistanceService.hpp"
+#include "application/ports/ILLMService.hpp"
+#include "src/application/dtos/cognitive/ContextBundleDTO.hpp"
+
+#include <optional>
+
+namespace {
+
+class FakeLLMService final : public Application::Ports::ILLMService {
+public:
+    void requestCompletion(const std::vector<Application::Ports::LLMMessage>& messages,
+                           CompletionCallback callback) override {
+        lastMessages = messages;
+        callback({true, "ok", ""});
+    }
+
+    bool isAvailable() const override { return true; }
+    std::string getModelName() const override { return "fake"; }
+
+    std::vector<Application::Ports::LLMMessage> lastMessages;
+};
+
+} // namespace
+
+TEST(CognitiveAssistanceServiceTest, SnapshotSummaryReflectsBundleScope) {
+    FakeLLMService llm;
+    Application::Services::Cognitive::CognitiveAssistanceService service(&llm);
+
+    Application::DTO::Cognitive::ContextBundleDTO bundle;
+    bundle.bundleId = "BUNDLE-TEST";
+    bundle.intent = "trajectory_reading";
+    bundle.narratives = {"n1", "n2"};
+    bundle.discursive = {"d1"};
+    bundle.recommendation =
+        "=> RECOMMENDATION SNAPSHOT [r1]\n"
+        "x\n"
+        "=> RECOMMENDATION SNAPSHOT [r2]\n";
+
+    std::optional<Application::DTO::Cognitive::InterpretationSnapshotDTO> output;
+    service.interpret(
+        bundle,
+        Application::Services::Cognitive::InterpretationMode::TrajectoryReading,
+        [&](const auto& snapshot) { output = snapshot; });
+
+    ASSERT_TRUE(output.has_value());
+    EXPECT_NE(output->createdAt, "");
+    EXPECT_NE(output->inputContextSummary.find("Context Bundle: BUNDLE-TEST"), std::string::npos);
+    EXPECT_NE(output->inputContextSummary.find("narratives=2"), std::string::npos);
+    EXPECT_NE(output->inputContextSummary.find("discursive=1"), std::string::npos);
+    EXPECT_NE(output->inputContextSummary.find("recommendationSnapshots=2"), std::string::npos);
+
+    ASSERT_EQ(llm.lastMessages.size(), 1u);
+    EXPECT_NE(llm.lastMessages[0].content.find("SCOPE: narratives=2 discursive=1 recommendationSnapshots=2"),
+              std::string::npos);
+}

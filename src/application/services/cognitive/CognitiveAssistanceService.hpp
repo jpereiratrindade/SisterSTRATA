@@ -7,6 +7,8 @@
 #include <vector>
 #include <functional>
 #include <ctime>
+#include <sstream>
+#include <iomanip>
 
 namespace Application::Services::Cognitive {
 
@@ -51,8 +53,9 @@ public:
         llmService_->requestCompletion(messages, [this, bundle, mode, callback](const Ports::ILLMService::Response& res) {
             DTO::Cognitive::InterpretationSnapshotDTO snapshot;
             snapshot.snapshotId = "SNAP-" + std::to_string(std::time(nullptr));
+            snapshot.createdAt = nowIsoLike();
             snapshot.intent = modeToString(mode);
-            snapshot.inputContextSummary = "Context Bundle: " + bundle.bundleId;
+            snapshot.inputContextSummary = summarizeBundleScope(bundle);
             snapshot.aiOutput = res.success ? res.content : "Error: " + res.errorMessage;
             snapshot.promptVersion = "Canonical-Prompt-v1.1";
             snapshot.sourceBundleId = bundle.bundleId;
@@ -68,6 +71,9 @@ private:
         prompt += "INTERPRETATION MODE: " + modeToString(mode) + "\n\n";
         
         prompt += "### DATA CONTEXT ###\n";
+        prompt += "SCOPE: narratives=" + std::to_string(bundle.narratives.size())
+               + " discursive=" + std::to_string(bundle.discursive.size())
+               + " recommendationSnapshots=" + std::to_string(countRecommendationSnapshots(bundle.recommendation)) + "\n";
         
         if (!bundle.narratives.empty()) {
             prompt += "\n[NARRATIVE OBSERVATIONS]\n";
@@ -119,6 +125,39 @@ private:
         }
 
         return prompt;
+    }
+
+    static std::string nowIsoLike() {
+        auto now = std::time(nullptr);
+        std::tm tm{};
+#if defined(_WIN32)
+        localtime_s(&tm, &now);
+#else
+        localtime_r(&now, &tm);
+#endif
+        std::ostringstream oss;
+        oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+        return oss.str();
+    }
+
+    static size_t countRecommendationSnapshots(const std::string& recommendationPacket) {
+        static const std::string marker = "=> RECOMMENDATION SNAPSHOT [";
+        size_t count = 0;
+        size_t pos = 0;
+        while ((pos = recommendationPacket.find(marker, pos)) != std::string::npos) {
+            ++count;
+            pos += marker.size();
+        }
+        return count;
+    }
+
+    static std::string summarizeBundleScope(const DTO::Cognitive::ContextBundleDTO& bundle) {
+        std::ostringstream ss;
+        ss << "Context Bundle: " << bundle.bundleId
+           << " | narratives=" << bundle.narratives.size()
+           << " | discursive=" << bundle.discursive.size()
+           << " | recommendationSnapshots=" << countRecommendationSnapshots(bundle.recommendation);
+        return ss.str();
     }
 
     std::string modeToString(InterpretationMode mode) {

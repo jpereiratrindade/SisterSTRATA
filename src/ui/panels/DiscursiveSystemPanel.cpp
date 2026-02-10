@@ -163,22 +163,26 @@ void DiscursiveSystemPanel::drawIngestionForm() {
 
     ImGui::TextColored(ImVec4(0.4f, 1.0f, 1.0f, 1.0f), "SYSTEM INGESTION (DSC)");
     ImGui::SameLine(ImGui::GetWindowWidth() - 500);
-    
-    if (ImGui::Button(aiRequestPending_ ? "Waiting..." : "Ask Qwen to Propose System", ImVec2(240, 60))) {
+
+    if (aiRequestPending_) {
+        ImGui::BeginDisabled();
+        ImGui::Button("Waiting...", ImVec2(240, 60));
+        ImGui::EndDisabled();
+    } else if (ImGui::Button("Ask Qwen to Propose System", ImVec2(240, 60))) {
         auto systems = collectSystemsForAI();
         if (!systems.empty()) {
             try {
                 // Pre-validation: Ensure discursive systems are valid
                 bool validSources = std::all_of(systems.begin(), systems.end(), [](const auto& s){ return !s.id.empty(); });
-                
+
                 if (validSources) {
                     aiRequestPending_ = true;
                     auto bundle = Application::Mappers::Cognitive::createBundle("discursive_draft", {}, systems);
-                    
+
                     // Inject Analytical Profile
                     bundle.trajectoryImpactProfile = session_->generateImpactProfileText();
 
-                    session_->requestAIInterpretation(bundle, 
+                    session_->requestAIInterpretation(bundle,
                         Application::Services::Cognitive::InterpretationMode::DiscursiveDraft,
                         [this](const auto& snapshot) {
                             std::lock_guard<std::mutex> lock(aiMutex_);
@@ -188,10 +192,10 @@ void DiscursiveSystemPanel::drawIngestionForm() {
                             aiResultReady_ = true; // Signal the main thread to open the popup
                         });
                 }
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 // Fallback / Log error
                 aiRequestPending_ = false;
-                ImGui::OpenPopup("AIAnalysisError"); 
+                ImGui::OpenPopup("AIAnalysisError");
             }
         } else {
             if (useSelectedForAI_) ImGui::OpenPopup("DiscursiveSelectionEmptyError");
@@ -200,17 +204,21 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     }
 
     ImGui::SameLine();
-    if (ImGui::Button(aiRequestPending_ ? "Waiting..." : "Evaluate Logical Coherence", ImVec2(240, 60))) {
+    if (aiRequestPending_) {
+        ImGui::BeginDisabled();
+        ImGui::Button("Waiting...", ImVec2(240, 60));
+        ImGui::EndDisabled();
+    } else if (ImGui::Button("Evaluate Logical Coherence", ImVec2(240, 60))) {
         auto systems = collectSystemsForAI();
         if (!systems.empty()) {
             try {
                 aiRequestPending_ = true;
                 auto bundle = Application::Mappers::Cognitive::createBundle("system_evaluation", {}, systems);
-                
+
                 // Inject Analytical Profile for context
                 bundle.trajectoryImpactProfile = session_->generateImpactProfileText();
 
-                session_->requestAIInterpretation(bundle, 
+                session_->requestAIInterpretation(bundle,
                     Application::Services::Cognitive::InterpretationMode::CoherenceCheck,
                     [this](const auto& snapshot) {
                         std::lock_guard<std::mutex> lock(aiMutex_);

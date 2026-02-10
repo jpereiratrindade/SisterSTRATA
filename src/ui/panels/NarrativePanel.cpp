@@ -461,12 +461,16 @@ void NarrativePanel::drawObservationList() {
     ImGui::SameLine();
     ImGui::TextDisabled("Selected: %zu", selectedObservationIds_.size());
 
-    if (ImGui::Button(aiRequestPending_ ? "Waiting for Qwen..." : "Analyze Themes with Qwen", ImVec2(240, 0))) {
+    if (aiRequestPending_) {
+        ImGui::BeginDisabled();
+        ImGui::Button("Waiting for Qwen...", ImVec2(240, 0));
+        ImGui::EndDisabled();
+    } else if (ImGui::Button("Analyze Themes with Qwen", ImVec2(240, 0))) {
         auto inputHistory = collectForAI();
         if (!inputHistory.empty()) {
             aiRequestPending_ = true;
             auto bundle = Application::Mappers::Cognitive::createBundle("theme_analysis", inputHistory);
-            session_->requestAIInterpretation(bundle, 
+            session_->requestAIInterpretation(bundle,
                 Application::Services::Cognitive::InterpretationMode::ThemeAnalysis,
                 [this](const auto& snapshot) {
                     std::lock_guard<std::mutex> lock(aiMutex_);

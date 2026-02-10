@@ -9,6 +9,7 @@ target_link_libraries(application_tests PRIVATE application core)
 add_test(NAME ApplicationUseCasesTest COMMAND application_tests)
 
 add_executable(application_mapper_tests
+    CognitiveAssistanceServiceTest.cpp
     ImpactProfileMapperTest.cpp
     IWMapperTest.cpp
 )

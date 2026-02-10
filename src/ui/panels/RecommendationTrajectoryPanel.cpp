@@ -124,13 +124,17 @@ void RecommendationTrajectoryPanel::drawTrajectoryConfig() {
 
     ImGui::TextColored(ImVec4(0.4f, 1.0f, 1.0f, 1.0f), "RECOMENDATION TRAJECTORY (RTC)");
     ImGui::SameLine(ImGui::GetWindowWidth() - 280);
-    
-    if (ImGui::Button(aiRequestPending_ ? "Waiting for Qwen..." : "Analyze Trajectory with Qwen", ImVec2(240, 0))) {
+
+    if (aiRequestPending_) {
+        ImGui::BeginDisabled();
+        ImGui::Button("Waiting for Qwen...", ImVec2(240, 0));
+        ImGui::EndDisabled();
+    } else if (ImGui::Button("Analyze Trajectory with Qwen", ImVec2(240, 0))) {
         auto trajectory = collectTrajectoryForAI();
         if (!trajectory.snapshots.empty()) {
             aiRequestPending_ = true;
             auto bundle = Application::Mappers::Cognitive::createBundle("trajectory_reading", {}, {}, &trajectory);
-            session_->requestAIInterpretation(bundle, 
+            session_->requestAIInterpretation(bundle,
                 Application::Services::Cognitive::InterpretationMode::TrajectoryReading,
                 [this](const auto& snapshot) {
                     std::lock_guard<std::mutex> lock(aiMutex_);
@@ -485,7 +489,16 @@ void RecommendationTrajectoryPanel::drawSnapshotList() {
             ImGui::Text("%s", snapshot.sourceReference.sourceId.c_str());
 
             ImGui::TableSetColumnIndex(4);
-            ImGui::Text("%s", snapshot.temporalContext.label.c_str());
+            std::string timeLabel = snapshot.temporalContext.label;
+            const bool isGenericIWTime =
+                (timeLabel == "IW recommendation ingestion") || (timeLabel == "IW ingestion");
+            if ((timeLabel.empty() || isGenericIWTime) && !snapshot.sourceReference.productionDate.empty()) {
+                timeLabel = snapshot.sourceReference.productionDate;
+            }
+            if (timeLabel.empty()) {
+                timeLabel = "-";
+            }
+            ImGui::Text("%s", timeLabel.c_str());
 
             ImGui::TableSetColumnIndex(5);
             ImGui::Text("%s", snapshot.intendedAction.c_str());

@@ -473,7 +473,11 @@ public:
                 dto.temporalContext.category = DEFAULT_TIME_CATEGORY;
             }
             if (dto.temporalContext.label.empty()) {
-                dto.temporalContext.label = "IW recommendation ingestion";
+                if (!dto.sourceReference.productionDate.empty()) {
+                    dto.temporalContext.label = dto.sourceReference.productionDate;
+                } else {
+                    dto.temporalContext.label = "IW recommendation ingestion";
+                }
             }
         };
 
