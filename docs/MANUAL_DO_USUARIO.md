@@ -121,6 +121,21 @@ O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como
     > **Detalhes do Modelo**: [Impact Profile](SCIENTIFIC_TRAJECTORY_IMPACT_PROFILE.md)
 *   **Configuração**: O sistema detecta automaticamente o modelo mais forte disponível (ex: `qwen2.5:14b`).
 
+### Escopo da análise por seleção de registros
+Para evitar análises amplas demais, os painéis contextuais permitem restringir o escopo enviado ao Qwen:
+*   **Discursive**: marque itens na coluna `Sel` e mantenha `Use selected records only`.
+*   **Narrative**: marque itens na coluna `Sel` e mantenha `Use selected observations only`.
+*   **Recommendation**: marque itens na coluna `Sel` e mantenha `Use selected snapshots only`.
+
+Se o modo de seleção estiver ativo e nenhum item for marcado, a análise não é executada e o sistema informa seleção vazia.
+
+### Exportação de avaliações LLM em Markdown
+No histórico de interpretações (aba de memória de cada contexto):
+*   **Export Selected .md**: exporta apenas snapshots marcados na tabela.
+*   **Export Visible .md**: exporta todos os snapshots atualmente visíveis no contexto.
+
+O arquivo `.md` inclui metadados de rastreabilidade (`snapshotId`, `createdAt`, `intent`, `sourceBundleId`, `promptVersion`) e o conteúdo da avaliação.
+
 ---
 
 ## 7. Ferramentas Científicas Específicas

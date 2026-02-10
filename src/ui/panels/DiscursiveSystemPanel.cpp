@@ -146,11 +146,26 @@ void DiscursiveSystemPanel::draw(bool* open) {
 }
 
 void DiscursiveSystemPanel::drawIngestionForm() {
+    auto allSystems = session_->getDiscursiveSystemDTOs();
+    auto collectSystemsForAI = [&]() {
+        if (!useSelectedForAI_) {
+            return allSystems;
+        }
+
+        std::vector<Application::DTO::DiscursiveSystemDTO> filtered;
+        for (const auto& system : allSystems) {
+            if (selectedSystemIds_.contains(system.id)) {
+                filtered.push_back(system);
+            }
+        }
+        return filtered;
+    };
+
     ImGui::TextColored(ImVec4(0.4f, 1.0f, 1.0f, 1.0f), "SYSTEM INGESTION (DSC)");
     ImGui::SameLine(ImGui::GetWindowWidth() - 500);
     
     if (ImGui::Button(aiRequestPending_ ? "Waiting..." : "Ask Qwen to Propose System", ImVec2(240, 60))) {
-        auto systems = session_->getDiscursiveSystemDTOs();
+        auto systems = collectSystemsForAI();
         if (!systems.empty()) {
             try {
                 // Pre-validation: Ensure discursive systems are valid
@@ -179,13 +194,14 @@ void DiscursiveSystemPanel::drawIngestionForm() {
                 ImGui::OpenPopup("AIAnalysisError"); 
             }
         } else {
-            ImGui::OpenPopup("DiscursiveContextEmptyError");
+            if (useSelectedForAI_) ImGui::OpenPopup("DiscursiveSelectionEmptyError");
+            else ImGui::OpenPopup("DiscursiveContextEmptyError");
         }
     }
 
     ImGui::SameLine();
     if (ImGui::Button(aiRequestPending_ ? "Waiting..." : "Evaluate Logical Coherence", ImVec2(240, 60))) {
-        auto systems = session_->getDiscursiveSystemDTOs();
+        auto systems = collectSystemsForAI();
         if (!systems.empty()) {
             try {
                 aiRequestPending_ = true;
@@ -208,9 +224,15 @@ void DiscursiveSystemPanel::drawIngestionForm() {
                 ImGui::OpenPopup("AIAnalysisError");
             }
         } else {
-            ImGui::OpenPopup("SystemsEmptyError");
+            if (useSelectedForAI_) ImGui::OpenPopup("DiscursiveSelectionEmptyError");
+            else ImGui::OpenPopup("SystemsEmptyError");
         }
     }
+
+    ImGui::Spacing();
+    ImGui::Checkbox("Use selected records only", &useSelectedForAI_);
+    ImGui::SameLine();
+    ImGui::TextDisabled("Selected: %zu", selectedSystemIds_.size());
     
     if (ImGui::BeginPopupModal("DiscursiveContextEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Discursive Systems Found");
@@ -224,6 +246,13 @@ void DiscursiveSystemPanel::drawIngestionForm() {
         ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Systems Found");
         ImGui::Text("To evaluate coherence, you need at least one Discursive System registered.");
         ImGui::Text("Please load an example or add a system manually first.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal("DiscursiveSelectionEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Selected Records");
+        ImGui::Text("Select one or more discursive records in the table first.");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
@@ -267,19 +296,23 @@ void DiscursiveSystemPanel::drawIngestionForm() {
 
     ImGui::Text("System ID (optional)");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::InputText("System ID", inputSystemId_, IM_ARRAYSIZE(inputSystemId_));
+    ImGui::InputText("##DiscSystemId", inputSystemId_, IM_ARRAYSIZE(inputSystemId_));
 
     ImGui::Spacing();
 
     ImGui::Text("Source Reference");
+    ImGui::Text("Source ID");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::InputText("Source ID", inputSourceId_, IM_ARRAYSIZE(inputSourceId_));
+    ImGui::InputText("##DiscSourceId", inputSourceId_, IM_ARRAYSIZE(inputSourceId_));
+    ImGui::Text("Date/Year");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::InputText("Date/Year", inputSourceDate_, IM_ARRAYSIZE(inputSourceDate_));
+    ImGui::InputText("##DiscSourceDate", inputSourceDate_, IM_ARRAYSIZE(inputSourceDate_));
+    ImGui::Text("Author (optional)");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::InputText("Author (optional)", inputSourceAuthor_, IM_ARRAYSIZE(inputSourceAuthor_));
+    ImGui::InputText("##DiscSourceAuthor", inputSourceAuthor_, IM_ARRAYSIZE(inputSourceAuthor_));
+    ImGui::Text("Type");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::Combo("Type", &inputSourceType_, DISC_SOURCE_LABELS, IM_ARRAYSIZE(DISC_SOURCE_LABELS));
+    ImGui::Combo("##DiscSourceType", &inputSourceType_, DISC_SOURCE_LABELS, IM_ARRAYSIZE(DISC_SOURCE_LABELS));
     if (ImGui::Button("Add Source")) {
         if (strlen(inputSourceId_) > 0) {
             Application::DTO::SourceReferenceDTO source;
@@ -308,10 +341,12 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::Spacing();
 
     ImGui::Text("Temporal Context (Declared)");
+    ImGui::Text("Category");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::Combo("Category", &inputTemporalCategory_, TEMPORAL_LABELS, IM_ARRAYSIZE(TEMPORAL_LABELS));
+    ImGui::Combo("##DiscTemporalCategory", &inputTemporalCategory_, TEMPORAL_LABELS, IM_ARRAYSIZE(TEMPORAL_LABELS));
+    ImGui::Text("Label");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::InputText("Label", inputTemporalLabel_, IM_ARRAYSIZE(inputTemporalLabel_));
+    ImGui::InputText("##DiscTemporalLabel", inputTemporalLabel_, IM_ARRAYSIZE(inputTemporalLabel_));
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -323,7 +358,7 @@ void DiscursiveSystemPanel::drawIngestionForm() {
 
     ImGui::Text("Declared Problems");
     ImGui::SetNextItemWidth(stretchedFieldWidth());
-    ImGui::InputText("Problem", inputProblem_, IM_ARRAYSIZE(inputProblem_));
+    ImGui::InputText("##DiscProblem", inputProblem_, IM_ARRAYSIZE(inputProblem_));
     ImGui::SameLine();
     if (ImGui::Button("Add Problem", ImVec2(addButtonWidth, 0))) {
         if (strlen(inputProblem_) > 0) {
@@ -334,7 +369,7 @@ void DiscursiveSystemPanel::drawIngestionForm() {
 
     ImGui::Text("Declared Actions");
     ImGui::SetNextItemWidth(stretchedFieldWidth());
-    ImGui::InputText("Action", inputAction_, IM_ARRAYSIZE(inputAction_));
+    ImGui::InputText("##DiscAction", inputAction_, IM_ARRAYSIZE(inputAction_));
     ImGui::SameLine();
     if (ImGui::Button("Add Action", ImVec2(addButtonWidth, 0))) {
         if (strlen(inputAction_) > 0) {
@@ -345,7 +380,7 @@ void DiscursiveSystemPanel::drawIngestionForm() {
 
     ImGui::Text("Alleged Mechanisms");
     ImGui::SetNextItemWidth(stretchedFieldWidth());
-    ImGui::InputText("Mechanism", inputMechanism_, IM_ARRAYSIZE(inputMechanism_));
+    ImGui::InputText("##DiscMechanism", inputMechanism_, IM_ARRAYSIZE(inputMechanism_));
     ImGui::SameLine();
     if (ImGui::Button("Add Mechanism", ImVec2(addButtonWidth, 0))) {
         if (strlen(inputMechanism_) > 0) {
@@ -356,7 +391,7 @@ void DiscursiveSystemPanel::drawIngestionForm() {
 
     ImGui::Text("Expected Effects");
     ImGui::SetNextItemWidth(stretchedFieldWidth());
-    ImGui::InputText("Effect", inputEffect_, IM_ARRAYSIZE(inputEffect_));
+    ImGui::InputText("##DiscEffect", inputEffect_, IM_ARRAYSIZE(inputEffect_));
     ImGui::SameLine();
     if (ImGui::Button("Add Effect", ImVec2(addButtonWidth, 0))) {
         if (strlen(inputEffect_) > 0) {
@@ -380,21 +415,28 @@ void DiscursiveSystemPanel::drawIngestionForm() {
 
     if (ImGui::CollapsingHeader("IW Structured Metadata (optional)", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::TextDisabled("Values are stored in interpretation metadata under iw.* keys.");
-        ImGui::InputTextMultiline("Baseline Assumptions##DiscIWBaseline", iwBaselineAssumptions_, IM_ARRAYSIZE(iwBaselineAssumptions_), ImVec2(-1, 70));
-        ImGui::InputTextMultiline("Discursive Context##DiscIWContext", iwDiscursiveContext_, IM_ARRAYSIZE(iwDiscursiveContext_), ImVec2(-1, 70));
-        ImGui::InputTextMultiline("Interpretation Layers##DiscIWLayers", iwInterpretationLayers_, IM_ARRAYSIZE(iwInterpretationLayers_), ImVec2(-1, 70));
-        ImGui::InputTextMultiline("Temporal Window##DiscIWTemporal", iwTemporalWindowReferences_, IM_ARRAYSIZE(iwTemporalWindowReferences_), ImVec2(-1, 70));
-        ImGui::InputTextMultiline("Source Profile##DiscIWSourceProfile", iwSourceProfile_, IM_ARRAYSIZE(iwSourceProfile_), ImVec2(-1, 70));
+        ImGui::Text("Baseline Assumptions");
+        ImGui::InputTextMultiline("##DiscIWBaseline", iwBaselineAssumptions_, IM_ARRAYSIZE(iwBaselineAssumptions_), ImVec2(-1, 70));
+        ImGui::Text("Discursive Context");
+        ImGui::InputTextMultiline("##DiscIWContext", iwDiscursiveContext_, IM_ARRAYSIZE(iwDiscursiveContext_), ImVec2(-1, 70));
+        ImGui::Text("Interpretation Layers");
+        ImGui::InputTextMultiline("##DiscIWLayers", iwInterpretationLayers_, IM_ARRAYSIZE(iwInterpretationLayers_), ImVec2(-1, 70));
+        ImGui::Text("Temporal Window");
+        ImGui::InputTextMultiline("##DiscIWTemporal", iwTemporalWindowReferences_, IM_ARRAYSIZE(iwTemporalWindowReferences_), ImVec2(-1, 70));
+        ImGui::Text("Source Profile");
+        ImGui::InputTextMultiline("##DiscIWSourceProfile", iwSourceProfile_, IM_ARRAYSIZE(iwSourceProfile_), ImVec2(-1, 70));
     }
 
     ImGui::Spacing();
     ImGui::Separator();
 
     ImGui::Text("Interpretation Metadata");
+    ImGui::Text("Key");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::InputText("Key", inputMetadataKey_, IM_ARRAYSIZE(inputMetadataKey_));
+    ImGui::InputText("##DiscMetadataKey", inputMetadataKey_, IM_ARRAYSIZE(inputMetadataKey_));
+    ImGui::Text("Value");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::InputText("Value", inputMetadataValue_, IM_ARRAYSIZE(inputMetadataValue_));
+    ImGui::InputText("##DiscMetadataValue", inputMetadataValue_, IM_ARRAYSIZE(inputMetadataValue_));
     if (ImGui::Button("Add Metadata")) {
         if (strlen(inputMetadataKey_) > 0) {
             metadata_[inputMetadataKey_] = inputMetadataValue_;
@@ -622,11 +664,32 @@ void DiscursiveSystemPanel::drawSystemList() {
     auto systems = session_->getDiscursiveSystemDTOs();
 
     if (systems.empty()) {
+        selectedSystemIds_.clear();
         ImGui::TextDisabled("No discursive systems registered.");
         return;
     }
 
-    if (ImGui::BeginTable("DiscursiveSystemsTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp)) {
+    std::set<std::string> existingIds;
+    for (const auto& system : systems) {
+        existingIds.insert(system.id);
+    }
+    for (auto it = selectedSystemIds_.begin(); it != selectedSystemIds_.end();) {
+        if (!existingIds.contains(*it)) it = selectedSystemIds_.erase(it);
+        else ++it;
+    }
+
+    if (ImGui::Button("Select All")) {
+        selectedSystemIds_ = existingIds;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Clear Selection")) {
+        selectedSystemIds_.clear();
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("Selected: %zu", selectedSystemIds_.size());
+
+    if (ImGui::BeginTable("DiscursiveSystemsTable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp)) {
+        ImGui::TableSetupColumn("Sel");
         ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Sources");
@@ -640,6 +703,15 @@ void DiscursiveSystemPanel::drawSystemList() {
             ImGui::TableNextRow();
 
             ImGui::TableSetColumnIndex(0);
+            bool selected = selectedSystemIds_.contains(system.id);
+            ImGui::PushID((system.id + "_sel").c_str());
+            if (ImGui::Checkbox("##SelectDiscSystem", &selected)) {
+                if (selected) selectedSystemIds_.insert(system.id);
+                else selectedSystemIds_.erase(system.id);
+            }
+            ImGui::PopID();
+
+            ImGui::TableSetColumnIndex(1);
             ImGui::PushID(system.id.c_str());
             if (ImGui::Button("Edit")) {
                 loadIntoForm(system);
@@ -649,25 +721,26 @@ void DiscursiveSystemPanel::drawSystemList() {
             ImGui::SameLine();
             if (ImGui::Button("Del")) {
                 session_->removeDiscursiveSystemDTO(system.id);
+                selectedSystemIds_.erase(system.id);
             }
             ImGui::PopID();
 
-            ImGui::TableSetColumnIndex(1);
+            ImGui::TableSetColumnIndex(2);
             ImGui::Text("%s", system.id.c_str());
 
-            ImGui::TableSetColumnIndex(2);
+            ImGui::TableSetColumnIndex(3);
             ImGui::Text("%zu", system.sourceReferences.size());
 
-            ImGui::TableSetColumnIndex(3);
+            ImGui::TableSetColumnIndex(4);
             ImGui::Text("%s", system.temporalContext.label.c_str());
 
-            ImGui::TableSetColumnIndex(4);
+            ImGui::TableSetColumnIndex(5);
             ImGui::Text("%zu", system.declaredProblems.size());
 
-            ImGui::TableSetColumnIndex(5);
+            ImGui::TableSetColumnIndex(6);
             ImGui::Text("%zu", system.declaredActions.size());
 
-            ImGui::TableSetColumnIndex(6);
+            ImGui::TableSetColumnIndex(7);
             ImGui::Text("%zu", system.expectedEffects.size());
         }
         ImGui::EndTable();

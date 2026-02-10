@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include <mutex>
 
 namespace UI::Panels {
@@ -58,6 +59,8 @@ private:
     std::vector<std::string> allegedMechanisms_;
     std::vector<std::string> expectedEffects_;
     std::map<std::string, std::string> metadata_;
+    std::set<std::string> selectedSystemIds_;
+    bool useSelectedForAI_ = true;
 
     UI::Components::FileSelector importSelector_{"Import Discursive JSON"};
     UI::Components::FileSelector exportSelector_{"Export Discursive JSON"};

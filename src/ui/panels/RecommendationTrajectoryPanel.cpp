@@ -97,12 +97,36 @@ void RecommendationTrajectoryPanel::draw(bool* open) {
 
 void RecommendationTrajectoryPanel::drawTrajectoryConfig() {
     auto current = session_->getRecommendationTrajectoryDTO();
+    if (current.snapshots.empty()) {
+        selectedSnapshotIds_.clear();
+    } else {
+        std::set<std::string> currentIds;
+        for (const auto& snapshot : current.snapshots) currentIds.insert(snapshot.id);
+        for (auto it = selectedSnapshotIds_.begin(); it != selectedSnapshotIds_.end();) {
+            if (!currentIds.contains(*it)) it = selectedSnapshotIds_.erase(it);
+            else ++it;
+        }
+    }
+
+    auto collectTrajectoryForAI = [&]() {
+        auto selected = current;
+        if (!useSelectedForAI_) {
+            return selected;
+        }
+        selected.snapshots.clear();
+        for (const auto& snapshot : current.snapshots) {
+            if (selectedSnapshotIds_.contains(snapshot.id)) {
+                selected.snapshots.push_back(snapshot);
+            }
+        }
+        return selected;
+    };
 
     ImGui::TextColored(ImVec4(0.4f, 1.0f, 1.0f, 1.0f), "RECOMENDATION TRAJECTORY (RTC)");
     ImGui::SameLine(ImGui::GetWindowWidth() - 280);
     
     if (ImGui::Button(aiRequestPending_ ? "Waiting for Qwen..." : "Analyze Trajectory with Qwen", ImVec2(240, 0))) {
-        auto trajectory = session_->getRecommendationTrajectoryDTO();
+        auto trajectory = collectTrajectoryForAI();
         if (!trajectory.snapshots.empty()) {
             aiRequestPending_ = true;
             auto bundle = Application::Mappers::Cognitive::createBundle("trajectory_reading", {}, {}, &trajectory);
@@ -116,14 +140,27 @@ void RecommendationTrajectoryPanel::drawTrajectoryConfig() {
                     aiResultReady_ = true; // Signal the main thread to open the popup
                 });
         } else {
-            ImGui::OpenPopup("SnapshotsEmptyError");
+            if (useSelectedForAI_) ImGui::OpenPopup("RecommendationSelectionEmptyError");
+            else ImGui::OpenPopup("SnapshotsEmptyError");
         }
     }
+
+    ImGui::Spacing();
+    ImGui::Checkbox("Use selected snapshots only", &useSelectedForAI_);
+    ImGui::SameLine();
+    ImGui::TextDisabled("Selected: %zu", selectedSnapshotIds_.size());
     
     if (ImGui::BeginPopupModal("SnapshotsEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Snapshots Found");
         ImGui::Text("The AI needs at least one Recommendation Snapshot to analyze a trajectory.");
         ImGui::Text("Please add a snapshot in the 'Snapshots' tab first.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal("RecommendationSelectionEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Snapshot Selected");
+        ImGui::Text("Select one or more snapshots in the table before running Qwen.");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
@@ -384,11 +421,30 @@ void RecommendationTrajectoryPanel::drawSnapshotForm() {
 void RecommendationTrajectoryPanel::drawSnapshotList() {
     auto trajectory = session_->getRecommendationTrajectoryDTO();
     if (trajectory.snapshots.empty()) {
+        selectedSnapshotIds_.clear();
         ImGui::TextDisabled("No recommendation snapshots registered.");
         return;
     }
 
-    if (ImGui::BeginTable("RecommendationSnapshotsTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+    std::set<std::string> currentIds;
+    for (const auto& snapshot : trajectory.snapshots) currentIds.insert(snapshot.id);
+    for (auto it = selectedSnapshotIds_.begin(); it != selectedSnapshotIds_.end();) {
+        if (!currentIds.contains(*it)) it = selectedSnapshotIds_.erase(it);
+        else ++it;
+    }
+
+    if (ImGui::Button("Select All##Recommendation")) {
+        selectedSnapshotIds_ = currentIds;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Clear Selection##Recommendation")) {
+        selectedSnapshotIds_.clear();
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("Selected: %zu", selectedSnapshotIds_.size());
+
+    if (ImGui::BeginTable("RecommendationSnapshotsTable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp)) {
+        ImGui::TableSetupColumn("Sel");
         ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Source");
@@ -402,6 +458,15 @@ void RecommendationTrajectoryPanel::drawSnapshotList() {
             ImGui::TableNextRow();
 
             ImGui::TableSetColumnIndex(0);
+            bool selected = selectedSnapshotIds_.contains(snapshot.id);
+            ImGui::PushID((snapshot.id + "_sel").c_str());
+            if (ImGui::Checkbox("##SelectRecommendationSnapshot", &selected)) {
+                if (selected) selectedSnapshotIds_.insert(snapshot.id);
+                else selectedSnapshotIds_.erase(snapshot.id);
+            }
+            ImGui::PopID();
+
+            ImGui::TableSetColumnIndex(1);
             ImGui::PushID(snapshot.id.c_str());
             if (ImGui::Button("Edit")) {
                 loadIntoForm(snapshot);
@@ -409,25 +474,26 @@ void RecommendationTrajectoryPanel::drawSnapshotList() {
             ImGui::SameLine();
             if (ImGui::Button("Del")) {
                 session_->removeRecommendationSnapshotDTO(snapshot.id);
+                selectedSnapshotIds_.erase(snapshot.id);
             }
             ImGui::PopID();
 
-            ImGui::TableSetColumnIndex(1);
+            ImGui::TableSetColumnIndex(2);
             ImGui::Text("%s", snapshot.id.c_str());
 
-            ImGui::TableSetColumnIndex(2);
+            ImGui::TableSetColumnIndex(3);
             ImGui::Text("%s", snapshot.sourceReference.sourceId.c_str());
 
-            ImGui::TableSetColumnIndex(3);
+            ImGui::TableSetColumnIndex(4);
             ImGui::Text("%s", snapshot.temporalContext.label.c_str());
 
-            ImGui::TableSetColumnIndex(4);
+            ImGui::TableSetColumnIndex(5);
             ImGui::Text("%s", snapshot.intendedAction.c_str());
 
-            ImGui::TableSetColumnIndex(5);
+            ImGui::TableSetColumnIndex(6);
             ImGui::Text("%s", snapshot.expectedOutcome.c_str());
 
-            ImGui::TableSetColumnIndex(6);
+            ImGui::TableSetColumnIndex(7);
             ImGui::Text("%zu", snapshot.contextConditions.size());
         }
         ImGui::EndTable();

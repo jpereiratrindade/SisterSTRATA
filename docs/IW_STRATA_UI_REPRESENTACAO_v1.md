@@ -186,6 +186,21 @@ Recommendation Form:
 - manter estrutura atual
 - garantir que multiplas analogias sejam visiveis como snapshots distintos
 
+Escopo de analise LLM por contexto:
+- Discursive, Narrative e Recommendation devem permitir selecao de 1..N registros para analise com Qwen
+- quando `usar selecionados` estiver ativo:
+  - se nenhum registro estiver selecionado, exibir erro explicito de selecao vazia
+  - nao executar analise com contexto vazio
+- quando `usar selecionados` estiver inativo:
+  - executar com todos os registros visiveis daquele contexto
+
+Memoria epistemica LLM:
+- permitir selecao de snapshots de interpretacao
+- permitir exportacao em Markdown:
+  - `Export Selected .md`
+  - `Export Visible .md`
+- manter exportacao contextual (filtrada por `intent` da aba atual)
+
 ---
 
 ## 8. Criterio de promocao de campo
@@ -245,8 +260,15 @@ Higiene de ingestao:
 UI:
 - Narrative: editor de metadata (`key/value`) + campos de evidencia (`iw.evidenceSnippet`, `iw.sourceSection`, `iw.pageRange`)
 - Narrative: coluna de metadata na grade com tooltip de detalhe
+- Narrative: selecao de observacoes para analise Qwen (`usar selecionados`)
 - Discursive: blocos colapsaveis para `iw.baselineAssumptions`, `iw.discursiveContext`, `iw.interpretationLayers`, `iw.temporalWindowReferences`, `iw.sourceProfile`
+- Discursive: selecao de sistemas para analise Qwen (`usar selecionados`)
+- Recommendation: selecao de snapshots para analise Qwen (`usar selecionados`)
 - Discursive e Narrative: campos ajustados para largura disponivel da janela (responsividade em formularios e tabelas)
+- Memoria epistemica (componente compartilhado): selecao de snapshots + exportacao `.md` (selecionados/visiveis)
+
+Escopo estrategico:
+- Global Synthesis permanece holistico (analisa o contexto completo), sem selecao parcial de registros
 
 Testes:
 - casos adicionais em `tests/application/IWMapperTest.cpp` cobrindo:
@@ -261,3 +283,30 @@ Testes:
 - validacao humana da UX dos campos longos em diferentes resolucoes de tela
 - eventual limpeza de dados historicos ja persistidos antes dos filtros de ingestao
 - decisao de promocao de metadados recorrentes para campos estruturados (criterio da secao 8)
+- avaliar se Global Synthesis deve manter apenas modo holistico ou receber modo por subconjunto
+
+---
+
+## 13. Operacao (LLM com selecao de registros)
+
+Discursive:
+- usar a coluna `Sel` na grade para marcar 1..N sistemas
+- manter `Use selected records only` ativo para limitar o escopo da analise
+- acoes suportadas: `Ask Qwen to Propose System` e `Evaluate Logical Coherence`
+
+Narrative:
+- usar a coluna `Sel` na grade para marcar 1..N observacoes
+- manter `Use selected observations only` ativo para limitar o escopo da analise
+- acao suportada: `Analyze Themes with Qwen`
+
+Recommendation:
+- usar a coluna `Sel` na grade para marcar 1..N snapshots
+- manter `Use selected snapshots only` ativo para limitar o escopo da analise
+- acao suportada: `Analyze Trajectory with Qwen`
+
+Memoria Epistemica:
+- selecionar snapshots no historico da aba ativa
+- exportar com:
+  - `Export Selected .md`
+  - `Export Visible .md`
+- a exportacao e filtrada pelo `intent` da aba e preserva rastreabilidade (`snapshotId`, `createdAt`, `sourceBundleId`, `promptVersion`)

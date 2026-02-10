@@ -176,6 +176,46 @@ A resposta gerada deve seguir estritamente o formato de lista de verificação:
 | **Timeline (4D)** | `CoherenceCheck` | Índices SSI e distribuição de classes entre estados. |
 | **Timeline (4D)** | `TrajectoryReading` | Resumo qualitativo da evolução de manchas e fragmentação. |
 
+## 12. Escopo de Análise por Seleção e Exportação Markdown (v2.1)
+
+Para reduzir ambiguidade de contexto, os painéis de contexto passam a suportar seleção explícita de registros antes da chamada ao LLM.
+
+### 12.1. Seleção por contexto
+- **Discursive (DSC)**:
+  - Controle: `Use selected records only`.
+  - Escopo: somente os `DiscursiveSystemDTO` marcados na coluna `Sel`.
+- **Narrative (NOC)**:
+  - Controle: `Use selected observations only`.
+  - Escopo: somente os `NarrativeStateDTO` marcados na coluna `Sel`.
+- **Recommendation (RTC)**:
+  - Controle: `Use selected snapshots only`.
+  - Escopo: somente os `RecommendationSnapshotDTO` marcados na coluna `Sel`.
+
+Regra operacional:
+- se o modo de seleção estiver ativo e não houver itens marcados, a UI exibe erro de seleção vazia e não dispara requisição ao LLM.
+- se o modo de seleção estiver desativado, o escopo volta a ser o conjunto visível completo do painel.
+
+### 12.2. Memória epistêmica com exportação `.md`
+
+O componente compartilhado de histórico (`InterpretationHistory`) agora permite:
+- seleção de snapshots individuais;
+- exportação para Markdown por subconjunto:
+  - `Export Selected .md`
+  - `Export Visible .md`
+
+Conteúdo exportado por snapshot:
+- `snapshotId`
+- `createdAt`
+- `intent`
+- `inputContextSummary`
+- `sourceBundleId`
+- `promptVersion`
+- `aiOutput`
+
+### 12.3. Escopo global
+
+`Global Synthesis` permanece em modo holístico: não há seleção parcial por registro nesse fluxo, por decisão arquitetural de síntese transversal.
+
 ---
-*Documentação v2.0 - Jan/2026*
+*Documentação v2.1 - Fev/2026*
 *Consolidado por: Antigravity AI*

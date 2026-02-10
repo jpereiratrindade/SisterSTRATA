@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 namespace UI::Panels {
 
@@ -43,6 +44,8 @@ private:
 
     char inputContextCondition_[128] = "";
     std::vector<std::string> contextConditions_;
+    std::set<std::string> selectedSnapshotIds_;
+    bool useSelectedForAI_ = true;
 
     UI::Components::FileSelector importSelector_{"Import Recommendation JSON"};
     UI::Components::FileSelector exportSelector_{"Export Recommendation JSON"};

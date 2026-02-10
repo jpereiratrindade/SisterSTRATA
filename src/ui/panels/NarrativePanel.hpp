@@ -7,6 +7,7 @@
 #include <string>
 #include <optional>
 #include <map>
+#include <set>
 #include <mutex>
 
 namespace UI::Panels {
@@ -65,6 +66,8 @@ private:
     char inputMetadataKey_[64] = "";
     char inputMetadataValue_[256] = "";
     std::map<std::string, std::string> metadata_;
+    std::set<std::string> selectedObservationIds_;
+    bool useSelectedForAI_ = true;
 
     // -- Spatial State --
     bool pickingMode_ = false;

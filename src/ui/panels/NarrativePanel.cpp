@@ -428,15 +428,44 @@ void NarrativePanel::drawIngestionForm() {
 
 void NarrativePanel::drawObservationList() {
     auto history = session_->getNarrativeHistoryDTO();
+    if (history.empty()) {
+        selectedObservationIds_.clear();
+    } else {
+        std::set<std::string> currentIds;
+        for (const auto& obs : history) currentIds.insert(obs.id);
+        for (auto it = selectedObservationIds_.begin(); it != selectedObservationIds_.end();) {
+            if (!currentIds.contains(*it)) it = selectedObservationIds_.erase(it);
+            else ++it;
+        }
+    }
+
+    auto collectForAI = [&]() {
+        if (!useSelectedForAI_) return history;
+        std::vector<Application::DTO::NarrativeStateDTO> filtered;
+        for (const auto& obs : history) {
+            if (selectedObservationIds_.contains(obs.id)) filtered.push_back(obs);
+        }
+        return filtered;
+    };
 
     ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "OBSERVATION LOG (NOC)");
-    ImGui::SameLine(ImGui::GetWindowWidth() - 280);
-    
+    ImGui::Checkbox("Use selected observations only", &useSelectedForAI_);
+    ImGui::SameLine();
+    if (ImGui::Button("Select All##Narrative")) {
+        for (const auto& obs : history) selectedObservationIds_.insert(obs.id);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Clear Selection##Narrative")) {
+        selectedObservationIds_.clear();
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("Selected: %zu", selectedObservationIds_.size());
+
     if (ImGui::Button(aiRequestPending_ ? "Waiting for Qwen..." : "Analyze Themes with Qwen", ImVec2(240, 0))) {
-        auto history = session_->getNarrativeHistoryDTO();
-        if (!history.empty()) {
+        auto inputHistory = collectForAI();
+        if (!inputHistory.empty()) {
             aiRequestPending_ = true;
-            auto bundle = Application::Mappers::Cognitive::createBundle("theme_analysis", history);
+            auto bundle = Application::Mappers::Cognitive::createBundle("theme_analysis", inputHistory);
             session_->requestAIInterpretation(bundle, 
                 Application::Services::Cognitive::InterpretationMode::ThemeAnalysis,
                 [this](const auto& snapshot) {
@@ -446,10 +475,28 @@ void NarrativePanel::drawObservationList() {
                     aiRequestPending_ = false;
                     aiResultReady_ = true; // Signal the main thread to open the popup
                 });
+        } else {
+            if (useSelectedForAI_) ImGui::OpenPopup("NarrativeSelectionEmptyError");
+            else ImGui::OpenPopup("NarrativeContextEmptyError");
         }
     }
 
-    if (ImGui::BeginTable("NarrativeLogTable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp)) {
+    if (ImGui::BeginPopupModal("NarrativeSelectionEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Observation Selected");
+        ImGui::Text("Select one or more observations before running Qwen.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal("NarrativeContextEmptyError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1, 0.6f, 0, 1), "No Observation Found");
+        ImGui::Text("Add at least one observation to run Qwen.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginTable("NarrativeLogTable", 9, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp)) {
+        ImGui::TableSetupColumn("Sel");
         ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Source");
@@ -462,8 +509,17 @@ void NarrativePanel::drawObservationList() {
 
         for (const auto& obs : history) {
             ImGui::TableNextRow();
-            
+
             ImGui::TableSetColumnIndex(0);
+            bool selected = selectedObservationIds_.contains(obs.id);
+            ImGui::PushID((obs.id + "_sel").c_str());
+            if (ImGui::Checkbox("##SelectObservation", &selected)) {
+                if (selected) selectedObservationIds_.insert(obs.id);
+                else selectedObservationIds_.erase(obs.id);
+            }
+            ImGui::PopID();
+
+            ImGui::TableSetColumnIndex(1);
             ImGui::PushID(obs.id.c_str());
             if (ImGui::Button("Edit")) {
                 loadIntoForm(obs);
@@ -471,29 +527,30 @@ void NarrativePanel::drawObservationList() {
             ImGui::SameLine();
             if (ImGui::Button("Del")) {
                 session_->removeNarrativeStateDTO(obs.id);
+                selectedObservationIds_.erase(obs.id);
             }
             ImGui::PopID();
 
-            ImGui::TableSetColumnIndex(1);
+            ImGui::TableSetColumnIndex(2);
             ImGui::Text("%s", obs.id.c_str());
 
-            ImGui::TableSetColumnIndex(2);
+            ImGui::TableSetColumnIndex(3);
             ImGui::Text("%s (%s)", obs.source.sourceId.c_str(), obs.source.productionDate.c_str());
 
-            ImGui::TableSetColumnIndex(3);
+            ImGui::TableSetColumnIndex(4);
             ImGui::Text("%s", obs.temporalContext.label.c_str());
 
-            ImGui::TableSetColumnIndex(4);
+            ImGui::TableSetColumnIndex(5);
             ImGui::Text("%s", intentLabel(obs.intent.intentType));
 
-            ImGui::TableSetColumnIndex(5);
+            ImGui::TableSetColumnIndex(6);
             if (!obs.axes.empty()) {
                 ImGui::Text("%s", obs.axes[0].label.c_str());
             } else {
                 ImGui::Text("-");
             }
             
-            ImGui::TableSetColumnIndex(6);
+            ImGui::TableSetColumnIndex(7);
             ImGui::Text("%zu", obs.metadata.size());
             if (ImGui::IsItemHovered() && !obs.metadata.empty()) {
                 ImGui::BeginTooltip();
@@ -503,7 +560,7 @@ void NarrativePanel::drawObservationList() {
                 ImGui::EndTooltip();
             }
 
-            ImGui::TableSetColumnIndex(7);
+            ImGui::TableSetColumnIndex(8);
             if (obs.spatialScope.has_value()) {
                  auto& scope = obs.spatialScope.value();
                  if (scope.type == "PATCH_ID" && scope.patchId.has_value()) {
