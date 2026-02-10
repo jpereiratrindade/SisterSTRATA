@@ -41,9 +41,10 @@ void MainMenu::draw() {
             ImGui::EndMenu();
         }
         
-            if (ImGui::MenuItem("From IdeaWalker (IW-Consumiveis)...")) {
+        if (ImGui::BeginMenu("Ingestion")) {
+            if (ImGui::MenuItem("From IdeaWalker (Batch Folder)...")) {
                 showImportIWDialog = true;
-                importIWSelector.Open(lastImportIWPath);
+                importIWDialogOpenRequested = true; // Defer open
             }
             if (ImGui::MenuItem("Scan Project Inputs (Batch)")) {
                  // Trigger session scan
@@ -140,14 +141,24 @@ void MainMenu::draw() {
 
 void MainMenu::drawImportIWDialog() {
     if (showImportIWDialog) {
-        std::string result;
-        if (importIWSelector.draw(&showImportIWDialog, result, ".json")) {
-             if (onImportIW) onImportIW(result);
-             std::filesystem::path selectedPath(result);
-             if (selectedPath.has_parent_path()) {
-                 lastImportIWPath = selectedPath.parent_path().string();
+        if (importIWDialogOpenRequested) {
+             if (!lastImportIWPath.empty()) {
+                 importIWBrowser.SetCurrentPath(lastImportIWPath);
              }
-             showImportIWDialog = false;
+             importIWBrowser.Open(true); // Directories Only
+             importIWDialogOpenRequested = false;
+        }
+
+        std::vector<std::string> chosen;
+        if (importIWBrowser.Render(chosen)) {
+             if (!chosen.empty()) {
+                 std::string dir = chosen.front();
+                 if (onImportIW) onImportIW(dir);
+                 lastImportIWPath = dir;
+                 showImportIWDialog = false;
+             }
+        } else if (!importIWBrowser.IsOpen()) {
+            showImportIWDialog = false;
         }
     }
 }

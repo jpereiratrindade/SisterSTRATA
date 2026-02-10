@@ -55,10 +55,11 @@ private:
     bool showImportIWDialog = false; // New
     bool isNewProjectMode = false;
     bool projectDialogOpenRequested = false;
+    bool importIWDialogOpenRequested = false; // New: Defer popup open
     
     UI::Components::FileSelector openFileSelector{"Open File"};
     UI::Components::FileSelector saveFileSelector{"Save As"};
-    UI::Components::FileSelector importIWSelector{"Import from IdeaWalker"}; // New
+    UI::Components::FileBrowser importIWBrowser{"Import from IdeaWalker"}; // New: Directory Browser
     UI::Components::FileBrowser projectBrowser{"Project Browser"};
     
     std::string lastOpenPath = "assets/data/";

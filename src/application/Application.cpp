@@ -133,7 +133,7 @@ void Application::init() {
         
         ui_->onImportIW = [this](std::string path) {
             if (this->session_) {
-                this->session_->ingestFromIW(path);
+                this->session_->ingestFromIWDirectory(path);
             }
         };
 

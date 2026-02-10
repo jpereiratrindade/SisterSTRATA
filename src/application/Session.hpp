@@ -252,6 +252,21 @@ public:
         }
     }
 
+    void ingestFromIWDirectory(const std::string& dirPath) {
+        std::cout << "[Session] Batch Ingestion from Directory: " << dirPath << std::endl;
+        if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
+            std::cerr << "Invalid directory for ingestion: " << dirPath << std::endl;
+            return;
+        }
+
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(dirPath)) {
+            if (entry.is_regular_file() && entry.path().extension() == ".json") {
+                ingestFromIW(entry.path().string());
+            }
+        }
+        std::cout << "[Session] Batch Ingestion Complete." << std::endl;
+    }
+
     void scanForIngestion() {
         std::cout << "[Session] Scanning project for inputs..." << std::endl;
         
