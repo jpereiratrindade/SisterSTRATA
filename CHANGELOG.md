@@ -7,6 +7,12 @@
   - Updated UI to use `FileBrowser` in directory mode for this action.
   - See `Session::ingestFromIWDirectory`.
 
+## [v1.9.7] - 2026-02-10
+### Documentation
+- **IW Ingest Epistemology:** Added formal epistemological note for IW -> STRATA ingestion.
+- **Resilience Alignment:** Added evaluation note confirming epistemic alignment and separation of narrated vs simulated contexts.
+- **Archive:** Added compacted reference archive in docs.
+
 ## [v1.9.6] - 2026-02-03
 ### Fixed
 - **Project Menu**: Resolved ID collision issue that caused "Project" menu options to be unresponsive.
