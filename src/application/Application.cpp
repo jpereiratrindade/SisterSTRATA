@@ -147,11 +147,14 @@ void Application::init() {
 
 void Application::shutdown() {
     if (window_) {
+        if (!config_.useHybridMode) {
+            // Ensure GPU is idle before tearing down Vulkan-backed UI and world resources.
+            World3D::getDevice().waitIdle();
+        }
+
         if (ui_) ui_->shutdown();
 
         if (!config_.useHybridMode) {
-            // Ensure GPU is idle before destroying resources
-            World3D::getDevice().waitIdle();
             World3D::shutdown();
         }
         
