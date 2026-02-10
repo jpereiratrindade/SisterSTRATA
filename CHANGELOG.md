@@ -11,7 +11,7 @@
 ### Documentation
 - **IW Ingest Epistemology:** Added formal epistemological note for IW -> STRATA ingestion.
 - **Resilience Alignment:** Added evaluation note confirming epistemic alignment and separation of narrated vs simulated contexts.
-- **Archive:** Added compacted reference archive in docs.
+- **Archive:** Removed compacted reference archive from version control (local-only artifact).
 
 ## [v1.9.6] - 2026-02-03
 ### Fixed
