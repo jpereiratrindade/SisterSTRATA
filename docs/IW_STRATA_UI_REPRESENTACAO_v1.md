@@ -214,6 +214,7 @@ Context Graph (Narrative):
   - limite de conectividade por no (`Top-K por no`)
   - opcao para ocultar nos isolados
   - modo foco por no selecionado (1 salto)
+  - legenda visual de cores por dimensao epistemica
   - tooltip com `observationIds`, `artifactIds` e `topTokens`
 
 ---
@@ -300,6 +301,10 @@ UI:
 
 Escopo estrategico:
 - Global Synthesis permanece holistico (analisa o contexto completo), sem selecao parcial de registros
+- Global Synthesis deve exibir feedback explicito de execucao:
+  - erro de ausencia de dados no projeto
+  - erro de indisponibilidade do servico LLM
+  - status de auditoria em andamento / concluida
 
 Testes:
 - casos adicionais em `tests/application/IWMapperTest.cpp` cobrindo:

@@ -90,6 +90,13 @@ static const char* labelForDimension(const std::string& dimension) {
     return "Mixed";
 }
 
+static void drawDimensionLegendItem(const char* id, ImU32 color, const char* label) {
+    const ImVec4 c = ImGui::ColorConvertU32ToFloat4(color);
+    ImGui::ColorButton(id, c, ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(14, 14));
+    ImGui::SameLine();
+    ImGui::TextUnformatted(label);
+}
+
 namespace UI::Panels {
 
 void NarrativePanel::setSession(Application::Session* session) {
@@ -944,6 +951,13 @@ void NarrativePanel::drawNarrativeGraph() {
 
     ImGui::Separator();
     ImGui::Text("Legend");
+    drawDimensionLegendItem("##LegendEcological", colorForDimension("ecological"), "Ecological");
+    ImGui::SameLine();
+    drawDimensionLegendItem("##LegendProductive", colorForDimension("productive"), "Productive");
+    ImGui::SameLine();
+    drawDimensionLegendItem("##LegendSocial", colorForDimension("social"), "Social");
+    ImGui::SameLine();
+    drawDimensionLegendItem("##LegendMixed", colorForDimension("mixed"), "Mixed");
     ImGui::BulletText("Node color: dominant epistemic dimension");
     ImGui::BulletText("Node size: number of narrative observations");
     ImGui::BulletText("Edge width/alpha: narrative similarity (Jaccard)");

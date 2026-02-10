@@ -45,8 +45,21 @@ public:
     void interpret(const DTO::Cognitive::ContextBundleDTO& bundle, 
                    InterpretationMode mode, 
                    SnapshotCallback callback) {
-        
-        if (!llmService_) return;
+        if (!callback) return;
+
+        if (!llmService_) {
+            DTO::Cognitive::InterpretationSnapshotDTO snapshot;
+            const auto refs = collectRecordRefs(bundle);
+            snapshot.snapshotId = "SNAP-" + std::to_string(std::time(nullptr));
+            snapshot.createdAt = nowIsoLike();
+            snapshot.intent = modeToString(mode);
+            snapshot.inputContextSummary = summarizeBundleScope(bundle, refs);
+            snapshot.aiOutput = "Error: LLM service not configured in current session.";
+            snapshot.promptVersion = "Canonical-Prompt-v1.1";
+            snapshot.sourceBundleId = formatSourceTrace(bundle.bundleId, refs);
+            callback(snapshot);
+            return;
+        }
 
         std::vector<Ports::LLMMessage> messages;
         messages.push_back({Ports::LLMRole::User, formatPrompt(bundle, mode)});

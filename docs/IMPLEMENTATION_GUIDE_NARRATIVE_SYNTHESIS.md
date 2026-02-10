@@ -61,6 +61,18 @@ Mandatory epistemic status values:
 - `Hide Isolated`.
 - `Focus Selected Node` (one-hop neighborhood).
 - Labels default off, enabled for hover/selected or explicit "Show Labels".
+- Visible color legend for node dimensions (`ecological`, `productive`, `social`, `mixed`).
+
+### 3.4 SGS UX Robustness
+
+- `Strategic Global Synthesis` must not fail silently.
+- Before requesting LLM:
+  - validate that at least one observational layer has records.
+  - validate that LLM service is configured.
+- During execution:
+  - show explicit pending status.
+- After execution:
+  - show success/failure status and persist interpretation snapshot when requested by user.
 
 ## 4. Architecture Boundary
 

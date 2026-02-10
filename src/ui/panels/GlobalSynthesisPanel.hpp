@@ -3,6 +3,7 @@
 #include "application/Session.hpp"
 #include "application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
 #include <mutex>
+#include <string>
 
 namespace UI::Panels {
 
@@ -27,6 +28,8 @@ private:
     std::mutex aiMutex_;
     Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_; 
     Application::DTO::Cognitive::InterpretationSnapshotDTO stagedAiSnapshot_;
+    std::string auditStatus_;
+    bool lastAuditFailed_ = false;
 
     void drawAuditSection();
     void drawHistoryTab();
