@@ -95,9 +95,11 @@ private:
     Application::DTO::Cognitive::InterpretationSnapshotDTO stagedAiSnapshot_;
 
     // -- Narrative Graph State --
-    float graphMinSimilarity_ = 0.08f;
-    bool graphShowLabels_ = true;
+    float graphMinSimilarity_ = 0.35f;
+    int graphTopKPerNode_ = 3;
+    bool graphShowLabels_ = false;
     bool graphHideIsolated_ = false;
+    bool graphFocusSelected_ = false;
     std::string selectedGraphNodeId_;
 };
 

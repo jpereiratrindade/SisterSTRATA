@@ -211,7 +211,9 @@ Context Graph (Narrative):
   - distancia derivada como `1 - similarity` (sem interpretacao causal)
 - controles minimos:
   - filtro de similaridade minima
+  - limite de conectividade por no (`Top-K por no`)
   - opcao para ocultar nos isolados
+  - modo foco por no selecionado (1 salto)
   - tooltip com `observationIds`, `artifactIds` e `topTokens`
 
 ---

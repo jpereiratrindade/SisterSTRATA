@@ -680,20 +680,99 @@ void NarrativePanel::drawNarrativeGraph() {
         edges.push_back(edge);
     }
 
+    auto normalizeDimension = [](std::string dim) {
+        if (dim != "ecological" && dim != "productive" && dim != "social") {
+            dim = "mixed";
+        }
+        return dim;
+    };
+
+    std::unordered_map<std::string, int> stableNodeLookup;
+    stableNodeLookup.reserve(nodes.size());
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        stableNodeLookup[nodes[i].id] = static_cast<int>(i);
+    }
+    if (!selectedGraphNodeId_.empty() && !stableNodeLookup.contains(selectedGraphNodeId_)) {
+        selectedGraphNodeId_.clear();
+    }
+
+    std::vector<bool> edgeActive(edges.size(), false);
+    for (size_t i = 0; i < edges.size(); ++i) {
+        edgeActive[i] = edges[i].similarity >= graphMinSimilarity_;
+    }
+
+    const int topK = std::max(0, graphTopKPerNode_);
+    if (topK > 0) {
+        std::vector<std::vector<std::pair<float, int>>> incident(nodes.size());
+        for (size_t i = 0; i < edges.size(); ++i) {
+            if (!edgeActive[i]) continue;
+            incident[edges[i].source].push_back({edges[i].similarity, static_cast<int>(i)});
+            incident[edges[i].target].push_back({edges[i].similarity, static_cast<int>(i)});
+        }
+
+        std::vector<bool> keep(edges.size(), false);
+        for (auto& list : incident) {
+            std::sort(list.begin(), list.end(), [](const auto& a, const auto& b) {
+                if (a.first == b.first) return a.second < b.second;
+                return a.first > b.first;
+            });
+            const int limit = std::min<int>(topK, static_cast<int>(list.size()));
+            for (int i = 0; i < limit; ++i) {
+                keep[list[i].second] = true;
+            }
+        }
+
+        for (size_t i = 0; i < edges.size(); ++i) {
+            edgeActive[i] = edgeActive[i] && keep[i];
+        }
+    }
+
+    int selectedIndex = -1;
+    if (!selectedGraphNodeId_.empty()) {
+        auto it = stableNodeLookup.find(selectedGraphNodeId_);
+        if (it != stableNodeLookup.end()) selectedIndex = it->second;
+    }
+
+    std::set<int> focusNodes;
+    if (graphFocusSelected_ && selectedIndex >= 0) {
+        focusNodes.insert(selectedIndex);
+        for (size_t i = 0; i < edges.size(); ++i) {
+            if (!edgeActive[i]) continue;
+            if (edges[i].source == selectedIndex || edges[i].target == selectedIndex) {
+                focusNodes.insert(edges[i].source);
+                focusNodes.insert(edges[i].target);
+            }
+        }
+        for (size_t i = 0; i < edges.size(); ++i) {
+            if (!edgeActive[i]) continue;
+            if (!focusNodes.contains(edges[i].source) || !focusNodes.contains(edges[i].target)) {
+                edgeActive[i] = false;
+            }
+        }
+    }
+
     std::vector<int> degree(nodes.size(), 0);
-    for (const auto& edge : edges) {
-        if (edge.similarity < graphMinSimilarity_) continue;
-        degree[edge.source] += 1;
-        degree[edge.target] += 1;
+    size_t activeEdgeCount = 0;
+    for (size_t i = 0; i < edges.size(); ++i) {
+        if (!edgeActive[i]) continue;
+        ++activeEdgeCount;
+        degree[edges[i].source] += 1;
+        degree[edges[i].target] += 1;
     }
 
     ImGui::Text("Distance Type: %s", graph.value("distanceType", "unknown").c_str());
     ImGui::SameLine();
-    ImGui::TextDisabled("| Nodes: %zu | Edges: %zu", nodes.size(), edges.size());
+    ImGui::TextDisabled("| Nodes: %zu | Edges: %zu (%zu shown)", nodes.size(), edges.size(), activeEdgeCount);
     ImGui::SliderFloat("Min Similarity", &graphMinSimilarity_, 0.0f, 1.0f, "%.2f");
+    ImGui::SliderInt("Top K links per node", &graphTopKPerNode_, 0, 8);
     ImGui::Checkbox("Show Labels", &graphShowLabels_);
     ImGui::SameLine();
     ImGui::Checkbox("Hide Isolated", &graphHideIsolated_);
+    ImGui::SameLine();
+    ImGui::Checkbox("Focus Selected Node", &graphFocusSelected_);
+    if (graphFocusSelected_ && selectedIndex < 0) {
+        ImGui::TextDisabled("Select one node to activate focus mode.");
+    }
 
     if (nodes.empty()) {
         ImGui::TextDisabled("No narrative contexts available to render.");
@@ -724,19 +803,48 @@ void NarrativePanel::drawNarrativeGraph() {
     std::vector<int> visibleIndices;
     visibleIndices.reserve(nodes.size());
     for (size_t i = 0; i < nodes.size(); ++i) {
+        if (graphFocusSelected_ && selectedIndex >= 0 && !focusNodes.contains(static_cast<int>(i))) continue;
         if (graphHideIsolated_ && degree[i] == 0) continue;
         visibleIndices.push_back(static_cast<int>(i));
     }
 
-    const float pi = 3.14159265358979323846f;
-    if (visibleIndices.size() == 1) {
-        nodes[visibleIndices[0]].position = center;
-    } else if (!visibleIndices.empty()) {
-        const float orbit = maxRing * 0.82f;
-        for (size_t i = 0; i < visibleIndices.size(); ++i) {
-            const float angle = (-pi * 0.5f) + (2.0f * pi * static_cast<float>(i) / static_cast<float>(visibleIndices.size()));
-            NarrativeGraphNodeUI& node = nodes[visibleIndices[i]];
-            node.position = ImVec2(center.x + std::cos(angle) * orbit, center.y + std::sin(angle) * orbit);
+    std::vector<bool> nodeVisible(nodes.size(), false);
+    for (int idx : visibleIndices) {
+        nodeVisible[idx] = true;
+        nodes[idx].dominantDimension = normalizeDimension(nodes[idx].dominantDimension);
+    }
+
+    std::map<std::string, std::vector<int>> buckets;
+    for (int idx : visibleIndices) {
+        buckets[nodes[idx].dominantDimension].push_back(idx);
+    }
+    for (auto& [_, bucket] : buckets) {
+        std::sort(bucket.begin(), bucket.end(), [&](int a, int b) {
+            if (nodes[a].narrativeCount == nodes[b].narrativeCount) return nodes[a].label < nodes[b].label;
+            return nodes[a].narrativeCount > nodes[b].narrativeCount;
+        });
+    }
+
+    const std::map<std::string, float> sectorCenters = {
+        {"ecological", -2.20f},
+        {"productive", -0.50f},
+        {"social", 1.20f},
+        {"mixed", 2.50f}
+    };
+    const float sectorSpan = 1.10f;
+    for (const auto& [dim, centerAngle] : sectorCenters) {
+        auto it = buckets.find(dim);
+        if (it == buckets.end()) continue;
+        const auto& bucket = it->second;
+        const size_t n = bucket.size();
+        for (size_t i = 0; i < n; ++i) {
+            const float t = (n <= 1) ? 0.5f : (static_cast<float>(i) / static_cast<float>(n - 1));
+            const float angle = centerAngle - sectorSpan * 0.5f + sectorSpan * t;
+            const float ring = static_cast<float>(i % 3);
+            const float layer = static_cast<float>(i / 3);
+            const float radius = maxRing * (0.42f + 0.16f * ring) + 10.0f * layer;
+            NarrativeGraphNodeUI& node = nodes[bucket[i]];
+            node.position = ImVec2(center.x + std::cos(angle) * radius, center.y + std::sin(angle) * radius);
         }
     }
 
@@ -754,9 +862,10 @@ void NarrativePanel::drawNarrativeGraph() {
         }
     }
 
-    for (const auto& edge : edges) {
-        if (edge.similarity < graphMinSimilarity_) continue;
-        if (graphHideIsolated_ && (degree[edge.source] == 0 || degree[edge.target] == 0)) continue;
+    for (size_t i = 0; i < edges.size(); ++i) {
+        if (!edgeActive[i]) continue;
+        const auto& edge = edges[i];
+        if (!nodeVisible[edge.source] || !nodeVisible[edge.target]) continue;
 
         const ImVec2 a = nodes[edge.source].position;
         const ImVec2 b = nodes[edge.target].position;
@@ -771,9 +880,10 @@ void NarrativePanel::drawNarrativeGraph() {
         const ImVec2 c1(a.x + dx * 0.33f + nx * curvature, a.y + dy * 0.33f + ny * curvature);
         const ImVec2 c2(a.x + dx * 0.66f + nx * curvature, a.y + dy * 0.66f + ny * curvature);
 
-        const int alpha = static_cast<int>(70 + edge.similarity * 155.0f);
-        const float thickness = 1.0f + edge.similarity * 3.5f;
-        const ImU32 edgeColor = IM_COL32(135, 165, 220, alpha);
+        const bool selectedEdge = selectedIndex >= 0 && (edge.source == selectedIndex || edge.target == selectedIndex);
+        const int alpha = static_cast<int>((selectedEdge ? 120 : 55) + edge.similarity * 120.0f);
+        const float thickness = (selectedEdge ? 1.8f : 0.8f) + edge.similarity * 2.4f;
+        const ImU32 edgeColor = selectedEdge ? IM_COL32(255, 222, 120, alpha) : IM_COL32(130, 162, 220, alpha);
         drawList->AddBezierCubic(a, c1, c2, b, edgeColor, thickness);
     }
 
@@ -788,7 +898,7 @@ void NarrativePanel::drawNarrativeGraph() {
         drawList->AddCircleFilled(node.position, node.radius, baseColor, 36);
         drawList->AddCircle(node.position, node.radius, selected ? IM_COL32(255, 255, 255, 255) : IM_COL32(210, 220, 240, hovered ? 255 : 160), 36, selected ? 2.5f : 1.4f);
 
-        if (graphShowLabels_) {
+        if (graphShowLabels_ || hovered || selected) {
             const std::string label = node.label.size() > 36 ? node.label.substr(0, 33) + "..." : node.label;
             ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
             drawList->AddText(ImVec2(node.position.x - textSize.x * 0.5f + 1.0f, node.position.y - node.radius - textSize.y - 7.0f + 1.0f), IM_COL32(0, 0, 0, 185), label.c_str());
@@ -837,7 +947,8 @@ void NarrativePanel::drawNarrativeGraph() {
     ImGui::BulletText("Node color: dominant epistemic dimension");
     ImGui::BulletText("Node size: number of narrative observations");
     ImGui::BulletText("Edge width/alpha: narrative similarity (Jaccard)");
-    ImGui::BulletText("Edge threshold controlled by Min Similarity");
+    ImGui::BulletText("Edges filtered by Min Similarity and Top-K per node");
+    ImGui::BulletText("Focus mode keeps only the selected node and first-hop neighbors");
 
     if (!selectedGraphNodeId_.empty()) {
         auto itSelected = std::find_if(nodes.begin(), nodes.end(), [&](const auto& item) {
