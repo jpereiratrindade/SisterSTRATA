@@ -41,6 +41,14 @@ inline std::string renderDiscursiveSystem(const Application::DTO::DiscursiveSyst
     std::stringstream ss;
     ss << "### DISCURSIVE SYSTEM [" << dto.id << "]\n";
     ss << "Declared context for time: " << dto.temporalContext.label << "\n";
+    if (!dto.sourceReferences.empty()) {
+        ss << "Source Refs: ";
+        for (size_t i = 0; i < dto.sourceReferences.size(); ++i) {
+            ss << dto.sourceReferences[i].sourceId;
+            if (i + 1 < dto.sourceReferences.size()) ss << ", ";
+        }
+        ss << "\n";
+    }
     
     if (!dto.declaredProblems.empty()) {
         ss << "DECLARED PROBLEMS:\n";
@@ -71,6 +79,7 @@ inline std::string renderDiscursiveSystem(const Application::DTO::DiscursiveSyst
 inline std::string renderRecommendation(const Application::DTO::RecommendationSnapshotDTO& dto) {
     std::stringstream ss;
     ss << "=> RECOMMENDATION SNAPSHOT [" << dto.id << "]\n";
+    ss << "Source: " << dto.sourceReference.sourceId << " (" << dto.sourceReference.productionDate << ")\n";
     ss << "Time Label: " << dto.temporalContext.label << "\n";
     ss << "Recommendation Text: \"" << dto.recommendationText << "\"\n";
     ss << "Intended Action: " << dto.intendedAction << "\n";

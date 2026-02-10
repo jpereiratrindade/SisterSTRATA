@@ -55,3 +55,35 @@ TEST(CognitiveAssistanceServiceTest, SnapshotSummaryReflectsBundleScope) {
     EXPECT_NE(llm.lastMessages[0].content.find("SCOPE: narratives=2 discursive=1 recommendationSnapshots=2"),
               std::string::npos);
 }
+
+TEST(CognitiveAssistanceServiceTest, SnapshotSummaryIncludesRecordDescriptorsForTraceability) {
+    FakeLLMService llm;
+    Application::Services::Cognitive::CognitiveAssistanceService service(&llm);
+
+    Application::DTO::Cognitive::ContextBundleDTO bundle;
+    bundle.bundleId = "BUNDLE-TRACE";
+    bundle.intent = "theme_analysis";
+    bundle.narratives = {
+        "--- OBSERVATION [candidate_abc] ---\n"
+        "Source: 20260210_073058_coelho2018.pdf (2026-02-10T10:31:59Z)\n"
+    };
+    bundle.discursive = {
+        "### DISCURSIVE SYSTEM [ds_1]\n"
+        "Source Refs: 20260210_073058_coelho2018.pdf\n"
+    };
+    bundle.recommendation =
+        "=> RECOMMENDATION SNAPSHOT [rec_9]\n"
+        "Source: 20260210_073058_coelho2018.pdf (2026-02-10T10:31:59Z)\n";
+
+    std::optional<Application::DTO::Cognitive::InterpretationSnapshotDTO> output;
+    service.interpret(
+        bundle,
+        Application::Services::Cognitive::InterpretationMode::ThemeAnalysis,
+        [&](const auto& snapshot) { output = snapshot; });
+
+    ASSERT_TRUE(output.has_value());
+    EXPECT_NE(output->inputContextSummary.find("NARRATIVE:candidate_abc"), std::string::npos);
+    EXPECT_NE(output->inputContextSummary.find("DISCURSIVE:ds_1"), std::string::npos);
+    EXPECT_NE(output->inputContextSummary.find("RECOMMENDATION:rec_9"), std::string::npos);
+    EXPECT_NE(output->sourceBundleId.find("NARRATIVE:candidate_abc"), std::string::npos);
+}

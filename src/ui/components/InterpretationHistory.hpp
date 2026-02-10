@@ -148,8 +148,12 @@ public:
                 ImGui::Separator();
 
                 ImGui::TextDisabled("Intent: %s", snap.intent.c_str());
-                ImGui::TextDisabled("Context: %s", snap.inputContextSummary.c_str());
-                ImGui::TextDisabled("Source Bundle: %s", snap.sourceBundleId.c_str());
+                ImGui::TextDisabled("Context:");
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.75f, 0.75f, 0.75f, 1.0f));
+                ImGui::TextWrapped("%s", snap.inputContextSummary.c_str());
+                ImGui::TextDisabled("Source Bundle:");
+                ImGui::TextWrapped("%s", snap.sourceBundleId.c_str());
+                ImGui::PopStyleColor();
 
                 ImGui::Separator();
                 ImGui::BeginChild("ContentScroll", ImVec2(0, -40));

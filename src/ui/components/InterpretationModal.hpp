@@ -23,7 +23,8 @@ public:
             ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "COGNITIVE INTERPRETATION [%s]", snapshot.intent.c_str());
             ImGui::Separator();
             
-            ImGui::Text("Context: %s", snapshot.inputContextSummary.c_str());
+            ImGui::TextUnformatted("Context:");
+            ImGui::TextWrapped("%s", snapshot.inputContextSummary.c_str());
             ImGui::Text("Prompt Version: %s", snapshot.promptVersion.c_str());
             ImGui::Separator();
 
