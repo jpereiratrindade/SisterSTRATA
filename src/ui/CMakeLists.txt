@@ -25,6 +25,7 @@ add_library(ui
     panels/DiscursiveSystemPanel.cpp
     panels/RecommendationTrajectoryPanel.cpp
     panels/GlobalSynthesisPanel.cpp
+    panels/AnalysisWorkspacePanel.cpp
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
     ${imgui_SOURCE_DIR}/imgui_tables.cpp

@@ -42,6 +42,7 @@ public:
     bool showDiscursivePanel = false;
     bool showRecommendationPanel = false;
     bool* showGlobalSynthesis = nullptr; // New: Pointer to UserInterface state
+    bool showAnalysisWorkspace = false;
     std::string currentProjectPath; // New: Cached path for display
 private:
     void drawOpenFileDialog();

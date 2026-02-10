@@ -19,6 +19,7 @@
 #include "ui/panels/DiscursiveSystemPanel.hpp"
 #include "ui/panels/RecommendationTrajectoryPanel.hpp"
 #include "ui/panels/GlobalSynthesisPanel.hpp" // New
+#include "ui/panels/AnalysisWorkspacePanel.hpp"
 
 namespace UI {
 
@@ -67,11 +68,16 @@ public:
     std::string getHybridViewName() const; // New: for UI feedback mechanism
 
 private:
+    void applyMultiViewportPreference();
+
     Application::Session* session_ = nullptr; // New: Cache for data access
     SDL_Window* window_ = nullptr;
     SDL_Renderer* sdlRenderer_ = nullptr; // New: for Hybrid mode
     bool isVulkan_ = true; // Flag for selective rendering/shutdown
     float dpiScale_ = 1.0f;
+    bool multiViewportSupported_ = false;
+    bool multiViewportRequested_ = true;
+    bool multiViewportActive_ = false;
 
     // Components
     Menus::MainMenu mainMenu_;
@@ -90,6 +96,12 @@ private:
     bool showGlobalSynthesisPanel = false; // New
     Panels::RecommendationTrajectoryPanel recommendationTrajectoryPanel_;
     Panels::GlobalSynthesisPanel globalSynthesisPanel_; // New
+    Panels::AnalysisWorkspacePanel analysisWorkspacePanel_;
+    bool showAnalysisWorkspacePanel_ = false;
+    std::string lastProjectRoot_;
+    bool uiStateLoaded_ = false;
+    bool lastAnalysisWorkspacePanelState_ = false;
+    bool lastMultiViewportRequestedState_ = true;
 };
 
 } // namespace UI

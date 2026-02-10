@@ -5,6 +5,12 @@
 
 namespace UI::Panels {
 
+void SettingsPanel::setMultiViewportControls(bool* requested, const bool* supported, const bool* active) {
+    multiViewportRequested_ = requested;
+    multiViewportSupported_ = supported;
+    multiViewportActive_ = active;
+}
+
 void SettingsPanel::draw(bool* open) {
      if (!open || !(*open)) return;
 
@@ -64,6 +70,27 @@ void SettingsPanel::draw(bool* open) {
             int targetFps = Application::Services::World3DService::getTargetFPS();
             if (ImGui::SliderInt("Max FPS (0 = Uncapped)", &targetFps, 0, 240)) {
                 Application::Services::World3DService::setTargetFPS(targetFps);
+            }
+        }
+
+        if (ImGui::CollapsingHeader("Workspace Windows", ImGuiTreeNodeFlags_DefaultOpen)) {
+            bool requested = multiViewportRequested_ ? *multiViewportRequested_ : false;
+            const bool supported = multiViewportSupported_ ? *multiViewportSupported_ : false;
+            const bool active = multiViewportActive_ ? *multiViewportActive_ : false;
+
+            if (ImGui::Checkbox("Enable Multi-Viewport (separate OS windows)", &requested)) {
+                if (requested && !supported) {
+                    requested = false;
+                }
+                if (multiViewportRequested_) {
+                    *multiViewportRequested_ = requested;
+                }
+            }
+
+            ImGui::TextDisabled("Supported by current SDL backend: %s", supported ? "yes" : "no");
+            ImGui::TextDisabled("Active now: %s", active ? "yes" : "no");
+            if (!supported) {
+                ImGui::TextWrapped("Current backend does not support platform viewports. Use X11 backend to enable separate OS windows.");
             }
         }
     }

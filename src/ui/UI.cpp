@@ -7,6 +7,9 @@
 #include <SDL2/SDL_vulkan.h>
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 namespace UI {
 
@@ -130,19 +133,86 @@ void rebuildFontsForDpi(float dpiScale) {
     io.FontGlobalScale = (dpiScale > 0.0f) ? (1.0f / dpiScale) : 1.0f;
 }
 
+bool loadUiState(const std::filesystem::path& path, bool& analysisWorkspaceOpen, bool& multiViewportRequested) {
+    try {
+        std::ifstream in(path);
+        if (!in.is_open()) return false;
+        nlohmann::json j;
+        in >> j;
+        analysisWorkspaceOpen = j.value("analysisWorkspaceOpen", false);
+        multiViewportRequested = j.value("multiViewportRequested", true);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+void saveUiState(const std::filesystem::path& path, bool analysisWorkspaceOpen, bool multiViewportRequested) {
+    try {
+        nlohmann::json j;
+        j["analysisWorkspaceOpen"] = analysisWorkspaceOpen;
+        j["multiViewportRequested"] = multiViewportRequested;
+        std::ofstream out(path);
+        if (out.is_open()) out << j.dump(2);
+    } catch (...) {
+    }
+}
+
 } // namespace
+
+void UserInterface::applyMultiViewportPreference() {
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (!isVulkan_) {
+        multiViewportRequested_ = false;
+        io.ConfigFlags &= ~ImGuiConfigFlags_ViewportsEnable;
+        multiViewportActive_ = false;
+        return;
+    }
+
+    if (multiViewportRequested_ && !multiViewportSupported_) {
+        multiViewportRequested_ = false;
+    }
+
+    const bool shouldEnable = multiViewportRequested_ && multiViewportSupported_;
+    if (shouldEnable) {
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    } else {
+        io.ConfigFlags &= ~ImGuiConfigFlags_ViewportsEnable;
+    }
+    multiViewportActive_ = (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) != 0;
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (multiViewportActive_) {
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    } else {
+        style.WindowRounding = 6.0f;
+    }
+}
 
 void UserInterface::init(SDL_Window* window, const VulkanInitInfo& info) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     // Docking disabled to match SisterAppPEC behavior.
 
     setupStyle();
 
     window_ = window;
+    isVulkan_ = true;
     ImGui_ImplSDL2_InitForVulkan(window);
+
+    // SDL platform backend may refuse multi-viewports on some drivers (e.g. Wayland).
+    // In that case Vulkan backend would assert if ViewportsEnable stays on at init.
+    multiViewportSupported_ = (io.BackendFlags & ImGuiBackendFlags_PlatformHasViewports) != 0;
+    if (!multiViewportSupported_) {
+        std::cout << "[UI] Multi-viewport disabled by SDL backend (likely Wayland). "
+                     "Analysis Workspace remains available in-window." << std::endl;
+    }
+    applyMultiViewportPreference();
 
     ImGui_ImplVulkan_InitInfo init_info = {};
     init_info.Instance = info.instance;
@@ -167,8 +237,6 @@ void UserInterface::init(SDL_Window* window, const VulkanInitInfo& info) {
     
     // Link Panels
     soilSimPanel_.setPatchAnalysisPanel(&patchAnalysisPanel_);
-
-    isVulkan_ = true;
 }
 
 void UserInterface::setupFourthDimension(Core::Domain::FourthDimension::Trajectory* trajectory, Application::Ports::ILLMService* llmService) {
@@ -182,6 +250,21 @@ void UserInterface::setupObservational(Application::Session* session) {
     recommendationTrajectoryPanel_.setSession(session);
     timelinePanel_.setSession(session);
     globalSynthesisPanel_.setSession(session);
+    analysisWorkspacePanel_.setSession(session);
+
+    if (session_) {
+        lastProjectRoot_ = session_->getProjectRoot();
+        const std::filesystem::path uiStatePath = std::filesystem::path(lastProjectRoot_) / "ui_state.json";
+        loadUiState(uiStatePath, showAnalysisWorkspacePanel_, multiViewportRequested_);
+        const bool requestedFromState = multiViewportRequested_;
+        applyMultiViewportPreference();
+        if (multiViewportRequested_ != requestedFromState) {
+            saveUiState(uiStatePath, showAnalysisWorkspacePanel_, multiViewportRequested_);
+        }
+        lastAnalysisWorkspacePanelState_ = showAnalysisWorkspacePanel_;
+        lastMultiViewportRequestedState_ = multiViewportRequested_;
+        uiStateLoaded_ = true;
+    }
 }
 
 void UserInterface::shutdown() {
@@ -232,6 +315,9 @@ void UserInterface::initHybrid(SDL_Window* window, SDL_Renderer* renderer) {
     window_ = window;
     sdlRenderer_ = renderer;
     isVulkan_ = false;
+    multiViewportSupported_ = false;
+    multiViewportRequested_ = false;
+    multiViewportActive_ = false;
 
     // 1. Setup Context
     IMGUI_CHECKVERSION();
@@ -261,22 +347,46 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     mainMenu_.onExit = onExit; // Restore missing exit
     mainMenu_.onImportIW = onImportIW; // Link
     mainMenu_.showGlobalSynthesis = &showGlobalSynthesisPanel; // New link
+    mainMenu_.showAnalysisWorkspace = showAnalysisWorkspacePanel_;
     mainMenu_.onScanProject = [this]() { 
         if (session_) session_->scanForIngestion(); 
     };
     
     if (session_) {
-        mainMenu_.currentProjectPath = session_->getProjectRoot();
+        const std::string currentRoot = session_->getProjectRoot();
+        mainMenu_.currentProjectPath = currentRoot;
+        if (currentRoot != lastProjectRoot_) {
+            lastProjectRoot_ = currentRoot;
+            uiStateLoaded_ = false;
+        }
+        if (!uiStateLoaded_) {
+            const std::filesystem::path uiStatePath = std::filesystem::path(currentRoot) / "ui_state.json";
+            loadUiState(uiStatePath, showAnalysisWorkspacePanel_, multiViewportRequested_);
+            const bool requestedFromState = multiViewportRequested_;
+            applyMultiViewportPreference();
+            if (multiViewportRequested_ != requestedFromState) {
+                saveUiState(uiStatePath, showAnalysisWorkspacePanel_, multiViewportRequested_);
+            }
+            lastAnalysisWorkspacePanelState_ = showAnalysisWorkspacePanel_;
+            lastMultiViewportRequestedState_ = multiViewportRequested_;
+            uiStateLoaded_ = true;
+        }
     }
 
 
     // 2. Draw Main Menu
     mainMenu_.draw();
+    showAnalysisWorkspacePanel_ = mainMenu_.showAnalysisWorkspace;
+
+    settingsPanel_.setMultiViewportControls(&multiViewportRequested_, &multiViewportSupported_, &multiViewportActive_);
 
     // 3. Draw Panels (Logic controlled by MainMenu state)
     analysisPanel_.draw(&mainMenu_.showAnalysisReport);
     patchAnalysisPanel_.draw(&mainMenu_.showPatchAnalysis);
     settingsPanel_.draw(&mainMenu_.showSettings);
+    if (multiViewportRequested_ != lastMultiViewportRequestedState_) {
+        applyMultiViewportPreference();
+    }
     hydrologyPanel_.draw(&mainMenu_.showHydrologyPanel);
     terrainGeneratorPanel_.draw(&mainMenu_.showTerrainGenerator); // New
     vegetationDeclarationPanel_.draw(&mainMenu_.showVegetation);
@@ -288,6 +398,16 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     discursiveSystemPanel_.draw(&mainMenu_.showDiscursivePanel);
     recommendationTrajectoryPanel_.draw(&mainMenu_.showRecommendationPanel);
     globalSynthesisPanel_.draw(&showGlobalSynthesisPanel); // New
+    analysisWorkspacePanel_.draw(&showAnalysisWorkspacePanel_);
+
+    if (session_ &&
+        (showAnalysisWorkspacePanel_ != lastAnalysisWorkspacePanelState_ ||
+         multiViewportRequested_ != lastMultiViewportRequestedState_)) {
+        const std::filesystem::path uiStatePath = std::filesystem::path(lastProjectRoot_) / "ui_state.json";
+        saveUiState(uiStatePath, showAnalysisWorkspacePanel_, multiViewportRequested_);
+        lastAnalysisWorkspacePanelState_ = showAnalysisWorkspacePanel_;
+        lastMultiViewportRequestedState_ = multiViewportRequested_;
+    }
 }
 
 void UserInterface::render(vk::CommandBuffer cmd) {

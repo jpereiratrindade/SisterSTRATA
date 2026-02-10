@@ -69,6 +69,7 @@ void MainMenu::draw() {
 
         if (ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Welcome Panel", nullptr, &showWelcome);
+            ImGui::MenuItem("Analysis Workspace", nullptr, &showAnalysisWorkspace);
             ImGui::Separator();
             if (ImGui::MenuItem("Reset Visualization (Original Colors)")) {
                  Application::Services::World3DService::resetVisualization();
