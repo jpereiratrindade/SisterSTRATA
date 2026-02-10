@@ -33,6 +33,7 @@ debug_output.txt
 
 # Documentation
 docs/doxygen/
+docs/NOTE_IW_STRATA_RESILIENCIA_QUARTA_DIMENSAO.tex
 
 # Generated Assets & Data
 *.obj
@@ -57,6 +58,7 @@ terrain_export.csv
 # Local-only folders
 /external/
 /sisterapp-test/
+/IW-Consumiveis/
 
 # Local snippets
 /tests/core/CMakeLists.txt.snippet

@@ -65,7 +65,7 @@ private:
     std::string lastOpenPath = "assets/data/";
     std::string lastSavePath = "assets/data/meshexport.obj";
     std::string lastProjectPath = "assets/data/user_db";
-    std::string lastImportIWPath = "IW-Consumiveis/"; // Default hint
+    std::string lastImportIWPath = "assets/data/user_db/inputs"; // Default hint
 };
 
 } // namespace UI::Menus
