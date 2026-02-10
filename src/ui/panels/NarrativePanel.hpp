@@ -83,6 +83,7 @@ private:
 
     void drawIngestionForm();
     void drawObservationList();
+    void drawNarrativeGraph();
     void loadIntoForm(const Application::DTO::NarrativeStateDTO& dto);
 
     // -- AI Analysis State --
@@ -92,6 +93,12 @@ private:
     std::mutex aiMutex_;
     Application::DTO::Cognitive::InterpretationSnapshotDTO lastAiSnapshot_;
     Application::DTO::Cognitive::InterpretationSnapshotDTO stagedAiSnapshot_;
+
+    // -- Narrative Graph State --
+    float graphMinSimilarity_ = 0.08f;
+    bool graphShowLabels_ = true;
+    bool graphHideIsolated_ = false;
+    std::string selectedGraphNodeId_;
 };
 
 } // namespace UI::Panels

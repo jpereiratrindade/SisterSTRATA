@@ -62,3 +62,9 @@ terrain_export.csv
 
 # Local snippets
 /tests/core/CMakeLists.txt.snippet
+
+# Generated ingestion synthesis reports (local artifacts)
+/IngestionSynthesisReport*.md
+/IngestionSynthesisReport*.txt
+/IngestionSynthezisReport*.md
+/IngestionSynthezisReport*.txt

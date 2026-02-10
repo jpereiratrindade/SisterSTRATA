@@ -201,6 +201,19 @@ Memoria epistemica LLM:
   - `Export Visible .md`
 - manter exportacao contextual (filtrada por `intent` da aba atual)
 
+Context Graph (Narrative):
+- exibir grafo epistemico de contexto narrativo em aba dedicada
+- no:
+  - tamanho proporcional a quantidade de observacoes narrativas
+  - cor por dimensao dominante (`ecological`, `productive`, `social`, `mixed`)
+- aresta:
+  - peso/espessura proporcional a similaridade (Jaccard)
+  - distancia derivada como `1 - similarity` (sem interpretacao causal)
+- controles minimos:
+  - filtro de similaridade minima
+  - opcao para ocultar nos isolados
+  - tooltip com `observationIds`, `artifactIds` e `topTokens`
+
 ---
 
 ## 8. Criterio de promocao de campo
@@ -228,6 +241,21 @@ Por execucao de ingestao:
 Saida minima esperada em log:
 - `[IW Ingest] bundle=<artifactId> context=<...> mapped=<n> skipped=<n>`
 - `[IW Ingest Summary] bundles=<n> discursive=<n> narrative=<n> recommendation=<n> coverage=<x%>`
+
+Artefato canônico de sintese (automatico ao fim do ingest):
+- JSON (fonte de verdade): `<projectRoot>/reports/ingestion/IngestionSynthesisReport.latest.json`
+- Markdown (derivado humano): `<projectRoot>/reports/ingestion/IngestionSynthesisReport.latest.md`
+- versoes com timestamp:
+  - `IngestionSynthesisReport_<YYYYMMDD_HHMMSS>.json`
+  - `IngestionSynthesisReport_<YYYYMMDD_HHMMSS>.md`
+- status epistemologico fixo:
+  - `type = observational_synthesis`
+  - `allowsResilienceInference = false`
+  - `requiresSpatialTemporalData = true`
+- incluir `narrativeContextGraph` no JSON com:
+  - `distanceType = epistemic_narrative_jaccard_v1`
+  - `causalInterpretationAllowed = false`
+  - `nodes[]` com `observationIds` e `artifactIds` para rastreabilidade
 
 ---
 
@@ -261,6 +289,7 @@ UI:
 - Narrative: editor de metadata (`key/value`) + campos de evidencia (`iw.evidenceSnippet`, `iw.sourceSection`, `iw.pageRange`)
 - Narrative: coluna de metadata na grade com tooltip de detalhe
 - Narrative: selecao de observacoes para analise Qwen (`usar selecionados`)
+- Narrative: aba `Context Graph` com visualizacao de proximidade/distancia epistemica entre contextos
 - Discursive: blocos colapsaveis para `iw.baselineAssumptions`, `iw.discursiveContext`, `iw.interpretationLayers`, `iw.temporalWindowReferences`, `iw.sourceProfile`
 - Discursive: selecao de sistemas para analise Qwen (`usar selecionados`)
 - Recommendation: selecao de snapshots para analise Qwen (`usar selecionados`)

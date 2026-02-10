@@ -60,10 +60,7 @@ public:
             snapshot.inputContextSummary = summarizeBundleScope(bundle, refs);
             snapshot.aiOutput = res.success ? res.content : "Error: " + res.errorMessage;
             snapshot.promptVersion = "Canonical-Prompt-v1.1";
-            snapshot.sourceBundleId = bundle.bundleId;
-            if (!refs.empty()) {
-                snapshot.sourceBundleId += " | " + refs.front();
-            }
+            snapshot.sourceBundleId = formatSourceTrace(bundle.bundleId, refs);
             
             // Note: We don't save to session here, we let the UI/Caller decide if they want to persist it
             callback(snapshot);
@@ -234,6 +231,24 @@ private:
                 ss << "; +" << (refs.size() - show) << " more";
             }
             ss << "]";
+        }
+        return ss.str();
+    }
+
+    static std::string formatSourceTrace(const std::string& bundleId,
+                                         const std::vector<std::string>& refs) {
+        std::ostringstream ss;
+        ss << bundleId;
+        if (!refs.empty()) {
+            ss << " | ";
+            const size_t show = std::min<size_t>(refs.size(), 3);
+            for (size_t i = 0; i < show; ++i) {
+                if (i > 0) ss << "; ";
+                ss << refs[i];
+            }
+            if (refs.size() > show) {
+                ss << "; +" << (refs.size() - show) << " more";
+            }
         }
         return ss.str();
     }

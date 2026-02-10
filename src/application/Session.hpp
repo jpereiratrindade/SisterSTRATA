@@ -30,12 +30,17 @@
 #include <map>
 #include <set>
 #include <array>
+#include <unordered_set>
 #include <filesystem>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <cctype>
 #include <optional>
+#include <chrono>
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 #include <nlohmann/json.hpp>
 
 namespace Application {
@@ -103,6 +108,10 @@ public:
             dtos.push_back(Application::Mappers::Narrative::toDTO(state));
         }
         return dtos;
+    }
+
+    [[nodiscard]] nlohmann::json getNarrativeContextGraph() const {
+        return buildNarrativeContextGraphJson();
     }
 
     void registerNarrativeStateDTO(const Application::DTO::NarrativeStateDTO& dto) {
@@ -226,6 +235,7 @@ public:
             ingestIWStandaloneFile(filePath, summary);
         }
         logIWIngestSummary(summary);
+        writeIngestionSynthesisReport(summary, filePath.parent_path().string(), "ingest_single_file");
     }
 
     void ingestFromIWDirectory(const std::string& dirPath) {
@@ -269,6 +279,7 @@ public:
         }
 
         logIWIngestSummary(summary);
+        writeIngestionSynthesisReport(summary, root.string(), "ingest_directory");
         std::cout << "[Session] Batch Ingestion Complete." << std::endl;
     }
 
@@ -286,17 +297,22 @@ public:
             return;
         }
 
+        IWIngestSummary summary;
         auto scanDir = [&](const std::filesystem::path& dir) {
              if (!std::filesystem::exists(dir)) return;
              for (const auto& entry : std::filesystem::directory_iterator(dir)) {
                  if (entry.is_regular_file() && entry.path().extension() == ".json") {
-                     ingestFromIW(entry.path().string());
+                     ingestIWStandaloneFile(entry.path(), summary);
                  }
              }
         };
 
         scanDir(inputsDir / "narratives");
         scanDir(inputsDir / "discursive");
+        if (summary.hasAnyActivity()) {
+            logIWIngestSummary(summary);
+            writeIngestionSynthesisReport(summary, inputsDir.string(), "scan_project_inputs");
+        }
         // We could scan recursively or other folders, but sticking to specific input folders is cleaner.
     }
 
@@ -533,6 +549,18 @@ private:
     using json = nlohmann::json;
 
     struct IWIngestSummary {
+        struct ArtifactReport {
+            std::string artifactId;
+            std::string sourceMode; // bundle|standalone
+            size_t discursiveMapped = 0;
+            size_t discursiveSkipped = 0;
+            size_t narrativeMapped = 0;
+            size_t narrativeSkipped = 0;
+            size_t recommendationMapped = 0;
+            size_t recommendationSkipped = 0;
+            std::map<std::string, size_t> skipReasons;
+        };
+
         size_t bundlesDetected = 0;
         size_t bundlesIngested = 0;
         size_t standaloneFiles = 0;
@@ -542,6 +570,15 @@ private:
         size_t narrativeSkipped = 0;
         size_t recommendationMapped = 0;
         size_t recommendationSkipped = 0;
+        std::map<std::string, size_t> skipReasons;
+        std::vector<ArtifactReport> artifactReports;
+
+        [[nodiscard]] bool hasAnyActivity() const {
+            return bundlesDetected > 0 || bundlesIngested > 0 || standaloneFiles > 0 ||
+                   discursiveMapped > 0 || discursiveSkipped > 0 ||
+                   narrativeMapped > 0 || narrativeSkipped > 0 ||
+                   recommendationMapped > 0 || recommendationSkipped > 0;
+        }
     };
 
     static std::string toMetadataValue(const json& value) {
@@ -563,6 +600,235 @@ private:
             if (!ok) c = '_';
         }
         return token;
+    }
+
+    static void incrementSkipReason(std::map<std::string, size_t>& target,
+                                    const std::string& context,
+                                    const std::string& reason) {
+        target[context + "." + reason] += 1;
+    }
+
+    static double computeIngestionCoverage(const IWIngestSummary& summary) {
+        const size_t totalMapped = summary.discursiveMapped + summary.narrativeMapped + summary.recommendationMapped;
+        const size_t totalSkipped = summary.discursiveSkipped + summary.narrativeSkipped + summary.recommendationSkipped;
+        const size_t denominator = totalMapped + totalSkipped;
+        return denominator == 0 ? 0.0 : (100.0 * static_cast<double>(totalMapped) / static_cast<double>(denominator));
+    }
+
+    static std::string nowIsoLike() {
+        auto now = std::chrono::system_clock::now();
+        std::time_t tt = std::chrono::system_clock::to_time_t(now);
+        std::tm tm {};
+#if defined(_WIN32)
+        localtime_s(&tm, &tt);
+#else
+        localtime_r(&tt, &tm);
+#endif
+        std::ostringstream out;
+        out << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+        return out.str();
+    }
+
+    static std::string nowFileToken() {
+        auto now = std::chrono::system_clock::now();
+        std::time_t tt = std::chrono::system_clock::to_time_t(now);
+        std::tm tm {};
+#if defined(_WIN32)
+        localtime_s(&tm, &tt);
+#else
+        localtime_r(&tt, &tm);
+#endif
+        std::ostringstream out;
+        out << std::put_time(&tm, "%Y%m%d_%H%M%S");
+        return out.str();
+    }
+
+    static std::vector<std::string> tokenizeText(const std::string& text) {
+        std::vector<std::string> tokens;
+        std::string current;
+        current.reserve(32);
+        auto flush = [&]() {
+            if (current.size() < 4) {
+                current.clear();
+                return;
+            }
+            static const std::unordered_set<std::string> stopwords = {
+                "this","that","with","from","into","between","sobre","entre","para","como","when","where","which",
+                "because","without","within","through","pela","pelos","pelas","pelo","dos","das","and","the","for",
+                "uma","umas","uns","com","sem","depois","antes","were","was","sao","são","isso","essa","este","esta",
+                "their","there","have","has","had","very","more","less","than","sobre","sobre","ainda","also","only",
+                "de","do","da","em","no","na","nos","nas","por","que","se","ao","aos","as","os","um","uma","e"
+            };
+            if (!stopwords.contains(current)) {
+                tokens.push_back(current);
+            }
+            current.clear();
+        };
+
+        for (char ch : text) {
+            const unsigned char c = static_cast<unsigned char>(ch);
+            if (std::isalnum(c) != 0) {
+                current.push_back(static_cast<char>(std::tolower(c)));
+            } else {
+                flush();
+            }
+        }
+        flush();
+        return tokens;
+    }
+
+    static std::string dominantDimensionFromTokens(const std::set<std::string>& tokens) {
+        static const std::unordered_set<std::string> ecological = {
+            "solo","soil","vegetacao","vegetation","ecologico","ecological","campo","pasture","forragem","forage",
+            "raizes","roots","umidade","water","hidrico","hydro","clima","climate","biologica","biological",
+            "micorrizica","mycorrhizal","temperatura","emissao","methane","metano","carbon","carbono"
+        };
+        static const std::unordered_set<std::string> productive = {
+            "manejo","management","producao","production","produtividade","productivity","pastejo","grazing",
+            "sistema","system","tecnico","technical","fertilizacao","fertilization","otimizacao","optimization",
+            "indicador","indicator","monitoramento","monitoring"
+        };
+        static const std::unordered_set<std::string> social = {
+            "regional","region","territorio","territory","politica","policy","institucional","institutional",
+            "governanca","governance","colaboracao","collaboration","social","sociais","communities","comunidade"
+        };
+
+        size_t eco = 0, prod = 0, soc = 0;
+        for (const auto& token : tokens) {
+            if (ecological.contains(token)) ++eco;
+            if (productive.contains(token)) ++prod;
+            if (social.contains(token)) ++soc;
+        }
+        if (eco >= prod && eco >= soc && eco > 0) return "ecological";
+        if (prod >= eco && prod >= soc && prod > 0) return "productive";
+        if (soc >= eco && soc >= prod && soc > 0) return "social";
+        return "mixed";
+    }
+
+    json buildNarrativeContextGraphJson() const {
+        struct ContextNodeData {
+            std::string sourceId;
+            size_t count = 0;
+            std::set<std::string> tokens;
+            std::map<std::string, size_t> intents;
+            std::set<std::string> artifactIds;
+            std::vector<std::string> observationIds;
+        };
+
+        std::map<std::string, ContextNodeData> grouped;
+        for (const auto& dto : getNarrativeHistoryDTO()) {
+            std::string sourceId = dto.source.sourceId.empty() ? "unknown_source" : dto.source.sourceId;
+            auto& item = grouped[sourceId];
+            item.sourceId = sourceId;
+            item.count += 1;
+            item.intents[dto.intent.intentType] += 1;
+            item.observationIds.push_back(dto.id);
+            auto itArtifact = dto.metadata.find("iw.artifactId");
+            if (itArtifact != dto.metadata.end() && !itArtifact->second.empty()) {
+                item.artifactIds.insert(itArtifact->second);
+            }
+
+            std::vector<std::string> textBlocks;
+            textBlocks.push_back(dto.temporalContext.label);
+            for (const auto& axis : dto.axes) {
+                textBlocks.push_back(axis.label);
+                textBlocks.push_back(axis.description);
+            }
+            auto itObs = dto.metadata.find("iw.observation");
+            if (itObs != dto.metadata.end()) textBlocks.push_back(itObs->second);
+            auto itCtx = dto.metadata.find("iw.context");
+            if (itCtx != dto.metadata.end()) textBlocks.push_back(itCtx->second);
+            auto itEvidence = dto.metadata.find("iw.evidenceSnippet");
+            if (itEvidence != dto.metadata.end()) textBlocks.push_back(itEvidence->second);
+
+            for (const auto& block : textBlocks) {
+                for (const auto& token : tokenizeText(block)) {
+                    item.tokens.insert(token);
+                }
+            }
+        }
+
+        json graph;
+        graph["distanceType"] = "epistemic_narrative_jaccard_v1";
+        graph["causalInterpretationAllowed"] = false;
+        graph["nodes"] = json::array();
+        graph["edges"] = json::array();
+
+        std::vector<ContextNodeData> nodes;
+        nodes.reserve(grouped.size());
+        for (const auto& [_, node] : grouped) {
+            nodes.push_back(node);
+        }
+
+        auto topTokens = [](const std::set<std::string>& tokenSet, size_t maxCount) {
+            std::vector<std::string> out;
+            out.reserve(std::min(maxCount, tokenSet.size()));
+            for (const auto& token : tokenSet) {
+                out.push_back(token);
+                if (out.size() >= maxCount) break;
+            }
+            return out;
+        };
+
+        auto toVector = [](const std::set<std::string>& values) {
+            std::vector<std::string> out;
+            out.reserve(values.size());
+            for (const auto& value : values) {
+                out.push_back(value);
+            }
+            return out;
+        };
+
+        for (const auto& node : nodes) {
+            std::string dominantIntent = "unknown";
+            size_t best = 0;
+            for (const auto& [intent, count] : node.intents) {
+                if (count > best) {
+                    best = count;
+                    dominantIntent = intent;
+                }
+            }
+
+            graph["nodes"].push_back({
+                {"id", node.sourceId},
+                {"label", node.sourceId},
+                {"narrativeCount", node.count},
+                {"dominantIntent", dominantIntent},
+                {"dominantDimension", dominantDimensionFromTokens(node.tokens)},
+                {"topTokens", topTokens(node.tokens, 10)},
+                {"artifactIds", toVector(node.artifactIds)},
+                {"observationIds", node.observationIds}
+            });
+        }
+
+        for (size_t i = 0; i < nodes.size(); ++i) {
+            for (size_t j = i + 1; j < nodes.size(); ++j) {
+                const auto& a = nodes[i].tokens;
+                const auto& b = nodes[j].tokens;
+                if (a.empty() || b.empty()) continue;
+
+                size_t intersection = 0;
+                for (const auto& token : a) {
+                    if (b.contains(token)) ++intersection;
+                }
+                const size_t uni = a.size() + b.size() - intersection;
+                if (uni == 0) continue;
+
+                const double similarity = static_cast<double>(intersection) / static_cast<double>(uni);
+                const double distance = 1.0 - similarity;
+
+                if (similarity <= 0.0) continue;
+                graph["edges"].push_back({
+                    {"source", nodes[i].sourceId},
+                    {"target", nodes[j].sourceId},
+                    {"similarity", similarity},
+                    {"distance", distance},
+                    {"sharedTokens", intersection}
+                });
+            }
+        }
+
+        return graph;
     }
 
     static bool hasDiscursiveContent(const Application::DTO::DiscursiveSystemDTO& dto) {
@@ -785,10 +1051,7 @@ private:
     }
 
     void logIWIngestSummary(const IWIngestSummary& summary) const {
-        const size_t totalMapped = summary.discursiveMapped + summary.narrativeMapped + summary.recommendationMapped;
-        const size_t totalSkipped = summary.discursiveSkipped + summary.narrativeSkipped + summary.recommendationSkipped;
-        const size_t denominator = totalMapped + totalSkipped;
-        const double coverage = denominator == 0 ? 0.0 : (100.0 * static_cast<double>(totalMapped) / static_cast<double>(denominator));
+        const double coverage = computeIngestionCoverage(summary);
 
         std::cout << "[IW Ingest Summary] bundles=" << summary.bundlesIngested << "/" << summary.bundlesDetected
                   << " standalone=" << summary.standaloneFiles
@@ -799,10 +1062,172 @@ private:
                   << std::endl;
     }
 
+    json buildIngestionSynthesisJson(const IWIngestSummary& summary,
+                                     const std::string& sourcePath,
+                                     const std::string& trigger) const {
+        json j;
+        j["schemaVersion"] = 1;
+        j["reportType"] = "IngestionSynthesisReport";
+        j["generatedAt"] = nowIsoLike();
+        j["projectRoot"] = projectRoot_.string();
+        j["sourcePath"] = sourcePath;
+        j["trigger"] = trigger;
+        j["pipelineVersion"] = "iw_ingest_v1";
+
+        j["epistemicStatus"] = {
+            {"type", "observational_synthesis"},
+            {"allowsResilienceInference", false},
+            {"requiresSpatialTemporalData", true},
+            {"notes", "Report is descriptive. No causal or prescriptive inference is performed."}
+        };
+
+        j["summary"] = {
+            {"bundlesDetected", summary.bundlesDetected},
+            {"bundlesIngested", summary.bundlesIngested},
+            {"standaloneFiles", summary.standaloneFiles},
+            {"coveragePercent", computeIngestionCoverage(summary)}
+        };
+
+        j["contexts"] = {
+            {"discursive", {{"mapped", summary.discursiveMapped}, {"skipped", summary.discursiveSkipped}}},
+            {"narrative", {{"mapped", summary.narrativeMapped}, {"skipped", summary.narrativeSkipped}}},
+            {"recommendation", {{"mapped", summary.recommendationMapped}, {"skipped", summary.recommendationSkipped}}}
+        };
+
+        j["skipReasons"] = summary.skipReasons;
+        auto artifacts = summary.artifactReports;
+        std::sort(artifacts.begin(), artifacts.end(), [](const auto& a, const auto& b) {
+            return a.artifactId < b.artifactId;
+        });
+
+        j["artifacts"] = json::array();
+        for (const auto& artifact : artifacts) {
+            j["artifacts"].push_back({
+                {"artifactId", artifact.artifactId},
+                {"sourceMode", artifact.sourceMode},
+                {"discursive", {{"mapped", artifact.discursiveMapped}, {"skipped", artifact.discursiveSkipped}}},
+                {"narrative", {{"mapped", artifact.narrativeMapped}, {"skipped", artifact.narrativeSkipped}}},
+                {"recommendation", {{"mapped", artifact.recommendationMapped}, {"skipped", artifact.recommendationSkipped}}},
+                {"skipReasons", artifact.skipReasons}
+            });
+        }
+
+        j["narrativeContextGraph"] = buildNarrativeContextGraphJson();
+        return j;
+    }
+
+    static std::string buildIngestionSynthesisMarkdown(const json& report) {
+        std::ostringstream md;
+        md << "# Ingestion Synthesis Report\n\n";
+        md << "- Generated At: " << report.value("generatedAt", "unknown") << "\n";
+        md << "- Project Root: " << report.value("projectRoot", "unknown") << "\n";
+        md << "- Source Path: " << report.value("sourcePath", "unknown") << "\n";
+        md << "- Trigger: " << report.value("trigger", "unknown") << "\n\n";
+
+        const auto summary = report.value("summary", json::object());
+        md << "## Summary\n\n";
+        md << "- Bundles Detected: " << summary.value("bundlesDetected", 0) << "\n";
+        md << "- Bundles Ingested: " << summary.value("bundlesIngested", 0) << "\n";
+        md << "- Standalone Files: " << summary.value("standaloneFiles", 0) << "\n";
+        md << "- Coverage (%): " << summary.value("coveragePercent", 0.0) << "\n\n";
+
+        const auto contexts = report.value("contexts", json::object());
+        const auto contextRow = [&](const char* key) {
+            const auto c = contexts.value(key, json::object());
+            md << "| " << key << " | " << c.value("mapped", 0) << " | " << c.value("skipped", 0) << " |\n";
+        };
+        md << "## Context Metrics\n\n";
+        md << "| Context | Mapped | Skipped |\n";
+        md << "| --- | ---: | ---: |\n";
+        contextRow("discursive");
+        contextRow("narrative");
+        contextRow("recommendation");
+        md << "\n";
+
+        const auto artifacts = report.value("artifacts", json::array());
+        md << "## Artifacts\n\n";
+        md << "| Artifact ID | Source Mode | Discursive | Narrative | Recommendation |\n";
+        md << "| --- | --- | ---: | ---: | ---: |\n";
+        for (const auto& item : artifacts) {
+            const auto disc = item.value("discursive", json::object());
+            const auto narr = item.value("narrative", json::object());
+            const auto rec = item.value("recommendation", json::object());
+            md << "| " << item.value("artifactId", "unknown")
+               << " | " << item.value("sourceMode", "unknown")
+               << " | " << disc.value("mapped", 0)
+               << " | " << narr.value("mapped", 0)
+               << " | " << rec.value("mapped", 0)
+               << " |\n";
+        }
+        md << "\n";
+
+        md << "## Epistemic Status\n\n";
+        const auto status = report.value("epistemicStatus", json::object());
+        md << "- Type: " << status.value("type", "unknown") << "\n";
+        md << "- allowsResilienceInference: " << (status.value("allowsResilienceInference", false) ? "true" : "false") << "\n";
+        md << "- requiresSpatialTemporalData: " << (status.value("requiresSpatialTemporalData", false) ? "true" : "false") << "\n";
+        md << "- Notes: " << status.value("notes", "") << "\n";
+
+        const auto graph = report.value("narrativeContextGraph", json::object());
+        md << "\n## Narrative Context Graph\n\n";
+        md << "- distanceType: " << graph.value("distanceType", "unknown") << "\n";
+        md << "- causalInterpretationAllowed: " << (graph.value("causalInterpretationAllowed", true) ? "true" : "false") << "\n";
+        md << "- nodes: " << graph.value("nodes", json::array()).size() << "\n";
+        md << "- edges: " << graph.value("edges", json::array()).size() << "\n";
+        return md.str();
+    }
+
+    void writeIngestionSynthesisReport(const IWIngestSummary& summary,
+                                       const std::string& sourcePath,
+                                       const std::string& trigger) const {
+        if (!summary.hasAnyActivity()) {
+            return;
+        }
+
+        try {
+            const json report = buildIngestionSynthesisJson(summary, sourcePath, trigger);
+            const std::string markdown = buildIngestionSynthesisMarkdown(report);
+            const std::string stamp = nowFileToken();
+
+            const std::filesystem::path reportDir = projectRoot_ / "reports" / "ingestion";
+            std::filesystem::create_directories(reportDir);
+
+            const auto latestJsonPath = reportDir / "IngestionSynthesisReport.latest.json";
+            const auto latestMdPath = reportDir / "IngestionSynthesisReport.latest.md";
+            const auto stampedJsonPath = reportDir / ("IngestionSynthesisReport_" + stamp + ".json");
+            const auto stampedMdPath = reportDir / ("IngestionSynthesisReport_" + stamp + ".md");
+
+            {
+                std::ofstream out(latestJsonPath);
+                if (out.is_open()) out << report.dump(2);
+            }
+            {
+                std::ofstream out(stampedJsonPath);
+                if (out.is_open()) out << report.dump(2);
+            }
+            {
+                std::ofstream out(latestMdPath);
+                if (out.is_open()) out << markdown;
+            }
+            {
+                std::ofstream out(stampedMdPath);
+                if (out.is_open()) out << markdown;
+            }
+
+            std::cout << "[IW Ingest Report] wrote " << latestJsonPath << " and " << latestMdPath << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "[IW Ingest Report] failed: " << e.what() << std::endl;
+        }
+    }
+
     void ingestIWPayload(const std::map<std::string, json>& docs,
                          const std::string& artifactId,
-                         IWIngestSummary& summary) {
+                         IWIngestSummary& summary,
+                         const std::string& sourceMode) {
         const std::string safeArtifact = sanitizeArtifactToken(artifactId);
+        IWIngestSummary::ArtifactReport artifactReport;
+        artifactReport.artifactId = safeArtifact;
+        artifactReport.sourceMode = sourceMode;
 
         // Discursive (DiscursiveSystem -> IWBundle)
         size_t discMapped = 0;
@@ -822,6 +1247,7 @@ private:
 
                 if (!hasDiscursiveContent(dto)) {
                     ++discSkipped;
+                    incrementSkipReason(artifactReport.skipReasons, "discursive", "empty_or_invalid_content");
                     continue;
                 }
 
@@ -830,11 +1256,14 @@ private:
                     ++discMapped;
                 } catch (const std::exception&) {
                     ++discSkipped;
+                    incrementSkipReason(artifactReport.skipReasons, "discursive", "persistence_error");
                 }
             }
         }
         summary.discursiveMapped += discMapped;
         summary.discursiveSkipped += discSkipped;
+        artifactReport.discursiveMapped = discMapped;
+        artifactReport.discursiveSkipped = discSkipped;
         if (discMapped > 0 || discSkipped > 0) {
             logIWIngestContext(safeArtifact, "discursive", discMapped, discSkipped);
         }
@@ -864,6 +1293,7 @@ private:
 
                 if (!hasNarrativeContent(dto)) {
                     ++narrSkipped;
+                    incrementSkipReason(artifactReport.skipReasons, "narrative", "empty_or_invalid_content");
                     continue;
                 }
 
@@ -872,11 +1302,14 @@ private:
                     ++narrMapped;
                 } catch (const std::exception&) {
                     ++narrSkipped;
+                    incrementSkipReason(artifactReport.skipReasons, "narrative", "persistence_error");
                 }
             }
         }
         summary.narrativeMapped += narrMapped;
         summary.narrativeSkipped += narrSkipped;
+        artifactReport.narrativeMapped = narrMapped;
+        artifactReport.narrativeSkipped = narrSkipped;
         if (narrMapped > 0 || narrSkipped > 0) {
             logIWIngestContext(safeArtifact, "narrative", narrMapped, narrSkipped);
         }
@@ -898,6 +1331,7 @@ private:
 
                 if (!hasRecommendationContent(dto)) {
                     ++recSkipped;
+                    incrementSkipReason(artifactReport.skipReasons, "recommendation", "empty_or_invalid_content");
                     continue;
                 }
 
@@ -906,14 +1340,22 @@ private:
                     ++recMapped;
                 } catch (const std::exception&) {
                     ++recSkipped;
+                    incrementSkipReason(artifactReport.skipReasons, "recommendation", "persistence_error");
                 }
             }
         }
         summary.recommendationMapped += recMapped;
         summary.recommendationSkipped += recSkipped;
+        artifactReport.recommendationMapped = recMapped;
+        artifactReport.recommendationSkipped = recSkipped;
         if (recMapped > 0 || recSkipped > 0) {
             logIWIngestContext(safeArtifact, "recommendation", recMapped, recSkipped);
         }
+
+        for (const auto& [reason, count] : artifactReport.skipReasons) {
+            summary.skipReasons[reason] += count;
+        }
+        summary.artifactReports.push_back(std::move(artifactReport));
     }
 
     void ingestIWStandaloneFile(const std::filesystem::path& filePath, IWIngestSummary& summary) {
@@ -929,7 +1371,7 @@ private:
         docs[filePath.filename().string()] = payload.value();
         const std::string artifactId = resolveArtifactId(filePath.parent_path(), docs);
         ++summary.standaloneFiles;
-        ingestIWPayload(docs, artifactId, summary);
+        ingestIWPayload(docs, artifactId, summary, "standalone");
     }
 
     void ingestIWBundleDirectory(const std::filesystem::path& bundleDir, IWIngestSummary& summary) {
@@ -954,7 +1396,7 @@ private:
 
         const std::string artifactId = resolveArtifactId(bundleDir, docs);
         ++summary.bundlesIngested;
-        ingestIWPayload(docs, artifactId, summary);
+        ingestIWPayload(docs, artifactId, summary, "bundle");
     }
 
     std::unique_ptr<Core::Domain::Workspace> workspace_;
