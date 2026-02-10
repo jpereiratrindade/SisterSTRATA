@@ -9,6 +9,8 @@ CMakeDoxyfile.in
 CMakeDoxygenDefaults.bin
 cmake_install.cmake
 CTestTestfile.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
 Makefile
 *.a
 *.o
