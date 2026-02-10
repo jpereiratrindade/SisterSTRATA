@@ -190,6 +190,8 @@ private:
     void uploadReferenceGrid();
     void limitFrameRate(); // New helper
 
+    std::atomic<bool> shuttingDown_{false};
+
     int targetFps_ = 0; // 0 = unlimited
     std::chrono::steady_clock::time_point lastFrameTime_;
 

@@ -15,6 +15,11 @@ public:
         queue_.push(std::move(cmd));
     }
 
+    [[nodiscard]] bool hasPending() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return !queue_.empty();
+    }
+
     void processAll() {
         std::queue<Command> localQueue;
         {
@@ -29,9 +34,15 @@ public:
         }
     }
 
+    void clear() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::queue<Command> empty;
+        std::swap(queue_, empty);
+    }
+
 private:
     std::queue<Command> queue_;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
 };
 
 } // namespace Infrastructure::Threading

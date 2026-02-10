@@ -150,6 +150,12 @@ void Engine::clear() {
 }
 
 void Engine::shutdown() {
+    shuttingDown_ = true;
+    if (threadPool_) {
+        threadPool_.reset();
+    }
+    commandQueue_.clear();
+
     if (descriptorPool_) {
          if (context_) {
             context_->getDevice().waitIdle();
@@ -185,6 +191,9 @@ void Engine::processEvent(const SDL_Event& event) {
 
 void Engine::update(float deltaTime) {
     // Process Async Tasks on Main Thread
+    if (renderer_ && context_ && commandQueue_.hasPending()) {
+        context_->getDevice().waitIdle();
+    }
     commandQueue_.processAll();
 
     if (inputController_) {
