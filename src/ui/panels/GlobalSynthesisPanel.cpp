@@ -15,18 +15,23 @@ void GlobalSynthesisPanel::setSession(Application::Session* session) {
 void GlobalSynthesisPanel::draw(bool* open) {
     if (!open || !*open) return;
 
+    bool shouldOpenAiPopup = false;
     // Ensure AI Modal opens in main thread
     {
         std::lock_guard<std::mutex> lock(aiMutex_);
         if (aiResultReady_) {
             lastAiSnapshot_ = stagedAiSnapshot_;
             showAiModal_ = true;
+            shouldOpenAiPopup = true;
             aiResultReady_ = false;
         }
     }
 
     ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Strategic Global Synthesis (SGS)", open)) {
+        if (shouldOpenAiPopup) {
+            ImGui::OpenPopup("GlobalSynthesisAIResult");
+        }
         
         if (ImGui::BeginTabBar("SGSTabs")) {
             if (ImGui::BeginTabItem("Strategic Audit")) {

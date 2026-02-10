@@ -781,6 +781,16 @@ void NarrativePanel::drawNarrativeGraph() {
         ImGui::TextDisabled("Select one node to activate focus mode.");
     }
 
+    ImGui::TextDisabled("Dimension Colors:");
+    ImGui::SameLine();
+    drawDimensionLegendItem("##LegendTopEcological", colorForDimension("ecological"), "Eco");
+    ImGui::SameLine();
+    drawDimensionLegendItem("##LegendTopProductive", colorForDimension("productive"), "Prod");
+    ImGui::SameLine();
+    drawDimensionLegendItem("##LegendTopSocial", colorForDimension("social"), "Soc");
+    ImGui::SameLine();
+    drawDimensionLegendItem("##LegendTopMixed", colorForDimension("mixed"), "Mixed");
+
     if (nodes.empty()) {
         ImGui::TextDisabled("No narrative contexts available to render.");
         return;
