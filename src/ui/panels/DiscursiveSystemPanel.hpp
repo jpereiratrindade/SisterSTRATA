@@ -46,6 +46,11 @@ private:
 
     char inputMetadataKey_[64] = "";
     char inputMetadataValue_[128] = "";
+    char iwBaselineAssumptions_[2048] = "";
+    char iwDiscursiveContext_[2048] = "";
+    char iwInterpretationLayers_[2048] = "";
+    char iwTemporalWindowReferences_[2048] = "";
+    char iwSourceProfile_[2048] = "";
 
     std::vector<Application::DTO::SourceReferenceDTO> sourceReferences_;
     std::vector<std::string> declaredProblems_;
@@ -64,6 +69,8 @@ private:
     void drawIngestionForm();
     void drawSystemList();
     void loadIntoForm(const Application::DTO::DiscursiveSystemDTO& dto);
+    void loadIWMetadataBuffersFromMap();
+    void syncIWMetadataBuffersToMap();
 
     // AI Analysis State
     bool showAiModal_ = false;

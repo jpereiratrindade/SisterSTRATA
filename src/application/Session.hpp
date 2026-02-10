@@ -27,9 +27,16 @@
 #include "src/application/mappers/IWMapper.hpp"
 #include <memory>
 #include <vector>
+#include <map>
+#include <set>
+#include <array>
 #include <filesystem>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
+#include <cctype>
+#include <optional>
+#include <nlohmann/json.hpp>
 
 namespace Application {
 
@@ -205,65 +212,63 @@ public:
 
     void ingestFromIW(const std::string& filepath) {
         std::cout << "[Session] Ingesting from IW: " << filepath << std::endl;
-        try {
-            std::ifstream f(filepath);
-            if (!f.is_open()) {
-                std::cerr << "Failed to open IW file: " << filepath << std::endl;
-                return;
-            }
-            nlohmann::json j;
-            f >> j;
-
-            // 1. Discursive System
-            auto discDTO = Application::Mappers::IW::IWMapper::toDiscursiveSystemDTO(j);
-            // Generate a unique ID if empty
-            if (discDTO.id.empty()) {
-                discDTO.id = "DS-IW-" + std::to_string(getDiscursiveSystemCount() + 1);
-            }
-            // Only register if it has content
-            if (!discDTO.declaredProblems.empty() || !discDTO.declaredActions.empty()) {
-                 registerDiscursiveSystemDTO(discDTO);
-                 std::cout << " -> Ingested Discursive System: " << discDTO.id << std::endl;
-            }
-
-            // 2. Narrative Observations
-            auto narrDTOs = Application::Mappers::IW::IWMapper::toNarrativeStateDTOs(j);
-            for (auto& narrDTO : narrDTOs) {
-                if (narrDTO.id.empty()) {
-                    narrDTO.id = "OBS-IW-" + std::to_string(narrativeSystem_->getHistory().size() + 1);
-                }
-                registerNarrativeStateDTO(narrDTO);
-            }
-            if (!narrDTOs.empty()) {
-                std::cout << " -> Ingested " << narrDTOs.size() << " Narrative Observations." << std::endl;
-            }
-
-            // 3. Recommendation Snapshot (Trajectory Analogy)
-            auto recOpt = Application::Mappers::IW::IWMapper::toRecommendationSnapshotDTO(j);
-            if (recOpt.has_value()) {
-                auto recDTO = recOpt.value();
-                recDTO.id = "REC-IW-" + std::to_string(getRecommendationSnapshotCount() + 1);
-                addRecommendationSnapshotDTO(recDTO);
-                std::cout << " -> Ingested Recommendation Snapshot: " << recDTO.id << std::endl;
-            }
-
-        } catch (const std::exception& e) {
-            std::cerr << "Error ingesting IW file: " << e.what() << std::endl;
+        std::filesystem::path filePath(filepath);
+        if (!std::filesystem::exists(filePath) || !std::filesystem::is_regular_file(filePath)) {
+            std::cerr << "Invalid IW file: " << filepath << std::endl;
+            return;
         }
+
+        IWIngestSummary summary;
+        if (isIWBundleDirectory(filePath.parent_path())) {
+            summary.bundlesDetected = 1;
+            ingestIWBundleDirectory(filePath.parent_path(), summary);
+        } else {
+            ingestIWStandaloneFile(filePath, summary);
+        }
+        logIWIngestSummary(summary);
     }
 
     void ingestFromIWDirectory(const std::string& dirPath) {
         std::cout << "[Session] Batch Ingestion from Directory: " << dirPath << std::endl;
-        if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
+        std::filesystem::path root(dirPath);
+        if (!std::filesystem::exists(root) || !std::filesystem::is_directory(root)) {
             std::cerr << "Invalid directory for ingestion: " << dirPath << std::endl;
             return;
         }
 
-        for (const auto& entry : std::filesystem::recursive_directory_iterator(dirPath)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".json") {
-                ingestFromIW(entry.path().string());
+        std::set<std::filesystem::path> bundleDirs;
+        std::vector<std::filesystem::path> standaloneFiles;
+
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(root)) {
+            if (!entry.is_regular_file() || entry.path().extension() != ".json") {
+                continue;
+            }
+
+            const auto parent = entry.path().parent_path();
+            if (isIWBundleDirectory(parent)) {
+                bundleDirs.insert(parent);
+            } else {
+                standaloneFiles.push_back(entry.path());
             }
         }
+
+        IWIngestSummary summary;
+        summary.bundlesDetected = bundleDirs.size();
+
+        for (const auto& bundleDir : bundleDirs) {
+            ingestIWBundleDirectory(bundleDir, summary);
+        }
+
+        // If canonical IW bundles exist, they are the preferred source and we skip
+        // standalone JSON files to avoid duplicate ingestion noise.
+        if (bundleDirs.empty()) {
+            std::sort(standaloneFiles.begin(), standaloneFiles.end());
+            for (const auto& file : standaloneFiles) {
+                ingestIWStandaloneFile(file, summary);
+            }
+        }
+
+        logIWIngestSummary(summary);
         std::cout << "[Session] Batch Ingestion Complete." << std::endl;
     }
 
@@ -525,6 +530,433 @@ public:
     }
 
 private:
+    using json = nlohmann::json;
+
+    struct IWIngestSummary {
+        size_t bundlesDetected = 0;
+        size_t bundlesIngested = 0;
+        size_t standaloneFiles = 0;
+        size_t discursiveMapped = 0;
+        size_t discursiveSkipped = 0;
+        size_t narrativeMapped = 0;
+        size_t narrativeSkipped = 0;
+        size_t recommendationMapped = 0;
+        size_t recommendationSkipped = 0;
+    };
+
+    static std::string toMetadataValue(const json& value) {
+        if (value.is_string()) return value.get<std::string>();
+        if (value.is_number_integer()) return std::to_string(value.get<long long>());
+        if (value.is_number_unsigned()) return std::to_string(value.get<unsigned long long>());
+        if (value.is_number_float()) return std::to_string(value.get<double>());
+        if (value.is_boolean()) return value.get<bool>() ? "true" : "false";
+        if (value.is_null()) return "";
+        return value.dump();
+    }
+
+    static std::string sanitizeArtifactToken(std::string token) {
+        if (token.empty()) {
+            return "unknown_bundle";
+        }
+        for (char& c : token) {
+            const bool ok = std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '-';
+            if (!ok) c = '_';
+        }
+        return token;
+    }
+
+    static bool hasDiscursiveContent(const Application::DTO::DiscursiveSystemDTO& dto) {
+        return !dto.declaredProblems.empty() || !dto.declaredActions.empty() ||
+               !dto.allegedMechanisms.empty() || !dto.expectedEffects.empty();
+    }
+
+    static bool hasNarrativeContent(const Application::DTO::NarrativeStateDTO& dto) {
+        return !dto.axes.empty() || !dto.metadata.empty() || !dto.source.sourceId.empty();
+    }
+
+    static bool hasRecommendationContent(const Application::DTO::RecommendationSnapshotDTO& dto) {
+        return !dto.recommendationText.empty() || !dto.expectedOutcome.empty() ||
+               !dto.contextConditions.empty() || !dto.intendedAction.empty();
+    }
+
+    static std::optional<json> loadJsonFile(const std::filesystem::path& filePath) {
+        try {
+            std::ifstream file(filePath);
+            if (!file.is_open()) {
+                return std::nullopt;
+            }
+            json j;
+            file >> j;
+            return j;
+        } catch (...) {
+            return std::nullopt;
+        }
+    }
+
+    static bool isIWPayloadJson(const json& j) {
+        return (j.contains("IWBundle") ||
+                j.contains("discursiveSystem") ||
+                j.contains("narrativeObservations") ||
+                j.contains("trajectoryAnalogies") ||
+                j.contains("systems") ||
+                j.contains("history") ||
+                j.contains("snapshots") ||
+                j.contains("allegedMechanisms") ||
+                j.contains("sourceProfile") ||
+                j.contains("baselineAssumptions") ||
+                j.contains("discursiveContext") ||
+                j.contains("interpretationLayers") ||
+                j.contains("temporalWindowReferences"));
+    }
+
+    bool isIWBundleDirectory(const std::filesystem::path& dirPath) const {
+        if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
+            return false;
+        }
+
+        static const std::array<const char*, 10> markers = {
+            "IWBundle.json",
+            "Manifest.json",
+            "DiscursiveSystem.json",
+            "NarrativeObservation.json",
+            "TrajectoryAnalogies.json",
+            "AllegedMechanisms.json",
+            "InterpretationLayers.json",
+            "DiscursiveContext.json",
+            "BaselineAssumptions.json",
+            "TemporalWindowReference.json"
+        };
+
+        size_t found = 0;
+        bool strongMarker = false;
+        for (const auto* marker : markers) {
+            if (std::filesystem::exists(dirPath / marker)) {
+                ++found;
+                if (std::string(marker) == "IWBundle.json" || std::string(marker) == "Manifest.json") {
+                    strongMarker = true;
+                }
+            }
+        }
+        return strongMarker || found >= 3;
+    }
+
+    static std::string resolveArtifactId(const std::filesystem::path& bundlePath,
+                                         const std::map<std::string, json>& docs) {
+        auto fromSourceObject = [](const json& j) -> std::string {
+            if (j.contains("source") && j["source"].is_object()) {
+                const auto& src = j["source"];
+                if (src.contains("artifactId")) return src["artifactId"].get<std::string>();
+                if (src.contains("filename")) return src["filename"].get<std::string>();
+            }
+            return "";
+        };
+
+        const auto manifestIt = docs.find("Manifest.json");
+        if (manifestIt != docs.end()) {
+            const auto& manifest = manifestIt->second;
+            if (manifest.contains("artifactId")) {
+                return sanitizeArtifactToken(manifest["artifactId"].get<std::string>());
+            }
+        }
+
+        for (const auto& [_, j] : docs) {
+            const std::string candidate = fromSourceObject(j);
+            if (!candidate.empty()) {
+                return sanitizeArtifactToken(candidate);
+            }
+        }
+
+        return sanitizeArtifactToken(bundlePath.filename().string());
+    }
+
+    static const json* pickPrimaryPayload(const std::map<std::string, json>& docs,
+                                          const std::vector<std::string>& precedence) {
+        for (const auto& name : precedence) {
+            auto it = docs.find(name);
+            if (it != docs.end()) {
+                return &it->second;
+            }
+        }
+        return nullptr;
+    }
+
+    void mergeDiscursiveSupplements(Application::DTO::DiscursiveSystemDTO& dto,
+                                    const std::map<std::string, json>& docs) const {
+        auto pickSection = [&](const std::string& fileName, const std::string& key) -> std::optional<json> {
+            auto fileIt = docs.find(fileName);
+            if (fileIt != docs.end() && fileIt->second.contains(key)) {
+                return fileIt->second[key];
+            }
+            auto bundleIt = docs.find("IWBundle.json");
+            if (bundleIt != docs.end() && bundleIt->second.contains(key)) {
+                return bundleIt->second[key];
+            }
+            return std::nullopt;
+        };
+
+        auto setMetadataIfMissing = [&](const std::string& metadataKey, const std::optional<json>& value) {
+            if (!value.has_value()) return;
+            auto it = dto.interpretationMetadata.find(metadataKey);
+            if (it != dto.interpretationMetadata.end() && !it->second.empty()) return;
+            dto.interpretationMetadata[metadataKey] = toMetadataValue(value.value());
+        };
+
+        if (dto.allegedMechanisms.empty()) {
+            auto alleged = pickSection("AllegedMechanisms.json", "allegedMechanisms");
+            if (alleged.has_value()) {
+                json patch;
+                patch["allegedMechanisms"] = alleged.value();
+                auto supplement = Application::Mappers::IW::IWMapper::toDiscursiveSystemDTO(patch);
+                dto.allegedMechanisms = supplement.allegedMechanisms;
+            }
+        }
+
+        setMetadataIfMissing("iw.baselineAssumptions", pickSection("BaselineAssumptions.json", "baselineAssumptions"));
+        setMetadataIfMissing("iw.discursiveContext", pickSection("DiscursiveContext.json", "discursiveContext"));
+        setMetadataIfMissing("iw.interpretationLayers", pickSection("InterpretationLayers.json", "interpretationLayers"));
+        setMetadataIfMissing("iw.temporalWindowReferences", pickSection("TemporalWindowReference.json", "temporalWindowReferences"));
+        setMetadataIfMissing("iw.sourceProfile", pickSection("SourceProfile.json", "sourceProfile"));
+    }
+
+    bool upsertDiscursiveSystemDTO(const Application::DTO::DiscursiveSystemDTO& dto) {
+        auto systems = getDiscursiveSystemDTOs();
+        auto it = std::find_if(systems.begin(), systems.end(), [&](const auto& item) {
+            return item.id == dto.id;
+        });
+        if (it != systems.end()) {
+            updateDiscursiveSystemDTO(it->id, dto);
+            return false;
+        }
+        registerDiscursiveSystemDTO(dto);
+        return true;
+    }
+
+    bool upsertNarrativeStateDTO(const Application::DTO::NarrativeStateDTO& dto) {
+        auto history = getNarrativeHistoryDTO();
+
+        auto byId = std::find_if(history.begin(), history.end(), [&](const auto& item) {
+            return item.id == dto.id;
+        });
+        if (byId != history.end()) {
+            Application::DTO::NarrativeStateDTO updated = dto;
+            updated.id = byId->id;
+            updateNarrativeStateDTO(byId->id, updated);
+            return false;
+        }
+
+        auto bySourceAndTime = std::find_if(history.begin(), history.end(), [&](const auto& item) {
+            return !item.source.sourceId.empty() &&
+                   item.source.sourceId == dto.source.sourceId &&
+                   item.temporalContext.label == dto.temporalContext.label;
+        });
+        if (bySourceAndTime != history.end()) {
+            Application::DTO::NarrativeStateDTO updated = dto;
+            updated.id = bySourceAndTime->id;
+            updateNarrativeStateDTO(bySourceAndTime->id, updated);
+            return false;
+        }
+
+        registerNarrativeStateDTO(dto);
+        return true;
+    }
+
+    bool upsertRecommendationSnapshotDTO(const Application::DTO::RecommendationSnapshotDTO& dto) {
+        auto trajectory = getRecommendationTrajectoryDTO();
+        auto it = std::find_if(trajectory.snapshots.begin(), trajectory.snapshots.end(), [&](const auto& item) {
+            return item.id == dto.id;
+        });
+        if (it != trajectory.snapshots.end()) {
+            updateRecommendationSnapshotDTO(it->id, dto);
+            return false;
+        }
+        addRecommendationSnapshotDTO(dto);
+        return true;
+    }
+
+    void logIWIngestContext(const std::string& artifactId,
+                            const std::string& context,
+                            size_t mapped,
+                            size_t skipped) const {
+        std::cout << "[IW Ingest] bundle=" << artifactId
+                  << " context=" << context
+                  << " mapped=" << mapped
+                  << " skipped=" << skipped
+                  << std::endl;
+    }
+
+    void logIWIngestSummary(const IWIngestSummary& summary) const {
+        const size_t totalMapped = summary.discursiveMapped + summary.narrativeMapped + summary.recommendationMapped;
+        const size_t totalSkipped = summary.discursiveSkipped + summary.narrativeSkipped + summary.recommendationSkipped;
+        const size_t denominator = totalMapped + totalSkipped;
+        const double coverage = denominator == 0 ? 0.0 : (100.0 * static_cast<double>(totalMapped) / static_cast<double>(denominator));
+
+        std::cout << "[IW Ingest Summary] bundles=" << summary.bundlesIngested << "/" << summary.bundlesDetected
+                  << " standalone=" << summary.standaloneFiles
+                  << " discursive=" << summary.discursiveMapped
+                  << " narrative=" << summary.narrativeMapped
+                  << " recommendation=" << summary.recommendationMapped
+                  << " coverage=" << coverage << "%"
+                  << std::endl;
+    }
+
+    void ingestIWPayload(const std::map<std::string, json>& docs,
+                         const std::string& artifactId,
+                         IWIngestSummary& summary) {
+        const std::string safeArtifact = sanitizeArtifactToken(artifactId);
+
+        // Discursive (DiscursiveSystem -> IWBundle)
+        size_t discMapped = 0;
+        size_t discSkipped = 0;
+        if (const json* discPayload = pickPrimaryPayload(docs, {"DiscursiveSystem.json", "IWBundle.json"})) {
+            auto discSystems = Application::Mappers::IW::IWMapper::toDiscursiveSystemDTOs(*discPayload);
+            for (size_t i = 0; i < discSystems.size(); ++i) {
+                auto dto = discSystems[i];
+                if (dto.id.empty()) {
+                    dto.id = "DS-IW-" + safeArtifact + "-" + std::to_string(i + 1);
+                }
+                if (dto.temporalContext.category.empty()) dto.temporalContext.category = "CONTEMPORARY";
+                if (dto.temporalContext.label.empty()) dto.temporalContext.label = "IW ingestion";
+
+                mergeDiscursiveSupplements(dto, docs);
+                dto.interpretationMetadata["iw.artifactId"] = safeArtifact;
+
+                if (!hasDiscursiveContent(dto)) {
+                    ++discSkipped;
+                    continue;
+                }
+
+                try {
+                    upsertDiscursiveSystemDTO(dto);
+                    ++discMapped;
+                } catch (const std::exception&) {
+                    ++discSkipped;
+                }
+            }
+        }
+        summary.discursiveMapped += discMapped;
+        summary.discursiveSkipped += discSkipped;
+        if (discMapped > 0 || discSkipped > 0) {
+            logIWIngestContext(safeArtifact, "discursive", discMapped, discSkipped);
+        }
+
+        // Narrative (NarrativeObservation -> IWBundle)
+        size_t narrMapped = 0;
+        size_t narrSkipped = 0;
+        if (const json* narrPayload = pickPrimaryPayload(docs, {"NarrativeObservation.json", "IWBundle.json"})) {
+            auto narratives = Application::Mappers::IW::IWMapper::toNarrativeStateDTOs(*narrPayload);
+            for (size_t i = 0; i < narratives.size(); ++i) {
+                auto dto = narratives[i];
+                if (dto.id.empty()) {
+                    dto.id = "OBS-IW-" + safeArtifact + "-" + std::to_string(i + 1);
+                }
+                if (dto.source.sourceId.empty()) dto.source.sourceId = safeArtifact;
+                if (dto.source.sourceType.empty()) dto.source.sourceType = "SCIENTIFIC_ARTICLE";
+                if (dto.temporalContext.category.empty()) dto.temporalContext.category = "CONTEMPORARY";
+                if (dto.temporalContext.label.empty()) dto.temporalContext.label = "IW ingestion";
+
+                std::map<std::string, std::string> normalizedMetadata;
+                for (const auto& [key, value] : dto.metadata) {
+                    if (key.rfind("iw.", 0) == 0) normalizedMetadata[key] = value;
+                    else normalizedMetadata["iw." + key] = value;
+                }
+                normalizedMetadata["iw.artifactId"] = safeArtifact;
+                dto.metadata = std::move(normalizedMetadata);
+
+                if (!hasNarrativeContent(dto)) {
+                    ++narrSkipped;
+                    continue;
+                }
+
+                try {
+                    upsertNarrativeStateDTO(dto);
+                    ++narrMapped;
+                } catch (const std::exception&) {
+                    ++narrSkipped;
+                }
+            }
+        }
+        summary.narrativeMapped += narrMapped;
+        summary.narrativeSkipped += narrSkipped;
+        if (narrMapped > 0 || narrSkipped > 0) {
+            logIWIngestContext(safeArtifact, "narrative", narrMapped, narrSkipped);
+        }
+
+        // Recommendation (TrajectoryAnalogies -> IWBundle)
+        size_t recMapped = 0;
+        size_t recSkipped = 0;
+        if (const json* recPayload = pickPrimaryPayload(docs, {"TrajectoryAnalogies.json", "IWBundle.json"})) {
+            auto recommendations = Application::Mappers::IW::IWMapper::toRecommendationSnapshotDTOs(*recPayload);
+            for (size_t i = 0; i < recommendations.size(); ++i) {
+                auto dto = recommendations[i];
+                if (dto.id.empty()) {
+                    dto.id = "REC-IW-" + safeArtifact + "-" + std::to_string(i + 1);
+                }
+                if (dto.sourceReference.sourceId.empty()) dto.sourceReference.sourceId = safeArtifact;
+                if (dto.sourceReference.sourceType.empty()) dto.sourceReference.sourceType = "DOCUMENT";
+                if (dto.temporalContext.category.empty()) dto.temporalContext.category = "CONTEMPORARY";
+                if (dto.temporalContext.label.empty()) dto.temporalContext.label = "IW ingestion";
+
+                if (!hasRecommendationContent(dto)) {
+                    ++recSkipped;
+                    continue;
+                }
+
+                try {
+                    upsertRecommendationSnapshotDTO(dto);
+                    ++recMapped;
+                } catch (const std::exception&) {
+                    ++recSkipped;
+                }
+            }
+        }
+        summary.recommendationMapped += recMapped;
+        summary.recommendationSkipped += recSkipped;
+        if (recMapped > 0 || recSkipped > 0) {
+            logIWIngestContext(safeArtifact, "recommendation", recMapped, recSkipped);
+        }
+    }
+
+    void ingestIWStandaloneFile(const std::filesystem::path& filePath, IWIngestSummary& summary) {
+        auto payload = loadJsonFile(filePath);
+        if (!payload.has_value()) {
+            return;
+        }
+        if (!isIWPayloadJson(payload.value())) {
+            return;
+        }
+
+        std::map<std::string, json> docs;
+        docs[filePath.filename().string()] = payload.value();
+        const std::string artifactId = resolveArtifactId(filePath.parent_path(), docs);
+        ++summary.standaloneFiles;
+        ingestIWPayload(docs, artifactId, summary);
+    }
+
+    void ingestIWBundleDirectory(const std::filesystem::path& bundleDir, IWIngestSummary& summary) {
+        if (!std::filesystem::exists(bundleDir) || !std::filesystem::is_directory(bundleDir)) {
+            return;
+        }
+
+        std::map<std::string, json> docs;
+        for (const auto& entry : std::filesystem::directory_iterator(bundleDir)) {
+            if (!entry.is_regular_file() || entry.path().extension() != ".json") {
+                continue;
+            }
+            auto payload = loadJsonFile(entry.path());
+            if (payload.has_value()) {
+                docs[entry.path().filename().string()] = payload.value();
+            }
+        }
+
+        if (docs.empty()) {
+            return;
+        }
+
+        const std::string artifactId = resolveArtifactId(bundleDir, docs);
+        ++summary.bundlesIngested;
+        ingestIWPayload(docs, artifactId, summary);
+    }
+
     std::unique_ptr<Core::Domain::Workspace> workspace_;
     std::unique_ptr<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem> narrativeSystem_;
     std::unique_ptr<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository> discursiveSystemRepository_;

@@ -15,3 +15,4 @@ Indice rapido para os documentos cientificos do SisterSTRATA.
 ## Integracao cognitiva (LLM)
 - [Manual Técnico Qwen](TECHNICAL_MANUAL_QWEN_INTEGRATION.md)
 - [Plano de Integração CAC](DDD_Cognitive_Assistance_INTEGRATION_PLAN.md)
+- [Requisitos de Representacao UI (IW -> STRATA)](IW_STRATA_UI_REPRESENTACAO_v1.md)

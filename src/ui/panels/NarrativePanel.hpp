@@ -6,6 +6,7 @@
 #include "ui/components/FileSelector.hpp"
 #include <string>
 #include <optional>
+#include <map>
 #include <mutex>
 
 namespace UI::Panels {
@@ -58,6 +59,12 @@ private:
     // Actually simplicity: We might just map content to a "Theme" axis for now, or just metadata
     // Plan said "Content/Theme". Let's treat it as a Semantic Axis label for simplicity.
     char inputTheme_[128] = ""; 
+    char inputEvidenceSnippet_[512] = "";
+    char inputSourceSection_[128] = "";
+    char inputPageRange_[64] = "";
+    char inputMetadataKey_[64] = "";
+    char inputMetadataValue_[256] = "";
+    std::map<std::string, std::string> metadata_;
 
     // -- Spatial State --
     bool pickingMode_ = false;

@@ -1,7 +1,6 @@
 #include "src/ui/panels/NarrativePanel.hpp"
 #include "imgui.h"
 #include "application/mappers/CognitiveMappers.hpp"
-#include "application/mappers/CognitiveMappers.hpp"
 #include "ui/components/InterpretationModal.hpp"
 #include "ui/components/InterpretationHistory.hpp"
 #include <vector>
@@ -41,6 +40,17 @@ static const char* intentLabel(const std::string& token) {
     if (token == "CONTEXTUALIZATION") return "Contextualization";
     if (token == "METHODOLOGICAL_NOTE") return "Methodological Note";
     return token.c_str();
+}
+
+static std::string metadataValueByPriority(const std::map<std::string, std::string>& metadata,
+                                           const std::vector<std::string>& keys) {
+    for (const auto& key : keys) {
+        auto it = metadata.find(key);
+        if (it != metadata.end()) {
+            return it->second;
+        }
+    }
+    return "";
 }
 
 namespace UI::Panels {
@@ -144,32 +154,75 @@ void NarrativePanel::drawIngestionForm() {
 
     // 1. Source Reference
     ImGui::Text("Source Reference");
+    ImGui::PushItemWidth(-1.0f);
     ImGui::InputText("Source ID", inputSourceId_, IM_ARRAYSIZE(inputSourceId_));
     ImGui::InputText("Date/Year", inputDate_, IM_ARRAYSIZE(inputDate_));
     ImGui::Combo("Type", &inputSourceType_, SOURCE_TYPES, IM_ARRAYSIZE(SOURCE_TYPES));
+    ImGui::PopItemWidth();
 
     ImGui::Spacing();
 
     // 2. Temporal Context
     ImGui::Text("Temporal Context (Declared)");
+    ImGui::PushItemWidth(-1.0f);
     ImGui::Combo("Category", &inputTemporalCategory_, TEMPORAL_CATEGORIES, IM_ARRAYSIZE(TEMPORAL_CATEGORIES));
     ImGui::InputText("Label (e.g. 'Pós-barragem')", inputTemporalLabel_, IM_ARRAYSIZE(inputTemporalLabel_));
+    ImGui::PopItemWidth();
 
     ImGui::Spacing();
 
     // 3. Epistemological Intent
     ImGui::Text("Observation Intent");
+    ImGui::PushItemWidth(-1.0f);
     ImGui::Combo("Intent", &inputIntent_, INTENTS, IM_ARRAYSIZE(INTENTS));
+    ImGui::PopItemWidth();
 
     ImGui::Spacing();
 
     // 4. Content (Theme)
     ImGui::Text("Content / Theme");
+    ImGui::PushItemWidth(-1.0f);
     ImGui::InputText("Dominant Theme", inputTheme_, IM_ARRAYSIZE(inputTheme_));
+    ImGui::PopItemWidth();
 
     ImGui::Spacing();
-    
-    // 5. Spatial Anchoring
+
+    // 5. Evidence (optional)
+    ImGui::Text("Evidence (optional)");
+    ImGui::PushItemWidth(-1.0f);
+    ImGui::InputTextMultiline("Evidence Snippet##NarrativeEvidence", inputEvidenceSnippet_, IM_ARRAYSIZE(inputEvidenceSnippet_), ImVec2(-1, 60));
+    ImGui::InputText("Source Section##NarrativeSourceSection", inputSourceSection_, IM_ARRAYSIZE(inputSourceSection_));
+    ImGui::InputText("Page Range##NarrativePageRange", inputPageRange_, IM_ARRAYSIZE(inputPageRange_));
+    ImGui::PopItemWidth();
+
+    ImGui::Spacing();
+    ImGui::Text("Metadata (optional)");
+    ImGui::PushItemWidth(-1.0f);
+    ImGui::InputText("Metadata Key##NarrativeMetaKey", inputMetadataKey_, IM_ARRAYSIZE(inputMetadataKey_));
+    ImGui::InputText("Metadata Value##NarrativeMetaValue", inputMetadataValue_, IM_ARRAYSIZE(inputMetadataValue_));
+    ImGui::PopItemWidth();
+    if (ImGui::Button("Add Metadata##Narrative")) {
+        if (strlen(inputMetadataKey_) > 0) {
+            metadata_[inputMetadataKey_] = inputMetadataValue_;
+            inputMetadataKey_[0] = '\0';
+            inputMetadataValue_[0] = '\0';
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Clear Metadata##Narrative")) {
+        metadata_.clear();
+    }
+
+    if (!metadata_.empty()) {
+        ImGui::TextDisabled("Current metadata:");
+        for (const auto& [key, value] : metadata_) {
+            ImGui::BulletText("%s: %s", key.c_str(), value.c_str());
+        }
+    }
+
+    ImGui::Spacing();
+
+    // 6. Spatial Anchoring
     ImGui::Text("Spatial Anchor");
     if (capturedScope_.has_value()) {
         auto& scope = capturedScope_.value();
@@ -208,6 +261,12 @@ void NarrativePanel::drawIngestionForm() {
             inputSourceId_[0] = '\0';
             inputTheme_[0] = '\0';
             inputTemporalLabel_[0] = '\0';
+            inputEvidenceSnippet_[0] = '\0';
+            inputSourceSection_[0] = '\0';
+            inputPageRange_[0] = '\0';
+            inputMetadataKey_[0] = '\0';
+            inputMetadataValue_[0] = '\0';
+            metadata_.clear();
             capturedScope_ = std::nullopt;
         }
         ImGui::SameLine();
@@ -248,7 +307,16 @@ void NarrativePanel::drawIngestionForm() {
             });
         }
         dto.axes = axes;
-        dto.metadata = {};
+
+        std::map<std::string, std::string> normalizedMetadata;
+        for (const auto& [key, value] : metadata_) {
+            if (key.rfind("iw.", 0) == 0) normalizedMetadata[key] = value;
+            else normalizedMetadata["iw." + key] = value;
+        }
+        if (strlen(inputEvidenceSnippet_) > 0) normalizedMetadata["iw.evidenceSnippet"] = inputEvidenceSnippet_;
+        if (strlen(inputSourceSection_) > 0) normalizedMetadata["iw.sourceSection"] = inputSourceSection_;
+        if (strlen(inputPageRange_) > 0) normalizedMetadata["iw.pageRange"] = inputPageRange_;
+        dto.metadata = std::move(normalizedMetadata);
         dto.spatialScope = capturedScope_;
 
         // Try Register/Update
@@ -264,7 +332,16 @@ void NarrativePanel::drawIngestionForm() {
             }
             // Clear inputs on success
             inputSourceId_[0] = '\0'; // Optional: keep for bulk? Let's clear to be safe
-            capturedScope_ = std::nullopt; 
+            inputDate_[0] = '\0';
+            inputTheme_[0] = '\0';
+            inputTemporalLabel_[0] = '\0';
+            inputEvidenceSnippet_[0] = '\0';
+            inputSourceSection_[0] = '\0';
+            inputPageRange_[0] = '\0';
+            inputMetadataKey_[0] = '\0';
+            inputMetadataValue_[0] = '\0';
+            metadata_.clear();
+            capturedScope_ = std::nullopt;
         } catch (const std::exception& e) {
             ImGui::OpenPopup("Error");
         }
@@ -372,13 +449,14 @@ void NarrativePanel::drawObservationList() {
         }
     }
 
-    if (ImGui::BeginTable("NarrativeLogTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+    if (ImGui::BeginTable("NarrativeLogTable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp)) {
         ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Source");
         ImGui::TableSetupColumn("Time");
         ImGui::TableSetupColumn("Intent");
         ImGui::TableSetupColumn("Theme");
+        ImGui::TableSetupColumn("Metadata");
         ImGui::TableSetupColumn("Anchor");
         ImGui::TableHeadersRow();
 
@@ -416,6 +494,16 @@ void NarrativePanel::drawObservationList() {
             }
             
             ImGui::TableSetColumnIndex(6);
+            ImGui::Text("%zu", obs.metadata.size());
+            if (ImGui::IsItemHovered() && !obs.metadata.empty()) {
+                ImGui::BeginTooltip();
+                for (const auto& [key, value] : obs.metadata) {
+                    ImGui::TextWrapped("%s: %s", key.c_str(), value.c_str());
+                }
+                ImGui::EndTooltip();
+            }
+
+            ImGui::TableSetColumnIndex(7);
             if (obs.spatialScope.has_value()) {
                  auto& scope = obs.spatialScope.value();
                  if (scope.type == "PATCH_ID" && scope.patchId.has_value()) {
@@ -437,7 +525,9 @@ void NarrativePanel::loadIntoForm(const Application::DTO::NarrativeStateDTO& dto
     
     // Source
     strncpy(inputSourceId_, dto.source.sourceId.c_str(), sizeof(inputSourceId_) - 1);
+    inputSourceId_[sizeof(inputSourceId_) - 1] = '\0';
     strncpy(inputDate_, dto.source.productionDate.c_str(), sizeof(inputDate_) - 1);
+    inputDate_[sizeof(inputDate_) - 1] = '\0';
     
     for (int i = 0; i < IM_ARRAYSIZE(SOURCE_TYPE_VALUES); i++) {
         if (dto.source.sourceType == SOURCE_TYPE_VALUES[i]) {
@@ -448,6 +538,7 @@ void NarrativePanel::loadIntoForm(const Application::DTO::NarrativeStateDTO& dto
 
     // Time
     strncpy(inputTemporalLabel_, dto.temporalContext.label.c_str(), sizeof(inputTemporalLabel_) - 1);
+    inputTemporalLabel_[sizeof(inputTemporalLabel_) - 1] = '\0';
     for (int i = 0; i < IM_ARRAYSIZE(TEMPORAL_VALUES); i++) {
         if (dto.temporalContext.category == TEMPORAL_VALUES[i]) {
             inputTemporalCategory_ = i;
@@ -466,9 +557,23 @@ void NarrativePanel::loadIntoForm(const Application::DTO::NarrativeStateDTO& dto
     // Theme (Axis 0)
     if (!dto.axes.empty()) {
         strncpy(inputTheme_, dto.axes[0].label.c_str(), sizeof(inputTheme_) - 1);
+        inputTheme_[sizeof(inputTheme_) - 1] = '\0';
     } else {
         inputTheme_[0] = '\0';
     }
+
+    metadata_ = dto.metadata;
+    const std::string evidenceSnippet = metadataValueByPriority(metadata_, {"iw.evidenceSnippet", "evidenceSnippet"});
+    const std::string sourceSection = metadataValueByPriority(metadata_, {"iw.sourceSection", "sourceSection"});
+    const std::string pageRange = metadataValueByPriority(metadata_, {"iw.pageRange", "pageRange"});
+    strncpy(inputEvidenceSnippet_, evidenceSnippet.c_str(), sizeof(inputEvidenceSnippet_) - 1);
+    inputEvidenceSnippet_[sizeof(inputEvidenceSnippet_) - 1] = '\0';
+    strncpy(inputSourceSection_, sourceSection.c_str(), sizeof(inputSourceSection_) - 1);
+    inputSourceSection_[sizeof(inputSourceSection_) - 1] = '\0';
+    strncpy(inputPageRange_, pageRange.c_str(), sizeof(inputPageRange_) - 1);
+    inputPageRange_[sizeof(inputPageRange_) - 1] = '\0';
+    inputMetadataKey_[0] = '\0';
+    inputMetadataValue_[0] = '\0';
 
     // Spatial
     capturedScope_ = dto.spatialScope;

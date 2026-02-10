@@ -30,6 +30,42 @@ void DiscursiveSystemPanel::setSession(Application::Session* session) {
     session_ = session;
 }
 
+static void copyToBuffer(char* buffer, size_t size, const std::string& value) {
+    if (size == 0) return;
+    strncpy(buffer, value.c_str(), size - 1);
+    buffer[size - 1] = '\0';
+}
+
+void DiscursiveSystemPanel::loadIWMetadataBuffersFromMap() {
+    auto get = [&](const std::string& key) -> std::string {
+        auto it = metadata_.find(key);
+        if (it == metadata_.end()) return "";
+        return it->second;
+    };
+
+    copyToBuffer(iwBaselineAssumptions_, sizeof(iwBaselineAssumptions_), get("iw.baselineAssumptions"));
+    copyToBuffer(iwDiscursiveContext_, sizeof(iwDiscursiveContext_), get("iw.discursiveContext"));
+    copyToBuffer(iwInterpretationLayers_, sizeof(iwInterpretationLayers_), get("iw.interpretationLayers"));
+    copyToBuffer(iwTemporalWindowReferences_, sizeof(iwTemporalWindowReferences_), get("iw.temporalWindowReferences"));
+    copyToBuffer(iwSourceProfile_, sizeof(iwSourceProfile_), get("iw.sourceProfile"));
+}
+
+void DiscursiveSystemPanel::syncIWMetadataBuffersToMap() {
+    auto sync = [&](const std::string& key, const char* value) {
+        if (strlen(value) > 0) {
+            metadata_[key] = value;
+        } else {
+            metadata_.erase(key);
+        }
+    };
+
+    sync("iw.baselineAssumptions", iwBaselineAssumptions_);
+    sync("iw.discursiveContext", iwDiscursiveContext_);
+    sync("iw.interpretationLayers", iwInterpretationLayers_);
+    sync("iw.temporalWindowReferences", iwTemporalWindowReferences_);
+    sync("iw.sourceProfile", iwSourceProfile_);
+}
+
 void DiscursiveSystemPanel::draw(bool* open) {
     if (!open || !*open) return;
 
@@ -230,14 +266,19 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::Separator();
 
     ImGui::Text("System ID (optional)");
+    ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputText("System ID", inputSystemId_, IM_ARRAYSIZE(inputSystemId_));
 
     ImGui::Spacing();
 
     ImGui::Text("Source Reference");
+    ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputText("Source ID", inputSourceId_, IM_ARRAYSIZE(inputSourceId_));
+    ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputText("Date/Year", inputSourceDate_, IM_ARRAYSIZE(inputSourceDate_));
+    ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputText("Author (optional)", inputSourceAuthor_, IM_ARRAYSIZE(inputSourceAuthor_));
+    ImGui::SetNextItemWidth(-1.0f);
     ImGui::Combo("Type", &inputSourceType_, DISC_SOURCE_LABELS, IM_ARRAYSIZE(DISC_SOURCE_LABELS));
     if (ImGui::Button("Add Source")) {
         if (strlen(inputSourceId_) > 0) {
@@ -267,16 +308,24 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::Spacing();
 
     ImGui::Text("Temporal Context (Declared)");
+    ImGui::SetNextItemWidth(-1.0f);
     ImGui::Combo("Category", &inputTemporalCategory_, TEMPORAL_LABELS, IM_ARRAYSIZE(TEMPORAL_LABELS));
+    ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputText("Label", inputTemporalLabel_, IM_ARRAYSIZE(inputTemporalLabel_));
 
     ImGui::Spacing();
     ImGui::Separator();
 
+    const float addButtonWidth = 110.0f;
+    auto stretchedFieldWidth = [&]() {
+        return std::max(120.0f, ImGui::GetContentRegionAvail().x - addButtonWidth - ImGui::GetStyle().ItemSpacing.x);
+    };
+
     ImGui::Text("Declared Problems");
+    ImGui::SetNextItemWidth(stretchedFieldWidth());
     ImGui::InputText("Problem", inputProblem_, IM_ARRAYSIZE(inputProblem_));
     ImGui::SameLine();
-    if (ImGui::Button("Add Problem")) {
+    if (ImGui::Button("Add Problem", ImVec2(addButtonWidth, 0))) {
         if (strlen(inputProblem_) > 0) {
             declaredProblems_.push_back(inputProblem_);
             inputProblem_[0] = '\0';
@@ -284,9 +333,10 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     }
 
     ImGui::Text("Declared Actions");
+    ImGui::SetNextItemWidth(stretchedFieldWidth());
     ImGui::InputText("Action", inputAction_, IM_ARRAYSIZE(inputAction_));
     ImGui::SameLine();
-    if (ImGui::Button("Add Action")) {
+    if (ImGui::Button("Add Action", ImVec2(addButtonWidth, 0))) {
         if (strlen(inputAction_) > 0) {
             declaredActions_.push_back(inputAction_);
             inputAction_[0] = '\0';
@@ -294,9 +344,10 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     }
 
     ImGui::Text("Alleged Mechanisms");
+    ImGui::SetNextItemWidth(stretchedFieldWidth());
     ImGui::InputText("Mechanism", inputMechanism_, IM_ARRAYSIZE(inputMechanism_));
     ImGui::SameLine();
-    if (ImGui::Button("Add Mechanism")) {
+    if (ImGui::Button("Add Mechanism", ImVec2(addButtonWidth, 0))) {
         if (strlen(inputMechanism_) > 0) {
             allegedMechanisms_.push_back(inputMechanism_);
             inputMechanism_[0] = '\0';
@@ -304,9 +355,10 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     }
 
     ImGui::Text("Expected Effects");
+    ImGui::SetNextItemWidth(stretchedFieldWidth());
     ImGui::InputText("Effect", inputEffect_, IM_ARRAYSIZE(inputEffect_));
     ImGui::SameLine();
-    if (ImGui::Button("Add Effect")) {
+    if (ImGui::Button("Add Effect", ImVec2(addButtonWidth, 0))) {
         if (strlen(inputEffect_) > 0) {
             expectedEffects_.push_back(inputEffect_);
             inputEffect_[0] = '\0';
@@ -326,8 +378,22 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::Spacing();
     ImGui::Separator();
 
+    if (ImGui::CollapsingHeader("IW Structured Metadata (optional)", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::TextDisabled("Values are stored in interpretation metadata under iw.* keys.");
+        ImGui::InputTextMultiline("Baseline Assumptions##DiscIWBaseline", iwBaselineAssumptions_, IM_ARRAYSIZE(iwBaselineAssumptions_), ImVec2(-1, 70));
+        ImGui::InputTextMultiline("Discursive Context##DiscIWContext", iwDiscursiveContext_, IM_ARRAYSIZE(iwDiscursiveContext_), ImVec2(-1, 70));
+        ImGui::InputTextMultiline("Interpretation Layers##DiscIWLayers", iwInterpretationLayers_, IM_ARRAYSIZE(iwInterpretationLayers_), ImVec2(-1, 70));
+        ImGui::InputTextMultiline("Temporal Window##DiscIWTemporal", iwTemporalWindowReferences_, IM_ARRAYSIZE(iwTemporalWindowReferences_), ImVec2(-1, 70));
+        ImGui::InputTextMultiline("Source Profile##DiscIWSourceProfile", iwSourceProfile_, IM_ARRAYSIZE(iwSourceProfile_), ImVec2(-1, 70));
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+
     ImGui::Text("Interpretation Metadata");
+    ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputText("Key", inputMetadataKey_, IM_ARRAYSIZE(inputMetadataKey_));
+    ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputText("Value", inputMetadataValue_, IM_ARRAYSIZE(inputMetadataValue_));
     if (ImGui::Button("Add Metadata")) {
         if (strlen(inputMetadataKey_) > 0) {
@@ -339,6 +405,11 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::SameLine();
     if (ImGui::Button("Clear Metadata")) {
         metadata_.clear();
+        iwBaselineAssumptions_[0] = '\0';
+        iwDiscursiveContext_[0] = '\0';
+        iwInterpretationLayers_[0] = '\0';
+        iwTemporalWindowReferences_[0] = '\0';
+        iwSourceProfile_[0] = '\0';
     }
 
     if (!metadata_.empty()) {
@@ -364,6 +435,11 @@ void DiscursiveSystemPanel::drawIngestionForm() {
             expectedEffects_.clear();
             metadata_.clear();
             sourceReferences_.clear();
+            iwBaselineAssumptions_[0] = '\0';
+            iwDiscursiveContext_[0] = '\0';
+            iwInterpretationLayers_[0] = '\0';
+            iwTemporalWindowReferences_[0] = '\0';
+            iwSourceProfile_[0] = '\0';
         }
         ImGui::SameLine();
     }
@@ -403,6 +479,7 @@ void DiscursiveSystemPanel::drawIngestionForm() {
                 TEMPORAL_VALUES[inputTemporalCategory_],
                 inputTemporalLabel_
             };
+            syncIWMetadataBuffersToMap();
             dto.interpretationMetadata = metadata_; // Metadata is strictly optional
 
             dto.sourceReferences = sourceReferences_;
@@ -435,6 +512,11 @@ void DiscursiveSystemPanel::drawIngestionForm() {
                 metadata_.clear();
                 inputSystemId_[0] = '\0';
                 sourceReferences_.clear();
+                iwBaselineAssumptions_[0] = '\0';
+                iwDiscursiveContext_[0] = '\0';
+                iwInterpretationLayers_[0] = '\0';
+                iwTemporalWindowReferences_[0] = '\0';
+                iwSourceProfile_[0] = '\0';
                 // Clear buffers too if we auto-added them
                 inputProblem_[0] = '\0'; 
                 inputAction_[0] = '\0';
@@ -544,7 +626,7 @@ void DiscursiveSystemPanel::drawSystemList() {
         return;
     }
 
-    if (ImGui::BeginTable("DiscursiveSystemsTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+    if (ImGui::BeginTable("DiscursiveSystemsTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp)) {
         ImGui::TableSetupColumn("Actions");
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Sources");
@@ -599,6 +681,7 @@ void DiscursiveSystemPanel::loadIntoForm(const Application::DTO::DiscursiveSyste
     
     // Copy ID
     strncpy(inputSystemId_, dto.id.c_str(), sizeof(inputSystemId_) - 1);
+    inputSystemId_[sizeof(inputSystemId_) - 1] = '\0';
 
     // Copy Vector fields
     declaredProblems_ = dto.declaredProblems;
@@ -610,6 +693,7 @@ void DiscursiveSystemPanel::loadIntoForm(const Application::DTO::DiscursiveSyste
 
     // Time
     strncpy(inputTemporalLabel_, dto.temporalContext.label.c_str(), sizeof(inputTemporalLabel_) - 1);
+    inputTemporalLabel_[sizeof(inputTemporalLabel_) - 1] = '\0';
     
     // Find category index if possible (simple matching)
     for (int i = 0; i < IM_ARRAYSIZE(TEMPORAL_VALUES); i++) {
@@ -623,6 +707,7 @@ void DiscursiveSystemPanel::loadIntoForm(const Application::DTO::DiscursiveSyste
     inputSourceId_[0] = '\0';
     inputSourceDate_[0] = '\0';
     inputSourceAuthor_[0] = '\0';
+    loadIWMetadataBuffersFromMap();
 }
 
 } // namespace UI::Panels
