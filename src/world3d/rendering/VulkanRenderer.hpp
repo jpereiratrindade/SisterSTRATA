@@ -89,6 +89,8 @@ private:
     void createCommandPool();
     void createCommandBuffers();
     void createSyncObjects();
+    void createImageSyncObjects();
+    void destroyImageSyncObjects();
     void createUniformBuffers(); // New
     void createDescriptorPool(); // New
     void createDescriptorSets(); // New
@@ -127,7 +129,7 @@ private:
 
     // Sync objects
     std::vector<vk::Semaphore> imageAvailableSemaphores_;
-    std::vector<vk::Semaphore> renderFinishedSemaphores_;
+    std::vector<vk::Semaphore> renderFinishedSemaphores_; // Per-swapchain image
     std::vector<vk::Fence> inFlightFences_;
     std::vector<vk::Fence> imagesInFlight_; // Maps image index to the fence currently using it
     

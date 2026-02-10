@@ -42,8 +42,11 @@ VulkanRenderer::~VulkanRenderer() {
     device.destroyDescriptorPool(descriptorPool_);
     device.destroyCommandPool(commandPool_);
 
+    for (auto semaphore : renderFinishedSemaphores_) {
+        device.destroySemaphore(semaphore);
+    }
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        device.destroySemaphore(renderFinishedSemaphores_[i]);
         device.destroySemaphore(imageAvailableSemaphores_[i]);
         device.destroyFence(inFlightFences_[i]);
     }
@@ -128,18 +131,38 @@ void VulkanRenderer::createCommandBuffers() {
 
 void VulkanRenderer::createSyncObjects() {
     imageAvailableSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
-    renderFinishedSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences_.resize(MAX_FRAMES_IN_FLIGHT);
-    imagesInFlight_.assign(swapchain_->getImageCount(), nullptr);
 
     vk::SemaphoreCreateInfo semaphoreInfo;
     vk::FenceCreateInfo fenceInfo(vk::FenceCreateFlagBits::eSignaled);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         imageAvailableSemaphores_[i] = context_->getDevice().createSemaphore(semaphoreInfo);
-        renderFinishedSemaphores_[i] = context_->getDevice().createSemaphore(semaphoreInfo);
         inFlightFences_[i] = context_->getDevice().createFence(fenceInfo);
     }
+
+    createImageSyncObjects();
+}
+
+void VulkanRenderer::createImageSyncObjects() {
+    auto device = context_->getDevice();
+
+    renderFinishedSemaphores_.resize(swapchain_->getImageCount());
+    vk::SemaphoreCreateInfo semaphoreInfo;
+
+    for (auto& semaphore : renderFinishedSemaphores_) {
+        semaphore = device.createSemaphore(semaphoreInfo);
+    }
+
+    imagesInFlight_.assign(swapchain_->getImageCount(), nullptr);
+}
+
+void VulkanRenderer::destroyImageSyncObjects() {
+    auto device = context_->getDevice();
+    for (auto semaphore : renderFinishedSemaphores_) {
+        device.destroySemaphore(semaphore);
+    }
+    renderFinishedSemaphores_.clear();
 }
 
 void VulkanRenderer::beginFrame(const Camera& camera) {
@@ -237,14 +260,14 @@ void VulkanRenderer::endFrame() {
     vk::SubmitInfo submitInfo(
         1, &imageAvailableSemaphores_[currentFrame_], waitStages,
         1, &cmd,
-        1, &renderFinishedSemaphores_[currentFrame_]
+        1, &renderFinishedSemaphores_[imageIndex_]
     );
 
     (void)context_->getGraphicsQueue().submit(1, &submitInfo, inFlightFences_[currentFrame_]);
 
     vk::SwapchainKHR swapchainHandle = swapchain_->getHandle();
     vk::PresentInfoKHR presentInfo(
-        1, &renderFinishedSemaphores_[currentFrame_],
+        1, &renderFinishedSemaphores_[imageIndex_],
         1, &swapchainHandle,
         &imageIndex_
     );
@@ -513,7 +536,8 @@ void VulkanRenderer::recreateSwapchain() {
     }
     createFramebuffers();
 
-    imagesInFlight_.assign(swapchain_->getImageCount(), nullptr);
+    destroyImageSyncObjects();
+    createImageSyncObjects();
 }
 
 } // namespace World3D::Rendering

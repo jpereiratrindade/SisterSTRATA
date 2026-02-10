@@ -73,6 +73,10 @@ void Engine::init(SDL_Window* window) {
 }
 
 void Engine::onWorldLoaded(const Core::Domain::WorldState& state) {
+    if (context_) {
+        context_->getDevice().waitIdle();
+    }
+
     // Clear scene but keep grid?
     scene_.clear();
     uploadReferenceGrid();
