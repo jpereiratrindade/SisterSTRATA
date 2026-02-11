@@ -26,6 +26,7 @@ add_library(ui
     panels/RecommendationTrajectoryPanel.cpp
     panels/GlobalSynthesisPanel.cpp
     panels/AnalysisWorkspacePanel.cpp
+    components/NarrativeGraphWidget.cpp
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
     ${imgui_SOURCE_DIR}/imgui_tables.cpp

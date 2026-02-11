@@ -163,6 +163,187 @@ void DiscursiveSystemPanel::draw(bool* open) {
 }
 
 void DiscursiveSystemPanel::drawIngestionForm() {
+    drawAIAnalysisSection();
+
+    ImGui::Separator();
+    // Impact Profile Preview
+    if (ImGui::CollapsingHeader("Live Trajectory Impact Analysis")) {
+        // Simulation Controls
+        ImGui::TextDisabled("Simulation Tools (Debug)");
+        if (ImGui::Button("Simulate: Stability")) {
+            session_->simulateCondition(Application::Session::SimulationType::Stability);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Simulate: Fragmentation")) {
+            session_->simulateCondition(Application::Session::SimulationType::Fragmentation);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Simulate: Deforestation")) {
+            session_->simulateCondition(Application::Session::SimulationType::Deforestation);
+        }
+        ImGui::Separator();
+
+        std::string profileText = session_->generateImpactProfileText();
+        if (profileText.empty()) {
+             ImGui::TextDisabled("No sufficient trajectory data for analysis.");
+        } else {
+             ImGui::TextWrapped("%s", profileText.c_str());
+        }
+    }
+
+    ImGui::Separator();
+
+    drawSystemInfoSection();
+
+    ImGui::Spacing();
+
+    drawTemporalContextSection();
+
+    ImGui::Spacing();
+    ImGui::Separator();
+
+    drawDiscursiveFieldsSection();
+
+    ImGui::Spacing();
+    ImGui::Separator();
+
+    drawMetadataSection();
+
+    ImGui::Spacing();
+    ImGui::Separator();
+
+    drawActionButtonsSection();
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    
+    drawImportExportSection();
+}
+
+void DiscursiveSystemPanel::drawSystemList() {
+    auto systems = session_->getDiscursiveSystemDTOs();
+
+    if (systems.empty()) {
+        selectedSystemIds_.clear();
+        ImGui::TextDisabled("No discursive systems registered.");
+        return;
+    }
+
+    std::set<std::string> existingIds;
+    for (const auto& system : systems) {
+        existingIds.insert(system.id);
+    }
+    for (auto it = selectedSystemIds_.begin(); it != selectedSystemIds_.end();) {
+        if (!existingIds.contains(*it)) it = selectedSystemIds_.erase(it);
+        else ++it;
+    }
+
+    if (ImGui::Button("Select All")) {
+        selectedSystemIds_ = existingIds;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Clear Selection")) {
+        selectedSystemIds_.clear();
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("Selected: %zu", selectedSystemIds_.size());
+
+    if (ImGui::BeginTable("DiscursiveSystemsTable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp)) {
+        ImGui::TableSetupColumn("Sel");
+        ImGui::TableSetupColumn("Actions");
+        ImGui::TableSetupColumn("ID");
+        ImGui::TableSetupColumn("Sources");
+        ImGui::TableSetupColumn("Time");
+        ImGui::TableSetupColumn("Problems");
+        ImGui::TableSetupColumn("Actions");
+        ImGui::TableSetupColumn("Effects");
+        ImGui::TableHeadersRow();
+
+        for (const auto& system : systems) {
+            ImGui::TableNextRow();
+
+            ImGui::TableSetColumnIndex(0);
+            bool selected = selectedSystemIds_.contains(system.id);
+            ImGui::PushID((system.id + "_sel").c_str());
+            if (ImGui::Checkbox("##SelectDiscSystem", &selected)) {
+                if (selected) selectedSystemIds_.insert(system.id);
+                else selectedSystemIds_.erase(system.id);
+            }
+            ImGui::PopID();
+
+            ImGui::TableSetColumnIndex(1);
+            ImGui::PushID(system.id.c_str());
+            if (ImGui::Button("Edit")) {
+                loadIntoForm(system);
+                // Hint user to switch tab
+                // In a more complex UI we would programmatically switch tabs
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Del")) {
+                session_->removeDiscursiveSystemDTO(system.id);
+                selectedSystemIds_.erase(system.id);
+            }
+            ImGui::PopID();
+
+            ImGui::TableSetColumnIndex(2);
+            ImGui::Text("%s", system.id.c_str());
+
+            ImGui::TableSetColumnIndex(3);
+            ImGui::Text("%zu", system.sourceReferences.size());
+
+            ImGui::TableSetColumnIndex(4);
+            ImGui::Text("%s", system.temporalContext.label.c_str());
+
+            ImGui::TableSetColumnIndex(5);
+            ImGui::Text("%zu", system.declaredProblems.size());
+
+            ImGui::TableSetColumnIndex(6);
+            ImGui::Text("%zu", system.declaredActions.size());
+
+            ImGui::TableSetColumnIndex(7);
+            ImGui::Text("%zu", system.expectedEffects.size());
+        }
+        ImGui::EndTable();
+    }
+}
+
+void DiscursiveSystemPanel::loadIntoForm(const Application::DTO::DiscursiveSystemDTO& dto) {
+    isEditing_ = true;
+    editingId_ = dto.id;
+    targetTab_ = 0; // Return to Ingestion tab for editing
+    
+    // Copy ID
+    strncpy(inputSystemId_, dto.id.c_str(), sizeof(inputSystemId_) - 1);
+    inputSystemId_[sizeof(inputSystemId_) - 1] = '\0';
+
+    // Copy Vector fields
+    declaredProblems_ = dto.declaredProblems;
+    declaredActions_ = dto.declaredActions;
+    allegedMechanisms_ = dto.allegedMechanisms;
+    expectedEffects_ = dto.expectedEffects;
+    metadata_ = dto.interpretationMetadata;
+    sourceReferences_ = dto.sourceReferences;
+
+    // Time
+    strncpy(inputTemporalLabel_, dto.temporalContext.label.c_str(), sizeof(inputTemporalLabel_) - 1);
+    inputTemporalLabel_[sizeof(inputTemporalLabel_) - 1] = '\0';
+    
+    // Find category index if possible (simple matching)
+    for (int i = 0; i < IM_ARRAYSIZE(TEMPORAL_VALUES); i++) {
+        if (dto.temporalContext.category == TEMPORAL_VALUES[i]) {
+            inputTemporalCategory_ = i;
+            break;
+        }
+    }
+
+    // Sources Input (optional, maybe clear or load first one)
+    inputSourceId_[0] = '\0';
+    inputSourceDate_[0] = '\0';
+    inputSourceAuthor_[0] = '\0';
+    loadIWMetadataBuffersFromMap();
+}
+
+void DiscursiveSystemPanel::drawAIAnalysisSection() {
     auto allSystems = session_->getDiscursiveSystemDTOs();
     auto collectSystemsForAI = [&]() {
         if (!useSelectedForAI_) {
@@ -289,36 +470,9 @@ void DiscursiveSystemPanel::drawIngestionForm() {
          if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
          ImGui::EndPopup();
     }
+}
 
-    ImGui::Separator();
-    
-    // Impact Profile Preview
-    if (ImGui::CollapsingHeader("Live Trajectory Impact Analysis")) {
-        // Simulation Controls
-        ImGui::TextDisabled("Simulation Tools (Debug)");
-        if (ImGui::Button("Simulate: Stability")) {
-            session_->simulateCondition(Application::Session::SimulationType::Stability);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Simulate: Fragmentation")) {
-            session_->simulateCondition(Application::Session::SimulationType::Fragmentation);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Simulate: Deforestation")) {
-            session_->simulateCondition(Application::Session::SimulationType::Deforestation);
-        }
-        ImGui::Separator();
-
-        std::string profileText = session_->generateImpactProfileText();
-        if (profileText.empty()) {
-             ImGui::TextDisabled("No sufficient trajectory data for analysis.");
-        } else {
-             ImGui::TextWrapped("%s", profileText.c_str());
-        }
-    }
-
-    ImGui::Separator();
-
+void DiscursiveSystemPanel::drawSystemInfoSection() {
     ImGui::Text("System ID (optional)");
     ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputText("##DiscSystemId", inputSystemId_, IM_ARRAYSIZE(inputSystemId_));
@@ -362,9 +516,9 @@ void DiscursiveSystemPanel::drawIngestionForm() {
             ImGui::BulletText("%s (%s)", src.sourceId.c_str(), src.productionDate.c_str());
         }
     }
+}
 
-    ImGui::Spacing();
-
+void DiscursiveSystemPanel::drawTemporalContextSection() {
     ImGui::Text("Temporal Context (Declared)");
     ImGui::Text("Category");
     ImGui::SetNextItemWidth(-1.0f);
@@ -372,10 +526,9 @@ void DiscursiveSystemPanel::drawIngestionForm() {
     ImGui::Text("Label");
     ImGui::SetNextItemWidth(-1.0f);
     ImGui::InputText("##DiscTemporalLabel", inputTemporalLabel_, IM_ARRAYSIZE(inputTemporalLabel_));
+}
 
-    ImGui::Spacing();
-    ImGui::Separator();
-
+void DiscursiveSystemPanel::drawDiscursiveFieldsSection() {
     const float addButtonWidth = 110.0f;
     auto stretchedFieldWidth = [&]() {
         return std::max(120.0f, ImGui::GetContentRegionAvail().x - addButtonWidth - ImGui::GetStyle().ItemSpacing.x);
@@ -434,10 +587,9 @@ void DiscursiveSystemPanel::drawIngestionForm() {
         for (const auto& item : allegedMechanisms_) ImGui::BulletText("Mechanism: %s", item.c_str());
         for (const auto& item : expectedEffects_) ImGui::BulletText("Effect: %s", item.c_str());
     }
+}
 
-    ImGui::Spacing();
-    ImGui::Separator();
-
+void DiscursiveSystemPanel::drawMetadataSection() {
     if (ImGui::CollapsingHeader("IW Structured Metadata (optional)", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::TextDisabled("Values are stored in interpretation metadata under iw.* keys.");
         ImGui::Text("Baseline Assumptions");
@@ -485,10 +637,9 @@ void DiscursiveSystemPanel::drawIngestionForm() {
             ImGui::BulletText("%s: %s", key.c_str(), value.c_str());
         }
     }
+}
 
-    ImGui::Spacing();
-    ImGui::Separator();
-
+void DiscursiveSystemPanel::drawActionButtonsSection() {
     if (isEditing_) {
         ImGui::TextColored(ImVec4(1,1,0,1), "EDITING MODE: %s", editingId_.c_str());
         if (ImGui::Button("Cancel Edit")) {
@@ -619,9 +770,9 @@ void DiscursiveSystemPanel::drawIngestionForm() {
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
+}
 
-    ImGui::Spacing();
-    ImGui::Separator();
+void DiscursiveSystemPanel::drawImportExportSection() {
     ImGui::TextDisabled("Import / Export");
     if (ImGui::Button("Import JSON")) {
         showImportDialog_ = true;
@@ -683,129 +834,6 @@ void DiscursiveSystemPanel::drawIngestionForm() {
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
-}
-
-void DiscursiveSystemPanel::drawSystemList() {
-    auto systems = session_->getDiscursiveSystemDTOs();
-
-    if (systems.empty()) {
-        selectedSystemIds_.clear();
-        ImGui::TextDisabled("No discursive systems registered.");
-        return;
-    }
-
-    std::set<std::string> existingIds;
-    for (const auto& system : systems) {
-        existingIds.insert(system.id);
-    }
-    for (auto it = selectedSystemIds_.begin(); it != selectedSystemIds_.end();) {
-        if (!existingIds.contains(*it)) it = selectedSystemIds_.erase(it);
-        else ++it;
-    }
-
-    if (ImGui::Button("Select All")) {
-        selectedSystemIds_ = existingIds;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Clear Selection")) {
-        selectedSystemIds_.clear();
-    }
-    ImGui::SameLine();
-    ImGui::TextDisabled("Selected: %zu", selectedSystemIds_.size());
-
-    if (ImGui::BeginTable("DiscursiveSystemsTable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp)) {
-        ImGui::TableSetupColumn("Sel");
-        ImGui::TableSetupColumn("Actions");
-        ImGui::TableSetupColumn("ID");
-        ImGui::TableSetupColumn("Sources");
-        ImGui::TableSetupColumn("Time");
-        ImGui::TableSetupColumn("Problems");
-        ImGui::TableSetupColumn("Actions");
-        ImGui::TableSetupColumn("Effects");
-        ImGui::TableHeadersRow();
-
-        for (const auto& system : systems) {
-            ImGui::TableNextRow();
-
-            ImGui::TableSetColumnIndex(0);
-            bool selected = selectedSystemIds_.contains(system.id);
-            ImGui::PushID((system.id + "_sel").c_str());
-            if (ImGui::Checkbox("##SelectDiscSystem", &selected)) {
-                if (selected) selectedSystemIds_.insert(system.id);
-                else selectedSystemIds_.erase(system.id);
-            }
-            ImGui::PopID();
-
-            ImGui::TableSetColumnIndex(1);
-            ImGui::PushID(system.id.c_str());
-            if (ImGui::Button("Edit")) {
-                loadIntoForm(system);
-                // Hint user to switch tab
-                // In a more complex UI we would programmatically switch tabs
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Del")) {
-                session_->removeDiscursiveSystemDTO(system.id);
-                selectedSystemIds_.erase(system.id);
-            }
-            ImGui::PopID();
-
-            ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%s", system.id.c_str());
-
-            ImGui::TableSetColumnIndex(3);
-            ImGui::Text("%zu", system.sourceReferences.size());
-
-            ImGui::TableSetColumnIndex(4);
-            ImGui::Text("%s", system.temporalContext.label.c_str());
-
-            ImGui::TableSetColumnIndex(5);
-            ImGui::Text("%zu", system.declaredProblems.size());
-
-            ImGui::TableSetColumnIndex(6);
-            ImGui::Text("%zu", system.declaredActions.size());
-
-            ImGui::TableSetColumnIndex(7);
-            ImGui::Text("%zu", system.expectedEffects.size());
-        }
-        ImGui::EndTable();
-    }
-}
-
-void DiscursiveSystemPanel::loadIntoForm(const Application::DTO::DiscursiveSystemDTO& dto) {
-    isEditing_ = true;
-    editingId_ = dto.id;
-    targetTab_ = 0; // Return to Ingestion tab for editing
-    
-    // Copy ID
-    strncpy(inputSystemId_, dto.id.c_str(), sizeof(inputSystemId_) - 1);
-    inputSystemId_[sizeof(inputSystemId_) - 1] = '\0';
-
-    // Copy Vector fields
-    declaredProblems_ = dto.declaredProblems;
-    declaredActions_ = dto.declaredActions;
-    allegedMechanisms_ = dto.allegedMechanisms;
-    expectedEffects_ = dto.expectedEffects;
-    metadata_ = dto.interpretationMetadata;
-    sourceReferences_ = dto.sourceReferences;
-
-    // Time
-    strncpy(inputTemporalLabel_, dto.temporalContext.label.c_str(), sizeof(inputTemporalLabel_) - 1);
-    inputTemporalLabel_[sizeof(inputTemporalLabel_) - 1] = '\0';
-    
-    // Find category index if possible (simple matching)
-    for (int i = 0; i < IM_ARRAYSIZE(TEMPORAL_VALUES); i++) {
-        if (dto.temporalContext.category == TEMPORAL_VALUES[i]) {
-            inputTemporalCategory_ = i;
-            break;
-        }
-    }
-
-    // Sources Input (optional, maybe clear or load first one)
-    inputSourceId_[0] = '\0';
-    inputSourceDate_[0] = '\0';
-    inputSourceAuthor_[0] = '\0';
-    loadIWMetadataBuffersFromMap();
 }
 
 } // namespace UI::Panels

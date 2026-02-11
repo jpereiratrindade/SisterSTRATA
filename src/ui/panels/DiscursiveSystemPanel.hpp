@@ -78,6 +78,15 @@ private:
     void loadIWMetadataBuffersFromMap();
     void syncIWMetadataBuffersToMap();
 
+    // Refactored Sub-methods for Ingestion Form
+    void drawAIAnalysisSection();
+    void drawSystemInfoSection();
+    void drawTemporalContextSection();
+    void drawDiscursiveFieldsSection();
+    void drawMetadataSection();
+    void drawActionButtonsSection();
+    void drawImportExportSection();
+
     // AI Analysis State
     bool showAiModal_ = false;
     bool aiRequestPending_ = false;

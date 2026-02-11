@@ -4,6 +4,7 @@
 #include "application/dtos/NarrativeDTOs.hpp"
 #include "application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
 #include "ui/components/FileSelector.hpp"
+#include "ui/components/NarrativeGraphWidget.hpp"
 #include <string>
 #include <optional>
 #include <map>
@@ -99,12 +100,7 @@ private:
     Application::DTO::Cognitive::InterpretationSnapshotDTO stagedAiSnapshot_;
 
     // -- Narrative Graph State --
-    float graphMinSimilarity_ = 0.35f;
-    int graphTopKPerNode_ = 3;
-    bool graphShowLabels_ = false;
-    bool graphHideIsolated_ = false;
-    bool graphFocusSelected_ = false;
-    std::string selectedGraphNodeId_;
+    UI::Components::NarrativeGraphState graphState_;
 };
 
 } // namespace UI::Panels

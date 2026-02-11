@@ -2,6 +2,7 @@
 
 #include "application/Session.hpp"
 #include <nlohmann/json.hpp>
+#include "ui/components/NarrativeGraphWidget.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -59,7 +60,7 @@ private:
 
     struct ContextProfile {
         std::vector<std::string> descriptions;
-        std::map<std::string, int> processCounts;
+        std::unordered_map<std::string, int> processCounts;
         std::map<NarrativeScale, int> scaleCounts;
     };
 
@@ -82,12 +83,7 @@ private:
     bool showContexts_ = true;
     bool showProcesses_ = false;
 
-    float graphMinSimilarity_ = 0.35f;
-    int graphTopKPerNode_ = 3;
-    bool graphShowLabels_ = false;
-    bool graphHideIsolated_ = false;
-    bool graphFocusSelected_ = false;
-    std::string selectedGraphNodeId_;
+    UI::Components::NarrativeGraphState graphState_;
 
     bool world3DAvailable_ = true;
     NarrativePanel* narrativePanel_ = nullptr;
@@ -116,7 +112,7 @@ private:
     void drawTrajectoryContextTab();
     void drawRecommendationContextTab();
 
-    void drawNarrativeGraph(const nlohmann::json& graph);
+    void drawNarrativeGraphWidget(const nlohmann::json& graph);
     void drawContextDetails();
 
     static NarrativeScale inferScaleFromText(const std::string& text);

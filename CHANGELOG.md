@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.9.9] - 2026-02-11
+### Refactored
+- **NarrativeGraphWidget**: Extracted shared graph rendering logic from `NarrativePanel` and `AnalysisWorkspacePanel` into a reusable component, eliminating ~770 lines of duplicated code.
+- **DiscursiveSystemPanel**: Decomposed the monolithic `drawIngestionForm` (520+ lines) into 7 smaller, manageable private methods for better maintainability.
+- **Panel Cleanup**: Updated `NarrativePanel` and `AnalysisWorkspacePanel` to delegate graph rendering to the new widget while preserving specific features like workspace filters.
+
 ## [v1.9.8] - 2026-02-11
 ### Refactored
 - **Session.hpp Decomposition**: Reduced God Object from 1,477 → 445 lines (~70% reduction) by extracting responsibilities into dedicated services:
