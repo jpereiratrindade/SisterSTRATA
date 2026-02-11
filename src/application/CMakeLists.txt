@@ -2,6 +2,10 @@
 # Headless-safe
 add_library(application
     Session.cpp
+    services/IWIngestionService.cpp
+    services/ProjectPersistenceService.cpp
+    services/SimulationService.cpp
+    services/NarrativeContextAnalyzer.cpp
 )
 
 target_include_directories(application PUBLIC

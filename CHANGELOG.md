@@ -1,11 +1,28 @@
 # Changelog
 
-## [Unreleased]
+## [v1.9.8] - 2026-02-11
+### Refactored
+- **Session.hpp Decomposition**: Reduced God Object from 1,477 → 445 lines (~70% reduction) by extracting responsibilities into dedicated services:
+  - `IWIngestionService` — IW bundle/standalone file ingestion and synthesis reporting
+  - `ProjectPersistenceService` — auto-save/load for all observational repositories
+  - `SimulationService` — landscape simulation (Stability, Fragmentation, Deforestation)
+  - `NarrativeContextAnalyzer` — text tokenization, dimension classification, Jaccard context graph
+- **Error Handling**: Replaced `catch(...)` with `catch(const std::exception& e)` with proper error logging.
+- **Namespace Disambiguation**: Fixed ambiguous `Infrastructure` namespace in `generateImpactProfileText()` using namespace alias.
+
 ### Added
+- **Logger.hpp**: Thread-safe, header-only structured logger with leveled output (DEBUG/INFO/WARN/ERROR) and compile-time filtering via `SISTERSTRATA_LOG_LEVEL`.
+- **Unit Tests (27)**: Added test coverage for all extracted services:
+  - `NarrativeContextAnalyzerTest.cpp` — 11 tests (tokenization, dimensions, graph)
+  - `SimulationServiceTest.cpp` — 5 tests (stability, fragmentation, deforestation, auto-create world)
+  - `ProjectPersistenceServiceTest.cpp` — 4 tests (save/load, corrupt files, path update)
+  - `IWIngestionServiceTest.cpp` — 7 tests (standalone, bundle, error handling)
 - **Feat(Ingestion):** Added "Batch Folder Ingestion" from IdeaWalker.
-  - Users can now select a directory (e.g., `IW-Teste`) to automatically ingest all `.json` files found within it (recursive scan).
-  - Updated UI to use `FileBrowser` in directory mode for this action.
-  - See `Session::ingestFromIWDirectory`.
+  - Users can now select a directory to automatically ingest all `.json` files found within it (recursive scan).
+
+### Fixed
+- **Duplicate Includes**: Removed duplicate `#include` directives for `ImpactProfileMapper.hpp` and `CsvLoader.hpp`.
+- **Duplicate Comments**: Removed duplicate `// Persistence Helpers` comment.
 
 ## [v1.9.7] - 2026-02-10
 ### Documentation

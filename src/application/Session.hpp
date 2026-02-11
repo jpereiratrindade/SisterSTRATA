@@ -17,63 +17,72 @@
 #include "src/observational/interpretation/aggregates/InterpretationRepository.hpp"
 #include "src/observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp"
 #include "src/application/mappers/ImpactProfileMapper.hpp"
-#include "src/application/mappers/ImpactProfileMapper.hpp"
-// #include "world3d/World3D.hpp" // Removed for architectural purity (Headless)
 #include "core/domain/world/WorldState.hpp"
 #include "application/ports/IWorldView.hpp"
 #include "infrastructure/io/ObjLoader.hpp"
 #include "infrastructure/io/CsvLoader.hpp"
-#include "infrastructure/io/CsvLoader.hpp"
-#include "src/application/mappers/IWMapper.hpp"
+
+// New extracted services
+#include "application/services/IWIngestionService.hpp"
+#include "application/services/ProjectPersistenceService.hpp"
+#include "application/services/SimulationService.hpp"
+#include "application/services/NarrativeContextAnalyzer.hpp"
+
 #include <memory>
 #include <vector>
 #include <map>
-#include <set>
-#include <array>
-#include <unordered_set>
 #include <filesystem>
 #include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <cctype>
-#include <optional>
-#include <chrono>
-#include <ctime>
-#include <sstream>
-#include <iomanip>
 #include <nlohmann/json.hpp>
 
 namespace Application {
 
+/**
+ * @brief Application Session — thin facade delegating to dedicated services.
+ *
+ * After refactoring v1.9.8, Session retains:
+ *   - Ownership of domain objects (workspace, repositories, trajectory)
+ *   - CRUD wrappers the UI calls (register/update/remove DTOs)
+ *   - World loading (3D data is loaded here, not in ingestion)
+ *   - LLM / Cognitive wiring
+ *   - Impact profile generation
+ *
+ * Delegated to:
+ *   - IWIngestionService:         all IW ingestion logic
+ *   - ProjectPersistenceService:  auto-save/load
+ *   - SimulationService:          landscape simulation
+ *   - NarrativeContextAnalyzer:   tokenization and context graph
+ */
 class Session {
 public:
     // Persistence Config
     std::filesystem::path projectRoot_ = "assets/data/user_db";
 
-    Session() 
+    // Keep SimulationType alias for backward compatibility with UI code
+    using SimulationType = Services::SimulationService::SimulationType;
+
+    Session()
         : workspace_(std::make_unique<Core::Domain::Workspace>()),
           narrativeSystem_(std::make_unique<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem>()),
           discursiveSystemRepository_(std::make_unique<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository>()),
           interpretationRepository_(std::make_unique<SisterSTRATA::Observational::Interpretation::InterpretationRepository>()),
           llmService_(nullptr),
           cognitiveService_(std::make_unique<Application::Services::Cognitive::CognitiveAssistanceService>(nullptr)),
-          worldState_(std::make_unique<Core::Domain::WorldState>()) // Init WorldState
+          worldState_(std::make_unique<Core::Domain::WorldState>())
     {
-        // Ensure standard persistence directories exist
         std::filesystem::create_directories(projectRoot_);
-        initializePersistence();
+        initServices();
+        persistenceService_->initializePersistence();
+        ingestionService_->scanForIngestion();
     }
 
     void setProjectRoot(const std::string& path) {
         projectRoot_ = path;
         std::filesystem::create_directories(projectRoot_);
-        
-        // Reload data for the new project
-        // 1. Clear current state
         newSession();
-        
-        // 2. Load from new path
-        initializePersistence();
+        initServices();
+        persistenceService_->initializePersistence();
+        ingestionService_->scanForIngestion();
     }
 
     [[nodiscard]] std::string getProjectRoot() const {
@@ -84,7 +93,6 @@ public:
         return *workspace_;
     }
 
-    // Ability to reset session if needed
     void newSession() {
         workspace_ = std::make_unique<Core::Domain::Workspace>();
         narrativeSystem_ = std::make_unique<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem>();
@@ -92,6 +100,7 @@ public:
         interpretationRepository_ = std::make_unique<SisterSTRATA::Observational::Interpretation::InterpretationRepository>();
         recommendationTrajectory_ = SisterSTRATA::Observational::Recommendation::RecommendationTrajectory();
         trajectory_.clear();
+        initServices();
     }
 
     [[nodiscard]] Core::Domain::FourthDimension::Trajectory& getTrajectory() {
@@ -102,6 +111,10 @@ public:
         return *narrativeSystem_;
     }
 
+    // ─────────────────────────────────────────────
+    //  Narrative CRUD
+    // ─────────────────────────────────────────────
+
     [[nodiscard]] std::vector<Application::DTO::NarrativeStateDTO> getNarrativeHistoryDTO() const {
         std::vector<Application::DTO::NarrativeStateDTO> dtos;
         for (const auto& state : narrativeSystem_->getHistory()) {
@@ -111,29 +124,39 @@ public:
     }
 
     [[nodiscard]] nlohmann::json getNarrativeContextGraph() const {
-        return buildNarrativeContextGraphJson();
+        return Services::NarrativeContextAnalyzer::buildContextGraph(getNarrativeHistoryDTO());
     }
 
     void registerNarrativeStateDTO(const Application::DTO::NarrativeStateDTO& dto) {
         narrativeSystem_->registerObservation(Application::Mappers::Narrative::toDomain(dto));
-        autoSaveNarrative();
+        persistenceService_->autoSaveNarrative();
     }
 
     void loadNarrativeFromFile(const std::string& path) {
         narrativeSystem_->deserialize(path);
-        autoSaveNarrative();
+        persistenceService_->autoSaveNarrative();
     }
 
     void saveNarrativeToFile(const std::string& path) const {
         narrativeSystem_->serialize(path);
     }
 
-    [[nodiscard]] SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository& getDiscursiveSystemRepository() const {
-        return *discursiveSystemRepository_;
+    void removeNarrativeStateDTO(const std::string& id) {
+        narrativeSystem_->removeObservation(id);
+        persistenceService_->autoSaveNarrative();
     }
 
-    [[nodiscard]] SisterSTRATA::Observational::Recommendation::RecommendationTrajectory& getRecommendationTrajectory() {
-        return recommendationTrajectory_;
+    void updateNarrativeStateDTO(const std::string& id, const Application::DTO::NarrativeStateDTO& dto) {
+        narrativeSystem_->updateObservation(id, Application::Mappers::Narrative::toDomain(dto));
+        persistenceService_->autoSaveNarrative();
+    }
+
+    // ─────────────────────────────────────────────
+    //  Discursive CRUD
+    // ─────────────────────────────────────────────
+
+    [[nodiscard]] SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository& getDiscursiveSystemRepository() const {
+        return *discursiveSystemRepository_;
     }
 
     [[nodiscard]] std::vector<Application::DTO::DiscursiveSystemDTO> getDiscursiveSystemDTOs() const {
@@ -144,13 +167,48 @@ public:
         return dtos;
     }
 
-    [[nodiscard]] Application::DTO::RecommendationTrajectoryDTO getRecommendationTrajectoryDTO() const {
-        return Application::Mappers::Recommendation::toDTO(recommendationTrajectory_);
+    [[nodiscard]] size_t getDiscursiveSystemCount() const {
+        return discursiveSystemRepository_->getSystems().size();
     }
 
     void registerDiscursiveSystemDTO(const Application::DTO::DiscursiveSystemDTO& dto) {
         discursiveSystemRepository_->registerSystem(Application::Mappers::Discursive::toDomain(dto));
-        autoSaveDiscursive();
+        persistenceService_->autoSaveDiscursive();
+    }
+
+    void removeDiscursiveSystemDTO(const std::string& id) {
+        discursiveSystemRepository_->removeSystem(id);
+        persistenceService_->autoSaveDiscursive();
+    }
+
+    void updateDiscursiveSystemDTO(const std::string& id, const Application::DTO::DiscursiveSystemDTO& dto) {
+        discursiveSystemRepository_->updateSystem(id, Application::Mappers::Discursive::toDomain(dto));
+        persistenceService_->autoSaveDiscursive();
+    }
+
+    void loadDiscursiveSystemsFromFile(const std::string& path) {
+        discursiveSystemRepository_->deserialize(path);
+        persistenceService_->autoSaveDiscursive();
+    }
+
+    void saveDiscursiveSystemsToFile(const std::string& path) const {
+        discursiveSystemRepository_->serialize(path);
+    }
+
+    // ─────────────────────────────────────────────
+    //  Recommendation CRUD
+    // ─────────────────────────────────────────────
+
+    [[nodiscard]] SisterSTRATA::Observational::Recommendation::RecommendationTrajectory& getRecommendationTrajectory() {
+        return recommendationTrajectory_;
+    }
+
+    [[nodiscard]] Application::DTO::RecommendationTrajectoryDTO getRecommendationTrajectoryDTO() const {
+        return Application::Mappers::Recommendation::toDTO(recommendationTrajectory_);
+    }
+
+    [[nodiscard]] size_t getRecommendationSnapshotCount() const {
+        return recommendationTrajectory_.getSnapshots().size();
     }
 
     void setRecommendationTrajectoryDTO(const Application::DTO::RecommendationTrajectoryDTO& dto) {
@@ -160,169 +218,51 @@ public:
     void addRecommendationSnapshotDTO(const Application::DTO::RecommendationSnapshotDTO& dto) {
         if (recommendationTrajectory_.getId().empty()) {
             recommendationTrajectory_ = SisterSTRATA::Observational::Recommendation::RecommendationTrajectory(
-                "REC-TRAJECTORY-1",
-                {}
+                "REC-TRAJECTORY-1", {}
             );
         }
         recommendationTrajectory_.addSnapshot(Application::Mappers::Recommendation::toDomain(dto));
-        autoSaveRecommendation();
+        persistenceService_->autoSaveRecommendation();
     }
 
-    // --- CRUD Wrappers for Recommendation Snapshot ---
     void removeRecommendationSnapshotDTO(const std::string& id) {
         recommendationTrajectory_.removeSnapshot(id);
-        autoSaveRecommendation();
+        persistenceService_->autoSaveRecommendation();
     }
 
     void updateRecommendationSnapshotDTO(const std::string& id, const Application::DTO::RecommendationSnapshotDTO& dto) {
         recommendationTrajectory_.updateSnapshot(id, Application::Mappers::Recommendation::toDomain(dto));
-        autoSaveRecommendation();
-    }
-
-    // --- CRUD Wrappers for Discursive System ---
-    void removeDiscursiveSystemDTO(const std::string& id) {
-        discursiveSystemRepository_->removeSystem(id);
-        autoSaveDiscursive();
-    }
-
-    void updateDiscursiveSystemDTO(const std::string& id, const Application::DTO::DiscursiveSystemDTO& dto) {
-        discursiveSystemRepository_->updateSystem(id, Application::Mappers::Discursive::toDomain(dto));
-        autoSaveDiscursive();
-    }
-
-    // --- CRUD Wrappers for Narrative Observation ---
-    void removeNarrativeStateDTO(const std::string& id) {
-        narrativeSystem_->removeObservation(id);
-        autoSaveNarrative();
-    }
-
-    void updateNarrativeStateDTO(const std::string& id, const Application::DTO::NarrativeStateDTO& dto) {
-        narrativeSystem_->updateObservation(id, Application::Mappers::Narrative::toDomain(dto));
-        autoSaveNarrative();
-    }
-
-    void loadDiscursiveSystemsFromFile(const std::string& path) {
-        discursiveSystemRepository_->deserialize(path);
-        autoSaveDiscursive();
-    }
-
-    void saveDiscursiveSystemsToFile(const std::string& path) const {
-        discursiveSystemRepository_->serialize(path);
+        persistenceService_->autoSaveRecommendation();
     }
 
     void loadRecommendationTrajectoryFromFile(const std::string& path) {
         recommendationTrajectory_.deserialize(path);
-        autoSaveRecommendation();
+        persistenceService_->autoSaveRecommendation();
     }
 
     void saveRecommendationTrajectoryToFile(const std::string& path) const {
         recommendationTrajectory_.serialize(path);
     }
 
-    void ingestFromIW(const std::string& filepath) {
-        std::cout << "[Session] Ingesting from IW: " << filepath << std::endl;
-        std::filesystem::path filePath(filepath);
-        if (!std::filesystem::exists(filePath) || !std::filesystem::is_regular_file(filePath)) {
-            std::cerr << "Invalid IW file: " << filepath << std::endl;
-            return;
-        }
+    // ─────────────────────────────────────────────
+    //  IW Ingestion (delegated)
+    // ─────────────────────────────────────────────
 
-        IWIngestSummary summary;
-        if (isIWBundleDirectory(filePath.parent_path())) {
-            summary.bundlesDetected = 1;
-            ingestIWBundleDirectory(filePath.parent_path(), summary);
-        } else {
-            ingestIWStandaloneFile(filePath, summary);
-        }
-        logIWIngestSummary(summary);
-        writeIngestionSynthesisReport(summary, filePath.parent_path().string(), "ingest_single_file");
+    void ingestFromIW(const std::string& filepath) {
+        ingestionService_->ingestFromIW(filepath);
     }
 
     void ingestFromIWDirectory(const std::string& dirPath) {
-        std::cout << "[Session] Batch Ingestion from Directory: " << dirPath << std::endl;
-        std::filesystem::path root(dirPath);
-        if (!std::filesystem::exists(root) || !std::filesystem::is_directory(root)) {
-            std::cerr << "Invalid directory for ingestion: " << dirPath << std::endl;
-            return;
-        }
-
-        std::set<std::filesystem::path> bundleDirs;
-        std::vector<std::filesystem::path> standaloneFiles;
-
-        for (const auto& entry : std::filesystem::recursive_directory_iterator(root)) {
-            if (!entry.is_regular_file() || entry.path().extension() != ".json") {
-                continue;
-            }
-
-            const auto parent = entry.path().parent_path();
-            if (isIWBundleDirectory(parent)) {
-                bundleDirs.insert(parent);
-            } else {
-                standaloneFiles.push_back(entry.path());
-            }
-        }
-
-        IWIngestSummary summary;
-        summary.bundlesDetected = bundleDirs.size();
-
-        for (const auto& bundleDir : bundleDirs) {
-            ingestIWBundleDirectory(bundleDir, summary);
-        }
-
-        // If canonical IW bundles exist, they are the preferred source and we skip
-        // standalone JSON files to avoid duplicate ingestion noise.
-        if (bundleDirs.empty()) {
-            std::sort(standaloneFiles.begin(), standaloneFiles.end());
-            for (const auto& file : standaloneFiles) {
-                ingestIWStandaloneFile(file, summary);
-            }
-        }
-
-        logIWIngestSummary(summary);
-        writeIngestionSynthesisReport(summary, root.string(), "ingest_directory");
-        std::cout << "[Session] Batch Ingestion Complete." << std::endl;
+        ingestionService_->ingestFromIWDirectory(dirPath);
     }
 
     void scanForIngestion() {
-        std::cout << "[Session] Scanning project for inputs..." << std::endl;
-        
-        std::filesystem::path inputsDir = projectRoot_ / "inputs";
-        if (!std::filesystem::exists(inputsDir)) {
-            // Create structure if it doesn't exist to guide user
-            try {
-                std::filesystem::create_directories(inputsDir / "narratives");
-                std::filesystem::create_directories(inputsDir / "discursive");
-                std::cout << "[Session] Created input directories at " << inputsDir << std::endl;
-            } catch (...) {}
-            return;
-        }
-
-        IWIngestSummary summary;
-        auto scanDir = [&](const std::filesystem::path& dir) {
-             if (!std::filesystem::exists(dir)) return;
-             for (const auto& entry : std::filesystem::directory_iterator(dir)) {
-                 if (entry.is_regular_file() && entry.path().extension() == ".json") {
-                     ingestIWStandaloneFile(entry.path(), summary);
-                 }
-             }
-        };
-
-        scanDir(inputsDir / "narratives");
-        scanDir(inputsDir / "discursive");
-        if (summary.hasAnyActivity()) {
-            logIWIngestSummary(summary);
-            writeIngestionSynthesisReport(summary, inputsDir.string(), "scan_project_inputs");
-        }
-        // We could scan recursively or other folders, but sticking to specific input folders is cleaner.
+        ingestionService_->scanForIngestion();
     }
 
-    [[nodiscard]] size_t getDiscursiveSystemCount() const {
-        return discursiveSystemRepository_->getSystems().size();
-    }
-
-    [[nodiscard]] size_t getRecommendationSnapshotCount() const {
-        return recommendationTrajectory_.getSnapshots().size();
-    }
+    // ─────────────────────────────────────────────
+    //  LLM / Cognitive
+    // ─────────────────────────────────────────────
 
     void setLLMService(std::unique_ptr<Ports::ILLMService> llmService) {
         llmService_ = std::move(llmService);
@@ -335,10 +275,9 @@ public:
         return llmService_.get();
     }
 
-    // --- Cognitive Interpretation Memory ---
     void saveInterpretationSnapshotDTO(const Application::DTO::Cognitive::InterpretationSnapshotDTO& dto) {
         interpretationRepository_->addSnapshot(Application::Mappers::Interpretation::toDomain(dto));
-        autoSaveInterpretation();
+        persistenceService_->autoSaveInterpretation();
     }
 
     [[nodiscard]] std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> getInterpretationSnapshots() const {
@@ -349,114 +288,99 @@ public:
         return dtos;
     }
 
-    // --- Cognitive Assistance ---
     void requestAIInterpretation(const Application::DTO::Cognitive::ContextBundleDTO& bundle,
                                 Application::Services::Cognitive::InterpretationMode mode,
                                 Application::Services::Cognitive::CognitiveAssistanceService::SnapshotCallback callback) {
         cognitiveService_->interpret(bundle, mode, callback);
     }
 
-    // --- Trajectory Impact Analysis ---
+    // ─────────────────────────────────────────────
+    //  Impact Profile
+    // ─────────────────────────────────────────────
+
     std::string generateImpactProfileText() const {
-        // 1. Check Prerequisites
         const auto& worldPtr = workspace_->getWorld();
         if (!worldPtr) return "";
         auto* world = worldPtr.get();
 
-        // 2. Instantiate Analyzer (Infrastructure)
-        using namespace SisterSTRATA::Observational::ImpactProfile;
-        SisterSTRATA::Observational::ImpactProfile::Infrastructure::TrajectoryImpactAnalyzerImpl analyzer(world->getResolution().width, world->getResolution().height);
+        namespace IP = SisterSTRATA::Observational::ImpactProfile;
+        IP::Infrastructure::TrajectoryImpactAnalyzerImpl analyzer(
+            world->getResolution().width, world->getResolution().height);
 
-        // 3. Define Reference (Self-Reference: First Frame vs Last Frame)
-        // If trajectory has < 2 slices, we can't really do a trend, but can do a structure check if referencing a theoretical baseline.
-        // For now, we try to grab the FIRST slice as the "Historical Baseline".
         Core::Domain::FourthDimension::Trajectory referenceTrajectory;
         if (!trajectory_.getTimeSlices().empty()) {
             referenceTrajectory.addTimeSlice(trajectory_.getTimeSlices().front());
         }
 
-        Domain::ReferenceFrame context(
-            Domain::ReferenceType::Historical,
+        IP::Domain::ReferenceFrame context(
+            IP::Domain::ReferenceType::Historical,
             "Baseline (Estado Inicial)",
             "REF-START"
         );
 
-        // 4. Analyze
         auto profile = analyzer.analyze(trajectory_, referenceTrajectory, context);
-
-        // 5. Map to Natural Language
         return Application::Mappers::ImpactProfileMapper::toNaturalLanguage(profile);
     }
 
-    // --- World Management ---
-    
+    // ─────────────────────────────────────────────
+    //  World Management
+    // ─────────────────────────────────────────────
+
     void setWorldView(Ports::IWorldView* view) {
         worldView_ = view;
     }
 
     void loadWorld(const std::string& path) {
         std::cout << "[Session] Loading world from: " << path << std::endl;
-        
-        // 1. Clear previous
+
         worldState_->clear();
         if (worldView_) worldView_->clear();
 
-        // 2. Determine Loader
         std::string ext = std::filesystem::path(path).extension().string();
-        
+
         if (ext == ".obj") {
             bool isPointCloud = false;
             auto data = Infrastructure::IO::ObjLoader::load(path, &isPointCloud);
-            
+
             Core::Domain::WorldEntity entity;
             entity.type = isPointCloud ? "point_cloud" : "mesh";
             entity.id = path;
-            
-            // Map Infrastructure Data -> Domain IO (or just copy)
-            // WorldState uses Core::ValueObjects::Vector3 (double)
-            // ObjLoader uses glm::vec3 (float)
-            // Need conversion.
+
             entity.points.reserve(data.positions.size());
             entity.colors.reserve(data.colors.size());
-            
+
             for(size_t i=0; i<data.positions.size(); ++i) {
                 entity.points.push_back({
-                    (double)data.positions[i].x, 
-                    (double)data.positions[i].y, 
+                    (double)data.positions[i].x,
+                    (double)data.positions[i].y,
                     (double)data.positions[i].z
                 });
-                
+
                 if (i < data.colors.size()) entity.colors.push_back(data.colors[i]);
                 else entity.colors.push_back({0.8, 0.8, 0.8});
             }
-            
+
             worldState_->addEntity(entity);
-            
+
         } else if (ext == ".csv" || ext == ".xyz" || ext == ".txt") {
-             // Basic Check if polyline or pointcloud
-             // For now assume pointcloud unless specialized loader called
-             // CsvLoader handles this internally via different methods?
-             // Let's use the generic load() for points.
              auto data = Infrastructure::IO::CsvLoader::load(path);
-             
+
              Core::Domain::WorldEntity entity;
              entity.type = "point_cloud";
              entity.id = path;
-             entity.points = data.points; // Direct copy (Vector3)
+             entity.points = data.points;
              entity.colors = data.colors;
-             
+
              worldState_->addEntity(entity);
         }
-        
-        // 3. Notify View
+
         if (worldView_) {
             worldView_->onWorldLoaded(*worldState_);
         }
-        
-        // 4. Load Sidecars
+
         loadSidecarData(path);
     }
-    
+
     void loadSidecarData(const std::string& path) {
          try {
             getNarrativeSystem().deserialize(path + ".json");
@@ -472,933 +396,33 @@ public:
         } catch (...) {}
     }
 
-
-    // --- Simulation Tools ---
-    enum class SimulationType {
-        Stability,
-        Fragmentation,
-        Deforestation
-    };
+    // ─────────────────────────────────────────────
+    //  Simulation (delegated)
+    // ─────────────────────────────────────────────
 
     void simulateCondition(SimulationType type) {
-        auto* world = workspace_->getWorld().get();
-        
-        // Auto-create world if missing (Mock for Simulation)
-        if (!world) {
-            workspace_->createWorld("Simulation Environment", 100, 100);
-            world = workspace_->getWorld().get();
-            
-            // Fix: Create physical mesh for visualization (Ghost Mode requires vertices)
-            // Use Type::Showcase (4) to ensure terrain has slopes/drainage context, avoiding "All Green" flat fallback.
-            // TODO: Move Terrain Generation to Core/Infrastructure
-            // World3D::generateTerrain("simulation_mesh.obj", 100, 100, 2.0f, 4, true);
-            std::cerr << "[Session] Warning: Terrain Generation currently unavailable in Headless/Session context." << std::endl;
-        }
-
-        if (!world) return; // Should not happen
-
-        trajectory_.clear(); 
-
-        int w = world->getResolution().width;
-        int h = world->getResolution().height;
-        size_t size = w * h;
-
-        // Helper to generate a slice
-        auto addSlice = [&](int ordinal, const std::vector<int>& cover, const std::string& meta) {
-             std::vector<bool> water(size, false);
-             trajectory_.addTimeSlice(Core::Domain::FourthDimension::TimeSlice(
-                 ordinal, ordinal, cover, water, meta,
-                 Core::Domain::FourthDimension::ClassificationType::SemanticCode
-             ));
-        };
-
-        std::vector<int> baseline(size, 1); // Full Forest
-
-        if (type == SimulationType::Stability) {
-            addSlice(1, baseline, "Baseline Year 1");
-            addSlice(2, baseline, "Baseline Year 5"); // Identical
-        }
-        else if (type == SimulationType::Fragmentation) {
-            addSlice(1, baseline, "Baseline (Intact)");
-            
-            // Checkerboard pattern (High Fragmentation)
-            std::vector<int> fragmented(size);
-            for(int y=0; y<h; ++y) {
-                for(int x=0; x<w; ++x) {
-                    // Use -1 (Soil) for non-forest to make it visually distinct (Brown cs Dark Green)
-                    // 0 is Campestre (Light Green), which looks too similar to Forest (Dark Green)
-                    fragmented[y*w + x] = ((x/10 + y/10) % 2 == 0) ? 1 : -1;
-                }
-            }
-            addSlice(2, fragmented, "Simulated Fragmentation");
-        }
-        else if (type == SimulationType::Deforestation) {
-            addSlice(1, baseline, "Baseline (Intact)");
-            
-            // Massive loss (80% gone)
-            // Use -1 (Soil) instead of 0 (Campestre) for high contrast visualization
-            std::vector<int> deforested(size, -1); 
-            // Keep small patch in corner
-            for(int i=0; i<size/10; ++i) deforested[i] = 1;
-            
-            addSlice(2, deforested, "Simulated Deforestation");
-        }
+        Services::SimulationService::simulateCondition(type, *workspace_, trajectory_);
     }
 
 private:
-    using json = nlohmann::json;
-
-    struct IWIngestSummary {
-        struct ArtifactReport {
-            std::string artifactId;
-            std::string sourceMode; // bundle|standalone
-            size_t discursiveMapped = 0;
-            size_t discursiveSkipped = 0;
-            size_t narrativeMapped = 0;
-            size_t narrativeSkipped = 0;
-            size_t recommendationMapped = 0;
-            size_t recommendationSkipped = 0;
-            std::map<std::string, size_t> skipReasons;
-        };
-
-        size_t bundlesDetected = 0;
-        size_t bundlesIngested = 0;
-        size_t standaloneFiles = 0;
-        size_t discursiveMapped = 0;
-        size_t discursiveSkipped = 0;
-        size_t narrativeMapped = 0;
-        size_t narrativeSkipped = 0;
-        size_t recommendationMapped = 0;
-        size_t recommendationSkipped = 0;
-        std::map<std::string, size_t> skipReasons;
-        std::vector<ArtifactReport> artifactReports;
-
-        [[nodiscard]] bool hasAnyActivity() const {
-            return bundlesDetected > 0 || bundlesIngested > 0 || standaloneFiles > 0 ||
-                   discursiveMapped > 0 || discursiveSkipped > 0 ||
-                   narrativeMapped > 0 || narrativeSkipped > 0 ||
-                   recommendationMapped > 0 || recommendationSkipped > 0;
-        }
-    };
-
-    static std::string toMetadataValue(const json& value) {
-        if (value.is_string()) return value.get<std::string>();
-        if (value.is_number_integer()) return std::to_string(value.get<long long>());
-        if (value.is_number_unsigned()) return std::to_string(value.get<unsigned long long>());
-        if (value.is_number_float()) return std::to_string(value.get<double>());
-        if (value.is_boolean()) return value.get<bool>() ? "true" : "false";
-        if (value.is_null()) return "";
-        return value.dump();
+    void initServices() {
+        persistenceService_ = std::make_unique<Services::ProjectPersistenceService>(
+            projectRoot_,
+            *narrativeSystem_,
+            *discursiveSystemRepository_,
+            recommendationTrajectory_,
+            *interpretationRepository_
+        );
+        ingestionService_ = std::make_unique<Services::IWIngestionService>(
+            *narrativeSystem_,
+            *discursiveSystemRepository_,
+            recommendationTrajectory_,
+            *persistenceService_,
+            projectRoot_
+        );
     }
 
-    static std::string sanitizeArtifactToken(std::string token) {
-        if (token.empty()) {
-            return "unknown_bundle";
-        }
-        for (char& c : token) {
-            const bool ok = std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '-';
-            if (!ok) c = '_';
-        }
-        return token;
-    }
-
-    static void incrementSkipReason(std::map<std::string, size_t>& target,
-                                    const std::string& context,
-                                    const std::string& reason) {
-        target[context + "." + reason] += 1;
-    }
-
-    static double computeIngestionCoverage(const IWIngestSummary& summary) {
-        const size_t totalMapped = summary.discursiveMapped + summary.narrativeMapped + summary.recommendationMapped;
-        const size_t totalSkipped = summary.discursiveSkipped + summary.narrativeSkipped + summary.recommendationSkipped;
-        const size_t denominator = totalMapped + totalSkipped;
-        return denominator == 0 ? 0.0 : (100.0 * static_cast<double>(totalMapped) / static_cast<double>(denominator));
-    }
-
-    static std::string nowIsoLike() {
-        auto now = std::chrono::system_clock::now();
-        std::time_t tt = std::chrono::system_clock::to_time_t(now);
-        std::tm tm {};
-#if defined(_WIN32)
-        localtime_s(&tm, &tt);
-#else
-        localtime_r(&tt, &tm);
-#endif
-        std::ostringstream out;
-        out << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
-        return out.str();
-    }
-
-    static std::string nowFileToken() {
-        auto now = std::chrono::system_clock::now();
-        std::time_t tt = std::chrono::system_clock::to_time_t(now);
-        std::tm tm {};
-#if defined(_WIN32)
-        localtime_s(&tm, &tt);
-#else
-        localtime_r(&tt, &tm);
-#endif
-        std::ostringstream out;
-        out << std::put_time(&tm, "%Y%m%d_%H%M%S");
-        return out.str();
-    }
-
-    static std::vector<std::string> tokenizeText(const std::string& text) {
-        std::vector<std::string> tokens;
-        std::string current;
-        current.reserve(32);
-        auto flush = [&]() {
-            if (current.size() < 4) {
-                current.clear();
-                return;
-            }
-            static const std::unordered_set<std::string> stopwords = {
-                "this","that","with","from","into","between","sobre","entre","para","como","when","where","which",
-                "because","without","within","through","pela","pelos","pelas","pelo","dos","das","and","the","for",
-                "uma","umas","uns","com","sem","depois","antes","were","was","sao","são","isso","essa","este","esta",
-                "their","there","have","has","had","very","more","less","than","sobre","sobre","ainda","also","only",
-                "de","do","da","em","no","na","nos","nas","por","que","se","ao","aos","as","os","um","uma","e"
-            };
-            if (!stopwords.contains(current)) {
-                tokens.push_back(current);
-            }
-            current.clear();
-        };
-
-        for (char ch : text) {
-            const unsigned char c = static_cast<unsigned char>(ch);
-            if (std::isalnum(c) != 0) {
-                current.push_back(static_cast<char>(std::tolower(c)));
-            } else {
-                flush();
-            }
-        }
-        flush();
-        return tokens;
-    }
-
-    static std::string dominantDimensionFromTokens(const std::set<std::string>& tokens) {
-        static const std::unordered_set<std::string> ecological = {
-            "solo","soil","vegetacao","vegetation","ecologico","ecological","campo","pasture","forragem","forage",
-            "raizes","roots","umidade","water","hidrico","hydro","clima","climate","biologica","biological",
-            "micorrizica","mycorrhizal","temperatura","emissao","methane","metano","carbon","carbono"
-        };
-        static const std::unordered_set<std::string> productive = {
-            "manejo","management","producao","production","produtividade","productivity","pastejo","grazing",
-            "sistema","system","tecnico","technical","fertilizacao","fertilization","otimizacao","optimization",
-            "indicador","indicator","monitoramento","monitoring"
-        };
-        static const std::unordered_set<std::string> social = {
-            "regional","region","territorio","territory","politica","policy","institucional","institutional",
-            "governanca","governance","colaboracao","collaboration","social","sociais","communities","comunidade"
-        };
-
-        size_t eco = 0, prod = 0, soc = 0;
-        for (const auto& token : tokens) {
-            if (ecological.contains(token)) ++eco;
-            if (productive.contains(token)) ++prod;
-            if (social.contains(token)) ++soc;
-        }
-        if (eco >= prod && eco >= soc && eco > 0) return "ecological";
-        if (prod >= eco && prod >= soc && prod > 0) return "productive";
-        if (soc >= eco && soc >= prod && soc > 0) return "social";
-        return "mixed";
-    }
-
-    json buildNarrativeContextGraphJson() const {
-        struct ContextNodeData {
-            std::string sourceId;
-            size_t count = 0;
-            std::set<std::string> tokens;
-            std::map<std::string, size_t> intents;
-            std::set<std::string> artifactIds;
-            std::vector<std::string> observationIds;
-        };
-
-        std::map<std::string, ContextNodeData> grouped;
-        for (const auto& dto : getNarrativeHistoryDTO()) {
-            std::string sourceId = dto.source.sourceId.empty() ? "unknown_source" : dto.source.sourceId;
-            auto& item = grouped[sourceId];
-            item.sourceId = sourceId;
-            item.count += 1;
-            item.intents[dto.intent.intentType] += 1;
-            item.observationIds.push_back(dto.id);
-            auto itArtifact = dto.metadata.find("iw.artifactId");
-            if (itArtifact != dto.metadata.end() && !itArtifact->second.empty()) {
-                item.artifactIds.insert(itArtifact->second);
-            }
-
-            std::vector<std::string> textBlocks;
-            textBlocks.push_back(dto.temporalContext.label);
-            for (const auto& axis : dto.axes) {
-                textBlocks.push_back(axis.label);
-                textBlocks.push_back(axis.description);
-            }
-            auto itObs = dto.metadata.find("iw.observation");
-            if (itObs != dto.metadata.end()) textBlocks.push_back(itObs->second);
-            auto itCtx = dto.metadata.find("iw.context");
-            if (itCtx != dto.metadata.end()) textBlocks.push_back(itCtx->second);
-            auto itEvidence = dto.metadata.find("iw.evidenceSnippet");
-            if (itEvidence != dto.metadata.end()) textBlocks.push_back(itEvidence->second);
-
-            for (const auto& block : textBlocks) {
-                for (const auto& token : tokenizeText(block)) {
-                    item.tokens.insert(token);
-                }
-            }
-        }
-
-        json graph;
-        graph["distanceType"] = "epistemic_narrative_jaccard_v1";
-        graph["causalInterpretationAllowed"] = false;
-        graph["nodes"] = json::array();
-        graph["edges"] = json::array();
-
-        std::vector<ContextNodeData> nodes;
-        nodes.reserve(grouped.size());
-        for (const auto& [_, node] : grouped) {
-            nodes.push_back(node);
-        }
-
-        auto topTokens = [](const std::set<std::string>& tokenSet, size_t maxCount) {
-            std::vector<std::string> out;
-            out.reserve(std::min(maxCount, tokenSet.size()));
-            for (const auto& token : tokenSet) {
-                out.push_back(token);
-                if (out.size() >= maxCount) break;
-            }
-            return out;
-        };
-
-        auto toVector = [](const std::set<std::string>& values) {
-            std::vector<std::string> out;
-            out.reserve(values.size());
-            for (const auto& value : values) {
-                out.push_back(value);
-            }
-            return out;
-        };
-
-        for (const auto& node : nodes) {
-            std::string dominantIntent = "unknown";
-            size_t best = 0;
-            for (const auto& [intent, count] : node.intents) {
-                if (count > best) {
-                    best = count;
-                    dominantIntent = intent;
-                }
-            }
-
-            graph["nodes"].push_back({
-                {"id", node.sourceId},
-                {"label", node.sourceId},
-                {"narrativeCount", node.count},
-                {"dominantIntent", dominantIntent},
-                {"dominantDimension", dominantDimensionFromTokens(node.tokens)},
-                {"topTokens", topTokens(node.tokens, 10)},
-                {"artifactIds", toVector(node.artifactIds)},
-                {"observationIds", node.observationIds}
-            });
-        }
-
-        for (size_t i = 0; i < nodes.size(); ++i) {
-            for (size_t j = i + 1; j < nodes.size(); ++j) {
-                const auto& a = nodes[i].tokens;
-                const auto& b = nodes[j].tokens;
-                if (a.empty() || b.empty()) continue;
-
-                size_t intersection = 0;
-                for (const auto& token : a) {
-                    if (b.contains(token)) ++intersection;
-                }
-                const size_t uni = a.size() + b.size() - intersection;
-                if (uni == 0) continue;
-
-                const double similarity = static_cast<double>(intersection) / static_cast<double>(uni);
-                const double distance = 1.0 - similarity;
-
-                if (similarity <= 0.0) continue;
-                graph["edges"].push_back({
-                    {"source", nodes[i].sourceId},
-                    {"target", nodes[j].sourceId},
-                    {"similarity", similarity},
-                    {"distance", distance},
-                    {"sharedTokens", intersection}
-                });
-            }
-        }
-
-        return graph;
-    }
-
-    static bool hasDiscursiveContent(const Application::DTO::DiscursiveSystemDTO& dto) {
-        return !dto.declaredProblems.empty() || !dto.declaredActions.empty() ||
-               !dto.allegedMechanisms.empty() || !dto.expectedEffects.empty();
-    }
-
-    static bool hasNarrativeContent(const Application::DTO::NarrativeStateDTO& dto) {
-        return !dto.axes.empty() || !dto.metadata.empty() || !dto.source.sourceId.empty();
-    }
-
-    static bool hasRecommendationContent(const Application::DTO::RecommendationSnapshotDTO& dto) {
-        return !dto.recommendationText.empty() || !dto.expectedOutcome.empty() ||
-               !dto.contextConditions.empty() || !dto.intendedAction.empty();
-    }
-
-    static std::optional<json> loadJsonFile(const std::filesystem::path& filePath) {
-        try {
-            std::ifstream file(filePath);
-            if (!file.is_open()) {
-                return std::nullopt;
-            }
-            json j;
-            file >> j;
-            return j;
-        } catch (...) {
-            return std::nullopt;
-        }
-    }
-
-    static bool isIWPayloadJson(const json& j) {
-        return (j.contains("IWBundle") ||
-                j.contains("discursiveSystem") ||
-                j.contains("narrativeObservations") ||
-                j.contains("trajectoryAnalogies") ||
-                j.contains("systems") ||
-                j.contains("history") ||
-                j.contains("snapshots") ||
-                j.contains("allegedMechanisms") ||
-                j.contains("sourceProfile") ||
-                j.contains("baselineAssumptions") ||
-                j.contains("discursiveContext") ||
-                j.contains("interpretationLayers") ||
-                j.contains("temporalWindowReferences"));
-    }
-
-    bool isIWBundleDirectory(const std::filesystem::path& dirPath) const {
-        if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
-            return false;
-        }
-
-        static const std::array<const char*, 10> markers = {
-            "IWBundle.json",
-            "Manifest.json",
-            "DiscursiveSystem.json",
-            "NarrativeObservation.json",
-            "TrajectoryAnalogies.json",
-            "AllegedMechanisms.json",
-            "InterpretationLayers.json",
-            "DiscursiveContext.json",
-            "BaselineAssumptions.json",
-            "TemporalWindowReference.json"
-        };
-
-        size_t found = 0;
-        bool strongMarker = false;
-        for (const auto* marker : markers) {
-            if (std::filesystem::exists(dirPath / marker)) {
-                ++found;
-                if (std::string(marker) == "IWBundle.json" || std::string(marker) == "Manifest.json") {
-                    strongMarker = true;
-                }
-            }
-        }
-        return strongMarker || found >= 3;
-    }
-
-    static std::string resolveArtifactId(const std::filesystem::path& bundlePath,
-                                         const std::map<std::string, json>& docs) {
-        auto fromSourceObject = [](const json& j) -> std::string {
-            if (j.contains("source") && j["source"].is_object()) {
-                const auto& src = j["source"];
-                if (src.contains("artifactId")) return src["artifactId"].get<std::string>();
-                if (src.contains("filename")) return src["filename"].get<std::string>();
-            }
-            return "";
-        };
-
-        const auto manifestIt = docs.find("Manifest.json");
-        if (manifestIt != docs.end()) {
-            const auto& manifest = manifestIt->second;
-            if (manifest.contains("artifactId")) {
-                return sanitizeArtifactToken(manifest["artifactId"].get<std::string>());
-            }
-        }
-
-        for (const auto& [_, j] : docs) {
-            const std::string candidate = fromSourceObject(j);
-            if (!candidate.empty()) {
-                return sanitizeArtifactToken(candidate);
-            }
-        }
-
-        return sanitizeArtifactToken(bundlePath.filename().string());
-    }
-
-    static const json* pickPrimaryPayload(const std::map<std::string, json>& docs,
-                                          const std::vector<std::string>& precedence) {
-        for (const auto& name : precedence) {
-            auto it = docs.find(name);
-            if (it != docs.end()) {
-                return &it->second;
-            }
-        }
-        return nullptr;
-    }
-
-    void mergeDiscursiveSupplements(Application::DTO::DiscursiveSystemDTO& dto,
-                                    const std::map<std::string, json>& docs) const {
-        auto pickSection = [&](const std::string& fileName, const std::string& key) -> std::optional<json> {
-            auto fileIt = docs.find(fileName);
-            if (fileIt != docs.end() && fileIt->second.contains(key)) {
-                return fileIt->second[key];
-            }
-            auto bundleIt = docs.find("IWBundle.json");
-            if (bundleIt != docs.end() && bundleIt->second.contains(key)) {
-                return bundleIt->second[key];
-            }
-            return std::nullopt;
-        };
-
-        auto setMetadataIfMissing = [&](const std::string& metadataKey, const std::optional<json>& value) {
-            if (!value.has_value()) return;
-            auto it = dto.interpretationMetadata.find(metadataKey);
-            if (it != dto.interpretationMetadata.end() && !it->second.empty()) return;
-            dto.interpretationMetadata[metadataKey] = toMetadataValue(value.value());
-        };
-
-        if (dto.allegedMechanisms.empty()) {
-            auto alleged = pickSection("AllegedMechanisms.json", "allegedMechanisms");
-            if (alleged.has_value()) {
-                json patch;
-                patch["allegedMechanisms"] = alleged.value();
-                auto supplement = Application::Mappers::IW::IWMapper::toDiscursiveSystemDTO(patch);
-                dto.allegedMechanisms = supplement.allegedMechanisms;
-            }
-        }
-
-        setMetadataIfMissing("iw.baselineAssumptions", pickSection("BaselineAssumptions.json", "baselineAssumptions"));
-        setMetadataIfMissing("iw.discursiveContext", pickSection("DiscursiveContext.json", "discursiveContext"));
-        setMetadataIfMissing("iw.interpretationLayers", pickSection("InterpretationLayers.json", "interpretationLayers"));
-        setMetadataIfMissing("iw.temporalWindowReferences", pickSection("TemporalWindowReference.json", "temporalWindowReferences"));
-        setMetadataIfMissing("iw.sourceProfile", pickSection("SourceProfile.json", "sourceProfile"));
-    }
-
-    bool upsertDiscursiveSystemDTO(const Application::DTO::DiscursiveSystemDTO& dto) {
-        auto systems = getDiscursiveSystemDTOs();
-        auto it = std::find_if(systems.begin(), systems.end(), [&](const auto& item) {
-            return item.id == dto.id;
-        });
-        if (it != systems.end()) {
-            updateDiscursiveSystemDTO(it->id, dto);
-            return false;
-        }
-        registerDiscursiveSystemDTO(dto);
-        return true;
-    }
-
-    bool upsertNarrativeStateDTO(const Application::DTO::NarrativeStateDTO& dto) {
-        auto history = getNarrativeHistoryDTO();
-
-        auto byId = std::find_if(history.begin(), history.end(), [&](const auto& item) {
-            return item.id == dto.id;
-        });
-        if (byId != history.end()) {
-            Application::DTO::NarrativeStateDTO updated = dto;
-            updated.id = byId->id;
-            updateNarrativeStateDTO(byId->id, updated);
-            return false;
-        }
-
-        auto bySourceAndTime = std::find_if(history.begin(), history.end(), [&](const auto& item) {
-            return !item.source.sourceId.empty() &&
-                   item.source.sourceId == dto.source.sourceId &&
-                   item.temporalContext.label == dto.temporalContext.label;
-        });
-        if (bySourceAndTime != history.end()) {
-            Application::DTO::NarrativeStateDTO updated = dto;
-            updated.id = bySourceAndTime->id;
-            updateNarrativeStateDTO(bySourceAndTime->id, updated);
-            return false;
-        }
-
-        registerNarrativeStateDTO(dto);
-        return true;
-    }
-
-    bool upsertRecommendationSnapshotDTO(const Application::DTO::RecommendationSnapshotDTO& dto) {
-        auto trajectory = getRecommendationTrajectoryDTO();
-        auto it = std::find_if(trajectory.snapshots.begin(), trajectory.snapshots.end(), [&](const auto& item) {
-            return item.id == dto.id;
-        });
-        if (it != trajectory.snapshots.end()) {
-            updateRecommendationSnapshotDTO(it->id, dto);
-            return false;
-        }
-        addRecommendationSnapshotDTO(dto);
-        return true;
-    }
-
-    void logIWIngestContext(const std::string& artifactId,
-                            const std::string& context,
-                            size_t mapped,
-                            size_t skipped) const {
-        std::cout << "[IW Ingest] bundle=" << artifactId
-                  << " context=" << context
-                  << " mapped=" << mapped
-                  << " skipped=" << skipped
-                  << std::endl;
-    }
-
-    void logIWIngestSummary(const IWIngestSummary& summary) const {
-        const double coverage = computeIngestionCoverage(summary);
-
-        std::cout << "[IW Ingest Summary] bundles=" << summary.bundlesIngested << "/" << summary.bundlesDetected
-                  << " standalone=" << summary.standaloneFiles
-                  << " discursive=" << summary.discursiveMapped
-                  << " narrative=" << summary.narrativeMapped
-                  << " recommendation=" << summary.recommendationMapped
-                  << " coverage=" << coverage << "%"
-                  << std::endl;
-    }
-
-    json buildIngestionSynthesisJson(const IWIngestSummary& summary,
-                                     const std::string& sourcePath,
-                                     const std::string& trigger) const {
-        json j;
-        j["schemaVersion"] = 1;
-        j["reportType"] = "IngestionSynthesisReport";
-        j["generatedAt"] = nowIsoLike();
-        j["projectRoot"] = projectRoot_.string();
-        j["sourcePath"] = sourcePath;
-        j["trigger"] = trigger;
-        j["pipelineVersion"] = "iw_ingest_v1";
-
-        j["epistemicStatus"] = {
-            {"type", "observational_synthesis"},
-            {"allowsResilienceInference", false},
-            {"requiresSpatialTemporalData", true},
-            {"notes", "Report is descriptive. No causal or prescriptive inference is performed."}
-        };
-
-        j["summary"] = {
-            {"bundlesDetected", summary.bundlesDetected},
-            {"bundlesIngested", summary.bundlesIngested},
-            {"standaloneFiles", summary.standaloneFiles},
-            {"coveragePercent", computeIngestionCoverage(summary)}
-        };
-
-        j["contexts"] = {
-            {"discursive", {{"mapped", summary.discursiveMapped}, {"skipped", summary.discursiveSkipped}}},
-            {"narrative", {{"mapped", summary.narrativeMapped}, {"skipped", summary.narrativeSkipped}}},
-            {"recommendation", {{"mapped", summary.recommendationMapped}, {"skipped", summary.recommendationSkipped}}}
-        };
-
-        j["skipReasons"] = summary.skipReasons;
-        auto artifacts = summary.artifactReports;
-        std::sort(artifacts.begin(), artifacts.end(), [](const auto& a, const auto& b) {
-            return a.artifactId < b.artifactId;
-        });
-
-        j["artifacts"] = json::array();
-        for (const auto& artifact : artifacts) {
-            j["artifacts"].push_back({
-                {"artifactId", artifact.artifactId},
-                {"sourceMode", artifact.sourceMode},
-                {"discursive", {{"mapped", artifact.discursiveMapped}, {"skipped", artifact.discursiveSkipped}}},
-                {"narrative", {{"mapped", artifact.narrativeMapped}, {"skipped", artifact.narrativeSkipped}}},
-                {"recommendation", {{"mapped", artifact.recommendationMapped}, {"skipped", artifact.recommendationSkipped}}},
-                {"skipReasons", artifact.skipReasons}
-            });
-        }
-
-        j["narrativeContextGraph"] = buildNarrativeContextGraphJson();
-        return j;
-    }
-
-    static std::string buildIngestionSynthesisMarkdown(const json& report) {
-        std::ostringstream md;
-        md << "# Ingestion Synthesis Report\n\n";
-        md << "- Generated At: " << report.value("generatedAt", "unknown") << "\n";
-        md << "- Project Root: " << report.value("projectRoot", "unknown") << "\n";
-        md << "- Source Path: " << report.value("sourcePath", "unknown") << "\n";
-        md << "- Trigger: " << report.value("trigger", "unknown") << "\n\n";
-
-        const auto summary = report.value("summary", json::object());
-        md << "## Summary\n\n";
-        md << "- Bundles Detected: " << summary.value("bundlesDetected", 0) << "\n";
-        md << "- Bundles Ingested: " << summary.value("bundlesIngested", 0) << "\n";
-        md << "- Standalone Files: " << summary.value("standaloneFiles", 0) << "\n";
-        md << "- Coverage (%): " << summary.value("coveragePercent", 0.0) << "\n\n";
-
-        const auto contexts = report.value("contexts", json::object());
-        const auto contextRow = [&](const char* key) {
-            const auto c = contexts.value(key, json::object());
-            md << "| " << key << " | " << c.value("mapped", 0) << " | " << c.value("skipped", 0) << " |\n";
-        };
-        md << "## Context Metrics\n\n";
-        md << "| Context | Mapped | Skipped |\n";
-        md << "| --- | ---: | ---: |\n";
-        contextRow("discursive");
-        contextRow("narrative");
-        contextRow("recommendation");
-        md << "\n";
-
-        const auto artifacts = report.value("artifacts", json::array());
-        md << "## Artifacts\n\n";
-        md << "| Artifact ID | Source Mode | Discursive | Narrative | Recommendation |\n";
-        md << "| --- | --- | ---: | ---: | ---: |\n";
-        for (const auto& item : artifacts) {
-            const auto disc = item.value("discursive", json::object());
-            const auto narr = item.value("narrative", json::object());
-            const auto rec = item.value("recommendation", json::object());
-            md << "| " << item.value("artifactId", "unknown")
-               << " | " << item.value("sourceMode", "unknown")
-               << " | " << disc.value("mapped", 0)
-               << " | " << narr.value("mapped", 0)
-               << " | " << rec.value("mapped", 0)
-               << " |\n";
-        }
-        md << "\n";
-
-        md << "## Epistemic Status\n\n";
-        const auto status = report.value("epistemicStatus", json::object());
-        md << "- Type: " << status.value("type", "unknown") << "\n";
-        md << "- allowsResilienceInference: " << (status.value("allowsResilienceInference", false) ? "true" : "false") << "\n";
-        md << "- requiresSpatialTemporalData: " << (status.value("requiresSpatialTemporalData", false) ? "true" : "false") << "\n";
-        md << "- Notes: " << status.value("notes", "") << "\n";
-
-        const auto graph = report.value("narrativeContextGraph", json::object());
-        md << "\n## Narrative Context Graph\n\n";
-        md << "- distanceType: " << graph.value("distanceType", "unknown") << "\n";
-        md << "- causalInterpretationAllowed: " << (graph.value("causalInterpretationAllowed", true) ? "true" : "false") << "\n";
-        md << "- nodes: " << graph.value("nodes", json::array()).size() << "\n";
-        md << "- edges: " << graph.value("edges", json::array()).size() << "\n";
-        return md.str();
-    }
-
-    void writeIngestionSynthesisReport(const IWIngestSummary& summary,
-                                       const std::string& sourcePath,
-                                       const std::string& trigger) const {
-        if (!summary.hasAnyActivity()) {
-            return;
-        }
-
-        try {
-            const json report = buildIngestionSynthesisJson(summary, sourcePath, trigger);
-            const std::string markdown = buildIngestionSynthesisMarkdown(report);
-            const std::string stamp = nowFileToken();
-
-            const std::filesystem::path reportDir = projectRoot_ / "reports" / "ingestion";
-            std::filesystem::create_directories(reportDir);
-
-            const auto latestJsonPath = reportDir / "IngestionSynthesisReport.latest.json";
-            const auto latestMdPath = reportDir / "IngestionSynthesisReport.latest.md";
-            const auto stampedJsonPath = reportDir / ("IngestionSynthesisReport_" + stamp + ".json");
-            const auto stampedMdPath = reportDir / ("IngestionSynthesisReport_" + stamp + ".md");
-
-            {
-                std::ofstream out(latestJsonPath);
-                if (out.is_open()) out << report.dump(2);
-            }
-            {
-                std::ofstream out(stampedJsonPath);
-                if (out.is_open()) out << report.dump(2);
-            }
-            {
-                std::ofstream out(latestMdPath);
-                if (out.is_open()) out << markdown;
-            }
-            {
-                std::ofstream out(stampedMdPath);
-                if (out.is_open()) out << markdown;
-            }
-
-            std::cout << "[IW Ingest Report] wrote " << latestJsonPath << " and " << latestMdPath << std::endl;
-        } catch (const std::exception& e) {
-            std::cerr << "[IW Ingest Report] failed: " << e.what() << std::endl;
-        }
-    }
-
-    void ingestIWPayload(const std::map<std::string, json>& docs,
-                         const std::string& artifactId,
-                         IWIngestSummary& summary,
-                         const std::string& sourceMode) {
-        const std::string safeArtifact = sanitizeArtifactToken(artifactId);
-        IWIngestSummary::ArtifactReport artifactReport;
-        artifactReport.artifactId = safeArtifact;
-        artifactReport.sourceMode = sourceMode;
-
-        // Discursive (DiscursiveSystem -> IWBundle)
-        size_t discMapped = 0;
-        size_t discSkipped = 0;
-        if (const json* discPayload = pickPrimaryPayload(docs, {"DiscursiveSystem.json", "IWBundle.json"})) {
-            auto discSystems = Application::Mappers::IW::IWMapper::toDiscursiveSystemDTOs(*discPayload);
-            for (size_t i = 0; i < discSystems.size(); ++i) {
-                auto dto = discSystems[i];
-                if (dto.id.empty()) {
-                    dto.id = "DS-IW-" + safeArtifact + "-" + std::to_string(i + 1);
-                }
-                if (dto.temporalContext.category.empty()) dto.temporalContext.category = "CONTEMPORARY";
-                if (dto.temporalContext.label.empty()) dto.temporalContext.label = "IW ingestion";
-
-                mergeDiscursiveSupplements(dto, docs);
-                dto.interpretationMetadata["iw.artifactId"] = safeArtifact;
-
-                if (!hasDiscursiveContent(dto)) {
-                    ++discSkipped;
-                    incrementSkipReason(artifactReport.skipReasons, "discursive", "empty_or_invalid_content");
-                    continue;
-                }
-
-                try {
-                    upsertDiscursiveSystemDTO(dto);
-                    ++discMapped;
-                } catch (const std::exception&) {
-                    ++discSkipped;
-                    incrementSkipReason(artifactReport.skipReasons, "discursive", "persistence_error");
-                }
-            }
-        }
-        summary.discursiveMapped += discMapped;
-        summary.discursiveSkipped += discSkipped;
-        artifactReport.discursiveMapped = discMapped;
-        artifactReport.discursiveSkipped = discSkipped;
-        if (discMapped > 0 || discSkipped > 0) {
-            logIWIngestContext(safeArtifact, "discursive", discMapped, discSkipped);
-        }
-
-        // Narrative (NarrativeObservation -> IWBundle)
-        size_t narrMapped = 0;
-        size_t narrSkipped = 0;
-        if (const json* narrPayload = pickPrimaryPayload(docs, {"NarrativeObservation.json", "IWBundle.json"})) {
-            auto narratives = Application::Mappers::IW::IWMapper::toNarrativeStateDTOs(*narrPayload);
-            for (size_t i = 0; i < narratives.size(); ++i) {
-                auto dto = narratives[i];
-                if (dto.id.empty()) {
-                    dto.id = "OBS-IW-" + safeArtifact + "-" + std::to_string(i + 1);
-                }
-                if (dto.source.sourceId.empty()) dto.source.sourceId = safeArtifact;
-                if (dto.source.sourceType.empty()) dto.source.sourceType = "SCIENTIFIC_ARTICLE";
-                if (dto.temporalContext.category.empty()) dto.temporalContext.category = "CONTEMPORARY";
-                if (dto.temporalContext.label.empty()) dto.temporalContext.label = "IW ingestion";
-
-                std::map<std::string, std::string> normalizedMetadata;
-                for (const auto& [key, value] : dto.metadata) {
-                    if (key.rfind("iw.", 0) == 0) normalizedMetadata[key] = value;
-                    else normalizedMetadata["iw." + key] = value;
-                }
-                normalizedMetadata["iw.artifactId"] = safeArtifact;
-                dto.metadata = std::move(normalizedMetadata);
-
-                if (!hasNarrativeContent(dto)) {
-                    ++narrSkipped;
-                    incrementSkipReason(artifactReport.skipReasons, "narrative", "empty_or_invalid_content");
-                    continue;
-                }
-
-                try {
-                    upsertNarrativeStateDTO(dto);
-                    ++narrMapped;
-                } catch (const std::exception&) {
-                    ++narrSkipped;
-                    incrementSkipReason(artifactReport.skipReasons, "narrative", "persistence_error");
-                }
-            }
-        }
-        summary.narrativeMapped += narrMapped;
-        summary.narrativeSkipped += narrSkipped;
-        artifactReport.narrativeMapped = narrMapped;
-        artifactReport.narrativeSkipped = narrSkipped;
-        if (narrMapped > 0 || narrSkipped > 0) {
-            logIWIngestContext(safeArtifact, "narrative", narrMapped, narrSkipped);
-        }
-
-        // Recommendation (TrajectoryAnalogies -> IWBundle)
-        size_t recMapped = 0;
-        size_t recSkipped = 0;
-        if (const json* recPayload = pickPrimaryPayload(docs, {"TrajectoryAnalogies.json", "IWBundle.json"})) {
-            auto recommendations = Application::Mappers::IW::IWMapper::toRecommendationSnapshotDTOs(*recPayload);
-            for (size_t i = 0; i < recommendations.size(); ++i) {
-                auto dto = recommendations[i];
-                if (dto.id.empty()) {
-                    dto.id = "REC-IW-" + safeArtifact + "-" + std::to_string(i + 1);
-                }
-                if (dto.sourceReference.sourceId.empty()) dto.sourceReference.sourceId = safeArtifact;
-                if (dto.sourceReference.sourceType.empty()) dto.sourceReference.sourceType = "DOCUMENT";
-                if (dto.temporalContext.category.empty()) dto.temporalContext.category = "CONTEMPORARY";
-                if (dto.temporalContext.label.empty()) dto.temporalContext.label = "IW ingestion";
-
-                if (!hasRecommendationContent(dto)) {
-                    ++recSkipped;
-                    incrementSkipReason(artifactReport.skipReasons, "recommendation", "empty_or_invalid_content");
-                    continue;
-                }
-
-                try {
-                    upsertRecommendationSnapshotDTO(dto);
-                    ++recMapped;
-                } catch (const std::exception&) {
-                    ++recSkipped;
-                    incrementSkipReason(artifactReport.skipReasons, "recommendation", "persistence_error");
-                }
-            }
-        }
-        summary.recommendationMapped += recMapped;
-        summary.recommendationSkipped += recSkipped;
-        artifactReport.recommendationMapped = recMapped;
-        artifactReport.recommendationSkipped = recSkipped;
-        if (recMapped > 0 || recSkipped > 0) {
-            logIWIngestContext(safeArtifact, "recommendation", recMapped, recSkipped);
-        }
-
-        for (const auto& [reason, count] : artifactReport.skipReasons) {
-            summary.skipReasons[reason] += count;
-        }
-        summary.artifactReports.push_back(std::move(artifactReport));
-    }
-
-    void ingestIWStandaloneFile(const std::filesystem::path& filePath, IWIngestSummary& summary) {
-        auto payload = loadJsonFile(filePath);
-        if (!payload.has_value()) {
-            return;
-        }
-        if (!isIWPayloadJson(payload.value())) {
-            return;
-        }
-
-        std::map<std::string, json> docs;
-        docs[filePath.filename().string()] = payload.value();
-        const std::string artifactId = resolveArtifactId(filePath.parent_path(), docs);
-        ++summary.standaloneFiles;
-        ingestIWPayload(docs, artifactId, summary, "standalone");
-    }
-
-    void ingestIWBundleDirectory(const std::filesystem::path& bundleDir, IWIngestSummary& summary) {
-        if (!std::filesystem::exists(bundleDir) || !std::filesystem::is_directory(bundleDir)) {
-            return;
-        }
-
-        std::map<std::string, json> docs;
-        for (const auto& entry : std::filesystem::directory_iterator(bundleDir)) {
-            if (!entry.is_regular_file() || entry.path().extension() != ".json") {
-                continue;
-            }
-            auto payload = loadJsonFile(entry.path());
-            if (payload.has_value()) {
-                docs[entry.path().filename().string()] = payload.value();
-            }
-        }
-
-        if (docs.empty()) {
-            return;
-        }
-
-        const std::string artifactId = resolveArtifactId(bundleDir, docs);
-        ++summary.bundlesIngested;
-        ingestIWPayload(docs, artifactId, summary, "bundle");
-    }
-
+    // Domain objects
     std::unique_ptr<Core::Domain::Workspace> workspace_;
     std::unique_ptr<SisterSTRATA::Observational::Narrative::NarrativeObservationSystem> narrativeSystem_;
     std::unique_ptr<SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository> discursiveSystemRepository_;
@@ -1408,72 +432,13 @@ private:
     SisterSTRATA::Observational::Recommendation::RecommendationTrajectory recommendationTrajectory_;
     Core::Domain::FourthDimension::Trajectory trajectory_;
 
-    // Persistence Helpers
-    // Persistence Helpers
-    void initializePersistence() {
-        std::filesystem::path discursivePath = projectRoot_ / "discursive_systems.json";
-        if (std::filesystem::exists(discursivePath)) {
-            try {
-                discursiveSystemRepository_->deserialize(discursivePath.string());
-            } catch (...) {
-                // Ignore load errors on init, start fresh or log
-            }
-        }
-
-        std::filesystem::path narrativePath = projectRoot_ / "narrative_history.json";
-        if (std::filesystem::exists(narrativePath)) {
-            try {
-                narrativeSystem_->deserialize(narrativePath.string());
-            } catch (...) {
-                // Ignore load errors on init
-            }
-        }
-
-        std::filesystem::path recPath = projectRoot_ / "recommendation_trajectory.json";
-        if (std::filesystem::exists(recPath)) {
-            try {
-                recommendationTrajectory_.deserialize(recPath.string());
-            } catch (...) {}
-        }
-        
-        std::filesystem::path interpPath = projectRoot_ / "interpretation_memory.json";
-        if (std::filesystem::exists(interpPath)) {
-            try {
-                interpretationRepository_->deserialize(interpPath.string());
-            } catch (...) {}
-        }
-        
-        // Auto-ingest inputs on load
-        scanForIngestion();
-    }
-
-    void autoSaveDiscursive() {
-        try {
-            discursiveSystemRepository_->serialize((projectRoot_ / "discursive_systems.json").string());
-        } catch (...) {}
-    }
-
-    void autoSaveNarrative() {
-         try {
-            narrativeSystem_->serialize((projectRoot_ / "narrative_history.json").string());
-        } catch (...) {}
-    }
-
-    void autoSaveRecommendation() {
-        try {
-            recommendationTrajectory_.serialize((projectRoot_ / "recommendation_trajectory.json").string());
-        } catch (...) {}
-    }
-
-    void autoSaveInterpretation() {
-        try {
-            interpretationRepository_->serialize((projectRoot_ / "interpretation_memory.json").string());
-        } catch (...) {}
-    }
-    
-    // World State Owner
+    // World
     std::unique_ptr<Core::Domain::WorldState> worldState_;
     Ports::IWorldView* worldView_ = nullptr;
+
+    // Extracted services
+    std::unique_ptr<Services::ProjectPersistenceService> persistenceService_;
+    std::unique_ptr<Services::IWIngestionService> ingestionService_;
 };
 
 } // namespace Application

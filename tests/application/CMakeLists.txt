@@ -13,10 +13,15 @@ add_executable(application_mapper_tests
     IngestionSynthesisReportTest.cpp
     ImpactProfileMapperTest.cpp
     IWMapperTest.cpp
+    NarrativeContextAnalyzerTest.cpp
+    SimulationServiceTest.cpp
+    ProjectPersistenceServiceTest.cpp
+    IWIngestionServiceTest.cpp
 )
 target_link_libraries(application_mapper_tests 
     PRIVATE 
     application 
+    core
     observational
     gtest 
     gtest_main
