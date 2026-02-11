@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <mutex>
 
 namespace UI::Panels {
 
@@ -18,8 +19,11 @@ public:
 
     void setSession(Application::Session* session);
     void draw(bool* open);
+    void drawInline(const char* idSuffix = "WorkspaceTrajectory");
 
 private:
+    void drawTabContent();
+
     Application::Session* session_ = nullptr;
 
     // Trajectory setup

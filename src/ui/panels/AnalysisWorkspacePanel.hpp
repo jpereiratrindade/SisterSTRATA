@@ -9,11 +9,27 @@
 
 namespace UI::Panels {
 
+class NarrativePanel;
+class DiscursiveSystemPanel;
+class RecommendationTrajectoryPanel;
+class GlobalSynthesisPanel;
+
 class AnalysisWorkspacePanel {
 public:
     AnalysisWorkspacePanel() = default;
 
     void setSession(Application::Session* session);
+    void setNarrativePanel(NarrativePanel* narrativePanel);
+    void setDiscursivePanel(DiscursiveSystemPanel* discursivePanel);
+    void setRecommendationTrajectoryPanel(RecommendationTrajectoryPanel* recommendationTrajectoryPanel);
+    void setGlobalSynthesisPanel(GlobalSynthesisPanel* globalSynthesisPanel);
+    void setContextToolToggles(bool* showNarrativePanel,
+                               bool* showDiscursivePanel,
+                               bool* showRecommendationPanel,
+                               bool* showGlobalSynthesisPanel,
+                               bool* showTimeline,
+                               bool* showPatchAnalysis);
+    void setWorld3DAvailable(bool available);
     void draw(bool* open);
 
 private:
@@ -73,6 +89,18 @@ private:
     bool graphFocusSelected_ = false;
     std::string selectedGraphNodeId_;
 
+    bool world3DAvailable_ = true;
+    NarrativePanel* narrativePanel_ = nullptr;
+    DiscursiveSystemPanel* discursivePanel_ = nullptr;
+    RecommendationTrajectoryPanel* recommendationTrajectoryPanel_ = nullptr;
+    GlobalSynthesisPanel* globalSynthesisPanel_ = nullptr;
+    bool* showNarrativePanel_ = nullptr;
+    bool* showDiscursivePanel_ = nullptr;
+    bool* showRecommendationPanel_ = nullptr;
+    bool* showGlobalSynthesisPanel_ = nullptr;
+    bool* showTimeline_ = nullptr;
+    bool* showPatchAnalysis_ = nullptr;
+
     void refreshReports();
     void ensureProfiles();
 
@@ -82,6 +110,11 @@ private:
     void drawLeftPanel(float height);
     void drawCenterPanel(float height);
     void drawRightPanel(float height);
+    void drawNarrativeSynthesisWorkspace(float totalHeight);
+    void drawContextAnalysisTab(float totalHeight);
+    void drawDiscursiveContextTab();
+    void drawTrajectoryContextTab();
+    void drawRecommendationContextTab();
 
     void drawNarrativeGraph(const nlohmann::json& graph);
     void drawContextDetails();

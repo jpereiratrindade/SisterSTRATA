@@ -12,6 +12,54 @@ void GlobalSynthesisPanel::setSession(Application::Session* session) {
     session_ = session;
 }
 
+void GlobalSynthesisPanel::drawTabContent(bool shouldOpenAiPopup) {
+    if (!session_) {
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Error: No Session Connected");
+        return;
+    }
+
+    if (shouldOpenAiPopup) {
+        ImGui::OpenPopup("GlobalSynthesisAIResult");
+    }
+    
+    if (ImGui::BeginTabBar("SGSTabs")) {
+        if (ImGui::BeginTabItem("Strategic Audit")) {
+            drawAuditSection();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Synthesis Memory")) {
+            drawHistoryTab();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+
+    // AI Interpretation Modal
+    if (showAiModal_) {
+        UI::Components::InterpretationModal::Draw("GlobalSynthesisAIResult", showAiModal_, lastAiSnapshot_, [this](const auto& snapshot){
+            if (session_) session_->saveInterpretationSnapshotDTO(snapshot);
+        });
+    }
+}
+
+void GlobalSynthesisPanel::drawInline(const char* idSuffix) {
+    bool shouldOpenAiPopup = false;
+    // Ensure AI Modal opens in main thread
+    {
+        std::lock_guard<std::mutex> lock(aiMutex_);
+        if (aiResultReady_) {
+            lastAiSnapshot_ = stagedAiSnapshot_;
+            showAiModal_ = true;
+            shouldOpenAiPopup = true;
+            aiResultReady_ = false;
+        }
+    }
+
+    ImGui::PushID(idSuffix ? idSuffix : "WorkspaceGlobalSynthesis");
+    drawTabContent(shouldOpenAiPopup);
+    ImGui::PopID();
+}
+
 void GlobalSynthesisPanel::draw(bool* open) {
     if (!open || !*open) return;
 
@@ -29,28 +77,9 @@ void GlobalSynthesisPanel::draw(bool* open) {
 
     ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Strategic Global Synthesis (SGS)", open)) {
-        if (shouldOpenAiPopup) {
-            ImGui::OpenPopup("GlobalSynthesisAIResult");
-        }
-        
-        if (ImGui::BeginTabBar("SGSTabs")) {
-            if (ImGui::BeginTabItem("Strategic Audit")) {
-                drawAuditSection();
-                ImGui::EndTabItem();
-            }
-            if (ImGui::BeginTabItem("Synthesis Memory")) {
-                drawHistoryTab();
-                ImGui::EndTabItem();
-            }
-            ImGui::EndTabBar();
-        }
-
-        // AI Interpretation Modal
-        if (showAiModal_) {
-            UI::Components::InterpretationModal::Draw("GlobalSynthesisAIResult", showAiModal_, lastAiSnapshot_, [this](const auto& snapshot){
-                if (session_) session_->saveInterpretationSnapshotDTO(snapshot);
-            });
-        }
+        ImGui::PushID("StandaloneGlobalSynthesis");
+        drawTabContent(shouldOpenAiPopup);
+        ImGui::PopID();
     }
     ImGui::End();
 }

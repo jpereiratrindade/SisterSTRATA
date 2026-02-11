@@ -38,8 +38,12 @@ public:
      * @param open Pointer to boolean controlling window visibility.
      */
     void draw(bool* open);
+    void drawInline(const char* idSuffix = "WorkspaceNarrative");
 
 private:
+    void handlePickingInput();
+    void drawTabContent();
+
     Application::Session* session_ = nullptr;
 
     // -- Edit State --

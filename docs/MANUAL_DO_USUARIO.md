@@ -109,10 +109,26 @@ As ferramentas de simulação geram cenários hipotéticos baseados em modelos c
 
 ---
 
-## 6. Assistência Cognitiva e IA (Painel "Discursive System")
+## 6. Assistência Cognitiva e IA (Analysis Workspace)
 
 O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como um "Copiloto Científico".
 > **Manual Técnico**: [Integração Qwen](TECHNICAL_MANUAL_QWEN_INTEGRATION.md) | [Arquitetura Vetorial](Arquitetura_Vetorial_Hipoteses.md)
+
+### Acesso aos contextos observacionais
+A entrada canônica dos contextos é:
+*   **View > Analysis Workspace**
+
+Dentro do Workspace:
+*   **Contexto Narrativo**:
+    *   `Workspace Synthesis`
+    *   `Narrative Observation Context` (abas: `Observation Log`, `Epistemic Memory`, `Context Graph`)
+*   **Contexto Discursivo**:
+    *   abas `Ingestion`, `Registered History`, `Epistemic Memory`
+*   **Trajectory**:
+    *   abas `Trajectory`, `Snapshots`, `Epistemic Memory`
+    *   seção auxiliar `Ações 3D` (Fourth Dimension / Patch Analysis), quando disponível
+*   **Recomendações**:
+    *   `Strategic Global Synthesis` (abas `Strategic Audit`, `Synthesis Memory`)
 
 *   **Ingestão de Sistema Discursivo (Aba "Ingestion")**:
     *   **Ask Qwen to Propose System**: Sintetiza um rascunho estruturado a partir dos **Sistemas Discursivos registrados** (ingest). Ideal para consolidar problemas, ações, mecanismos e efeitos já declarados.
@@ -122,7 +138,7 @@ O SisterSTRATA integra modelos de linguagem locais (Ollama/Qwen) para atuar como
 *   **Configuração**: O sistema detecta automaticamente o modelo mais forte disponível (ex: `qwen2.5:14b`).
 
 ### Escopo da análise por seleção de registros
-Para evitar análises amplas demais, os painéis contextuais permitem restringir o escopo enviado ao Qwen:
+Para evitar análises amplas demais, os painéis contextuais (dentro do Analysis Workspace) permitem restringir o escopo enviado ao Qwen:
 *   **Discursive**: marque itens na coluna `Sel` e mantenha `Use selected records only`.
 *   **Narrative**: marque itens na coluna `Sel` e mantenha `Use selected observations only`.
 *   **Recommendation**: marque itens na coluna `Sel` e mantenha `Use selected snapshots only`.
@@ -130,7 +146,7 @@ Para evitar análises amplas demais, os painéis contextuais permitem restringir
 Se o modo de seleção estiver ativo e nenhum item for marcado, a análise não é executada e o sistema informa seleção vazia.
 
 ### Exportação de avaliações LLM em Markdown
-No histórico de interpretações (aba de memória de cada contexto):
+No histórico de interpretações (aba de memória de cada contexto no Workspace):
 *   **Export Selected .md**: exporta apenas snapshots marcados na tabela.
 *   **Export Visible .md**: exporta todos os snapshots atualmente visíveis no contexto.
 

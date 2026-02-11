@@ -17,8 +17,11 @@ public:
 
     void setSession(Application::Session* session);
     void draw(bool* open);
+    void drawInline(const char* idSuffix = "WorkspaceGlobalSynthesis");
 
 private:
+    void drawTabContent(bool shouldOpenAiPopup);
+
     Application::Session* session_ = nullptr;
 
     // AI Analysis State

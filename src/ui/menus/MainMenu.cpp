@@ -98,18 +98,6 @@ void MainMenu::draw() {
             if (ImGui::MenuItem("Terrain Simulator (Procedural)")) {
                 showTerrainGenerator = true;
             }
-            if (ImGui::MenuItem("Narrative Observation Context")) {
-                showNarrativePanel = true;
-            }
-            if (ImGui::MenuItem("Discursive System Context")) {
-                showDiscursivePanel = true;
-            }
-            if (ImGui::MenuItem("Recommendation Trajectory Context")) {
-                showRecommendationPanel = true;
-            }
-            if (ImGui::MenuItem("Strategic Global Synthesis")) {
-                if (showGlobalSynthesis) *showGlobalSynthesis = true;
-            }
             ImGui::Separator();
             if (ImGui::MenuItem("Patch Analysis (CSV)")) {
                 showPatchAnalysis = true;

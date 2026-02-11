@@ -44,19 +44,24 @@ Este guia fornece exemplos "mão na massa" para testar as principais funcionalid
 ## Exemplo 3: Sistemas Complexos (JSON)
 **Objetivo**: Carregar estruturas cognitivas avançadas (NOC, DSC, Trajetórias).
 
+Antes de iniciar:
+*   Abra `View > Analysis Workspace`.
+*   Use as abas `Contexto Narrativo`, `Contexto Discursivo`, `Trajectory` e `Recomendacoes`.
+
 1.  **Narrative Observation Context (NOC)**:
     *   Arquivo: `examples/data_samples/example_narrative_observation.json`
     *   Este arquivo define uma observação narrativa qualitativa, incluindo autor, intenção e metáfora ("A chuva não é um sinal para voltar ao normal.").
+    *   No Workspace: `Contexto Narrativo > Narrative Observation Context`.
 
 2.  **Discursive System Context (DSC)**:
     *   Arquivo: `examples/data_samples/example_discursive_system.json`
     *   Define um sistema de discurso completo com Declaração de Problemas, Ações e Mecanismos Alegados (baseado na lógica Embrapa 2025).
+    *   No Workspace: `Contexto Discursivo`.
 
 3.  **Trajetória de Recomendação**:
     *   Arquivo: `examples/data_samples/example_recommendation_trajectory.json`
     *   Contém uma série temporal de recomendações ("Janela de Oportunidade Pós-seca").
-
-*Para carregar estes arquivos em versões futuras da UI, use os botões "Load Context" nos respectivos painéis.*
+    *   No Workspace: `Trajectory` (e síntese em `Recomendacoes`).
 
 ---
 

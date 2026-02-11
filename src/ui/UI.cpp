@@ -379,6 +379,17 @@ void UserInterface::draw(const Application::DTO::UIData& data) {
     showAnalysisWorkspacePanel_ = mainMenu_.showAnalysisWorkspace;
 
     settingsPanel_.setMultiViewportControls(&multiViewportRequested_, &multiViewportSupported_, &multiViewportActive_);
+    analysisWorkspacePanel_.setWorld3DAvailable(isVulkan_);
+    analysisWorkspacePanel_.setNarrativePanel(&narrativePanel_);
+    analysisWorkspacePanel_.setDiscursivePanel(&discursiveSystemPanel_);
+    analysisWorkspacePanel_.setRecommendationTrajectoryPanel(&recommendationTrajectoryPanel_);
+    analysisWorkspacePanel_.setGlobalSynthesisPanel(&globalSynthesisPanel_);
+    analysisWorkspacePanel_.setContextToolToggles(&mainMenu_.showNarrativePanel,
+                                                  &mainMenu_.showDiscursivePanel,
+                                                  &mainMenu_.showRecommendationPanel,
+                                                  &showGlobalSynthesisPanel,
+                                                  &mainMenu_.showTimeline,
+                                                  &mainMenu_.showPatchAnalysis);
 
     // 3. Draw Panels (Logic controlled by MainMenu state)
     analysisPanel_.draw(&mainMenu_.showAnalysisReport);

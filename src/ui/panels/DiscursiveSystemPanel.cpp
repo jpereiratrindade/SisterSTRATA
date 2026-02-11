@@ -66,6 +66,84 @@ void DiscursiveSystemPanel::syncIWMetadataBuffersToMap() {
     sync("iw.sourceProfile", iwSourceProfile_);
 }
 
+void DiscursiveSystemPanel::drawTabContent() {
+    if (ImGui::BeginTabBar("DiscursiveTabs")) {
+
+        if (ImGui::BeginTabItem("Ingestion", nullptr, targetTab_ == 0 ? ImGuiTabItemFlags_SetSelected : 0)) {
+            // Check for Deferred AI Results (Thread-safe UI update) inside the tab scope
+            {
+                std::lock_guard<std::mutex> lock(aiMutex_);
+                if (aiResultReady_) {
+                    lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy to UI thread
+
+                    // Check for error in output
+                    if (lastAiSnapshot_.aiOutput.rfind("Error:", 0) == 0) {
+                        ImGui::OpenPopup("AIError");
+                    } else {
+                        ImGui::OpenPopup("AI Discursive Proposal");
+                    }
+                    aiResultReady_ = false;
+                }
+            }
+
+            drawIngestionForm();
+
+            // AI Result Modal (Matches the ID used in OpenPopup inside tab)
+            UI::Components::InterpretationModal::Draw("AI Discursive Proposal", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
+                session_->saveInterpretationSnapshotDTO(snap);
+            });
+
+            if (ImGui::BeginPopupModal("AIError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::TextColored(ImVec4(1, 0, 0, 1), "AI Analysis Failed");
+                ImGui::Separator();
+                ImGui::TextWrapped("%s", lastAiSnapshot_.aiOutput.c_str());
+                if (ImGui::Button("Close")) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+
+            ImGui::Separator();
+            drawSystemList();
+
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Registered History", nullptr, targetTab_ == 1 ? ImGuiTabItemFlags_SetSelected : 0)) {
+            drawSystemList();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Epistemic Memory", nullptr, targetTab_ == 2 ? ImGuiTabItemFlags_SetSelected : 0)) {
+            auto snapshots = session_->getInterpretationSnapshots();
+            std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> filtered;
+
+            // Filter for Discursive Context
+            std::copy_if(snapshots.begin(), snapshots.end(), std::back_inserter(filtered), [](const auto& s){
+                return s.intent == "discursive_draft" || s.intent == "coherence_check";
+            });
+
+            std::reverse(filtered.begin(), filtered.end());
+            UI::Components::InterpretationHistory::Draw(filtered);
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+
+        targetTab_ = -1; // Reset selection
+    }
+}
+
+void DiscursiveSystemPanel::drawInline(const char* idSuffix) {
+    if (!session_) {
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Error: No Session Connected");
+        return;
+    }
+
+    ImGui::PushID(idSuffix ? idSuffix : "WorkspaceDiscursive");
+    drawTabContent();
+    ImGui::PopID();
+}
+
 void DiscursiveSystemPanel::draw(bool* open) {
     if (!open || !*open) return;
 
@@ -77,70 +155,9 @@ void DiscursiveSystemPanel::draw(bool* open) {
             return;
         }
 
-        if (ImGui::BeginTabBar("DiscursiveTabs")) {
-            
-            if (ImGui::BeginTabItem("Ingestion", nullptr, targetTab_ == 0 ? ImGuiTabItemFlags_SetSelected : 0)) {
-                // Check for Deferred AI Results (Thread-safe UI update) inside the tab scope
-                {
-                    std::lock_guard<std::mutex> lock(aiMutex_);
-                    if (aiResultReady_) {
-                        lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy to UI thread
-                        
-                        // Check for error in output
-                        if (lastAiSnapshot_.aiOutput.rfind("Error:", 0) == 0) {
-                            ImGui::OpenPopup("AIError");
-                        } else {
-                            ImGui::OpenPopup("AI Discursive Proposal");
-                        }
-                        aiResultReady_ = false;
-                    }
-                }
-
-                drawIngestionForm();
-                
-                // AI Result Modal (Matches the ID used in OpenPopup inside tab)
-                UI::Components::InterpretationModal::Draw("AI Discursive Proposal", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
-                    session_->saveInterpretationSnapshotDTO(snap);
-                });
-
-                if (ImGui::BeginPopupModal("AIError", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-                    ImGui::TextColored(ImVec4(1, 0, 0, 1), "AI Analysis Failed");
-                    ImGui::Separator();
-                    ImGui::TextWrapped("%s", lastAiSnapshot_.aiOutput.c_str());
-                    if (ImGui::Button("Close")) {
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndPopup();
-                }
-
-                ImGui::Separator();
-                drawSystemList();
-
-                ImGui::EndTabItem();
-            }
-
-            if (ImGui::BeginTabItem("Registered History", nullptr, targetTab_ == 1 ? ImGuiTabItemFlags_SetSelected : 0)) {
-                drawSystemList();
-                ImGui::EndTabItem();
-            }
-
-            if (ImGui::BeginTabItem("Epistemic Memory", nullptr, targetTab_ == 2 ? ImGuiTabItemFlags_SetSelected : 0)) {
-                auto snapshots = session_->getInterpretationSnapshots();
-                std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> filtered;
-
-                // Filter for Discursive Context
-                std::copy_if(snapshots.begin(), snapshots.end(), std::back_inserter(filtered), [](const auto& s){
-                    return s.intent == "discursive_draft" || s.intent == "coherence_check";
-                });
-
-                std::reverse(filtered.begin(), filtered.end());
-                UI::Components::InterpretationHistory::Draw(filtered);
-                ImGui::EndTabItem();
-            }
-            ImGui::EndTabBar();
-
-            targetTab_ = -1; // Reset selection
-        }
+        ImGui::PushID("StandaloneDiscursive");
+        drawTabContent();
+        ImGui::PopID();
     }
     ImGui::End();
 }

@@ -1,4 +1,8 @@
 #include "AnalysisWorkspacePanel.hpp"
+#include "NarrativePanel.hpp"
+#include "DiscursiveSystemPanel.hpp"
+#include "RecommendationTrajectoryPanel.hpp"
+#include "GlobalSynthesisPanel.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <cctype>
@@ -82,6 +86,40 @@ void AnalysisWorkspacePanel::setSession(Application::Session* session) {
     contextProfiles_.clear();
 }
 
+void AnalysisWorkspacePanel::setNarrativePanel(NarrativePanel* narrativePanel) {
+    narrativePanel_ = narrativePanel;
+}
+
+void AnalysisWorkspacePanel::setDiscursivePanel(DiscursiveSystemPanel* discursivePanel) {
+    discursivePanel_ = discursivePanel;
+}
+
+void AnalysisWorkspacePanel::setRecommendationTrajectoryPanel(RecommendationTrajectoryPanel* recommendationTrajectoryPanel) {
+    recommendationTrajectoryPanel_ = recommendationTrajectoryPanel;
+}
+
+void AnalysisWorkspacePanel::setGlobalSynthesisPanel(GlobalSynthesisPanel* globalSynthesisPanel) {
+    globalSynthesisPanel_ = globalSynthesisPanel;
+}
+
+void AnalysisWorkspacePanel::setContextToolToggles(bool* showNarrativePanel,
+                                                   bool* showDiscursivePanel,
+                                                   bool* showRecommendationPanel,
+                                                   bool* showGlobalSynthesisPanel,
+                                                   bool* showTimeline,
+                                                   bool* showPatchAnalysis) {
+    showNarrativePanel_ = showNarrativePanel;
+    showDiscursivePanel_ = showDiscursivePanel;
+    showRecommendationPanel_ = showRecommendationPanel;
+    showGlobalSynthesisPanel_ = showGlobalSynthesisPanel;
+    showTimeline_ = showTimeline;
+    showPatchAnalysis_ = showPatchAnalysis;
+}
+
+void AnalysisWorkspacePanel::setWorld3DAvailable(bool available) {
+    world3DAvailable_ = available;
+}
+
 void AnalysisWorkspacePanel::draw(bool* open) {
     if (!open || !*open) return;
 
@@ -111,28 +149,142 @@ void AnalysisWorkspacePanel::draw(bool* open) {
         ImGui::TextDisabled("Analysis Workspace (observational, read-only)");
         ImGui::Separator();
 
-        const float spacing = ImGui::GetStyle().ItemSpacing.x;
-        const float totalWidth = ImGui::GetContentRegionAvail().x;
         const float totalHeight = ImGui::GetContentRegionAvail().y;
-        const float leftWidth = std::max(260.0f, totalWidth * 0.26f);
-        const float rightWidth = std::max(280.0f, totalWidth * 0.26f);
-        const float centerWidth = std::max(360.0f, totalWidth - leftWidth - rightWidth - spacing * 2.0f);
-
-        ImGui::BeginChild("AnalysisLeftPanel", ImVec2(leftWidth, totalHeight), true);
-        drawLeftPanel(totalHeight);
-        ImGui::EndChild();
-
-        ImGui::SameLine();
-        ImGui::BeginChild("AnalysisCenterPanel", ImVec2(centerWidth, totalHeight), true);
-        drawCenterPanel(totalHeight);
-        ImGui::EndChild();
-
-        ImGui::SameLine();
-        ImGui::BeginChild("AnalysisRightPanel", ImVec2(0.0f, totalHeight), true);
-        drawRightPanel(totalHeight);
-        ImGui::EndChild();
+        if (ImGui::BeginTabBar("AnalysisWorkspaceTabs")) {
+            if (ImGui::BeginTabItem("Contexto Narrativo")) {
+                drawContextAnalysisTab(totalHeight);
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Contexto Discursivo")) {
+                drawDiscursiveContextTab();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Trajectory")) {
+                drawTrajectoryContextTab();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Recomendacoes")) {
+                drawRecommendationContextTab();
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
     }
     ImGui::End();
+}
+
+void AnalysisWorkspacePanel::drawContextAnalysisTab(float totalHeight) {
+    if (ImGui::BeginTabBar("NarrativeWorkspaceSubTabs")) {
+        if (ImGui::BeginTabItem("Workspace Synthesis")) {
+            drawNarrativeSynthesisWorkspace(totalHeight);
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Narrative Observation Context")) {
+            if (narrativePanel_) {
+                narrativePanel_->drawInline("WorkspaceNarrativeContext");
+            } else {
+                ImGui::TextDisabled("Narrative panel unavailable.");
+            }
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
+}
+
+void AnalysisWorkspacePanel::drawNarrativeSynthesisWorkspace(float totalHeight) {
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    const float totalWidth = ImGui::GetContentRegionAvail().x;
+    const float leftWidth = std::max(260.0f, totalWidth * 0.26f);
+    const float rightWidth = std::max(280.0f, totalWidth * 0.26f);
+    const float centerWidth = std::max(360.0f, totalWidth - leftWidth - rightWidth - spacing * 2.0f);
+
+    ImGui::BeginChild("AnalysisLeftPanel", ImVec2(leftWidth, totalHeight), true);
+    drawLeftPanel(totalHeight);
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+    ImGui::BeginChild("AnalysisCenterPanel", ImVec2(centerWidth, totalHeight), true);
+    drawCenterPanel(totalHeight);
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+    ImGui::BeginChild("AnalysisRightPanel", ImVec2(0.0f, totalHeight), true);
+    drawRightPanel(totalHeight);
+    ImGui::EndChild();
+}
+
+void AnalysisWorkspacePanel::drawDiscursiveContextTab() {
+    if (discursivePanel_) {
+        discursivePanel_->drawInline("WorkspaceDiscursiveContext");
+        return;
+    }
+
+    ImGui::TextDisabled("Discursive panel unavailable.");
+}
+
+void AnalysisWorkspacePanel::drawTrajectoryContextTab() {
+    if (recommendationTrajectoryPanel_) {
+        recommendationTrajectoryPanel_->drawInline("WorkspaceTrajectoryContext");
+    } else {
+        ImGui::TextDisabled("Recommendation trajectory panel unavailable.");
+    }
+
+    ImGui::Separator();
+    if (ImGui::CollapsingHeader("Acoes 3D auxiliares", ImGuiTreeNodeFlags_DefaultOpen)) {
+        size_t snapshotCount = 0;
+        if (session_) {
+            snapshotCount = session_->getRecommendationTrajectoryDTO().snapshots.size();
+        }
+        ImGui::Text("Snapshots na trajectory: %zu", snapshotCount);
+
+        if (ImGui::Button("Abrir Janela Trajectory Context") && showRecommendationPanel_) {
+            *showRecommendationPanel_ = true;
+        }
+
+        ImGui::Spacing();
+        if (!world3DAvailable_) {
+            ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.2f, 1.0f), "3D indisponivel neste modo de execucao.");
+            ImGui::BeginDisabled();
+        }
+        if (ImGui::Button("Abrir Fourth Dimension") && showTimeline_) {
+            *showTimeline_ = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Abrir Patch Analysis (CSV)") && showPatchAnalysis_) {
+            *showPatchAnalysis_ = true;
+        }
+        if (!world3DAvailable_) {
+            ImGui::EndDisabled();
+        }
+
+        ImGui::Spacing();
+        ImGui::BulletText("3D pode permanecer como suporte");
+        ImGui::BulletText("Dependencia explicita: UI/Application -> World3DService");
+    }
+}
+
+void AnalysisWorkspacePanel::drawRecommendationContextTab() {
+    if (globalSynthesisPanel_) {
+        globalSynthesisPanel_->drawInline("WorkspaceRecommendations");
+    } else {
+        ImGui::TextDisabled("Global synthesis panel unavailable.");
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    if (ImGui::Button("Abrir Janela Strategic Global Synthesis") && showGlobalSynthesisPanel_) {
+        *showGlobalSynthesisPanel_ = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Abrir Janela Contexto Narrativo") && showNarrativePanel_) {
+        *showNarrativePanel_ = true;
+    }
+
+    ImGui::Spacing();
+    ImGui::BulletText("Sem inferencia causal automatica");
+    ImGui::BulletText("Recomendacoes permanecem no nivel observacional/interpretativo");
 }
 
 void AnalysisWorkspacePanel::refreshReports() {

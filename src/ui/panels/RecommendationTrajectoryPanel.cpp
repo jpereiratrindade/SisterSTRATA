@@ -30,6 +30,70 @@ void RecommendationTrajectoryPanel::setSession(Application::Session* session) {
     session_ = session;
 }
 
+void RecommendationTrajectoryPanel::drawTabContent() {
+    if (ImGui::BeginTabBar("RecommendationTabs")) {
+
+        if (ImGui::BeginTabItem("Trajectory", nullptr, targetTab_ == 0 ? ImGuiTabItemFlags_SetSelected : 0)) {
+            // Check for Deferred AI Results (Thread-safe UI update)
+            {
+                std::lock_guard<std::mutex> lock(aiMutex_);
+                if (aiResultReady_) {
+                    lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy
+                    ImGui::OpenPopup("AI Recommendation Analysis");
+                    aiResultReady_ = false;
+                }
+            }
+
+            drawTrajectoryConfig();
+
+            ImGui::Separator();
+            drawSnapshotList();
+
+            // AI Modal Rendering
+            UI::Components::InterpretationModal::Draw("AI Recommendation Analysis", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
+                session_->saveInterpretationSnapshotDTO(snap);
+            });
+
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Snapshots", nullptr, targetTab_ == 1 ? ImGuiTabItemFlags_SetSelected : 0)) {
+            drawSnapshotForm();
+            ImGui::Separator();
+            drawSnapshotList();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Epistemic Memory", nullptr, targetTab_ == 2 ? ImGuiTabItemFlags_SetSelected : 0)) {
+            auto snapshots = session_->getInterpretationSnapshots();
+            std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> filtered;
+
+            // Filter for Recommendation Context
+            std::copy_if(snapshots.begin(), snapshots.end(), std::back_inserter(filtered), [](const auto& s){
+                return s.intent == "trajectory_reading";
+            });
+
+            std::reverse(filtered.begin(), filtered.end());
+            UI::Components::InterpretationHistory::Draw(filtered);
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+
+        targetTab_ = -1; // Reset after one frame of "Selection"
+    }
+}
+
+void RecommendationTrajectoryPanel::drawInline(const char* idSuffix) {
+    if (!session_) {
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Error: No Session Connected");
+        return;
+    }
+
+    ImGui::PushID(idSuffix ? idSuffix : "WorkspaceTrajectory");
+    drawTabContent();
+    ImGui::PopID();
+}
+
 void RecommendationTrajectoryPanel::draw(bool* open) {
     if (!open || !*open) return;
 
@@ -41,56 +105,9 @@ void RecommendationTrajectoryPanel::draw(bool* open) {
             return;
         }
 
-        if (ImGui::BeginTabBar("RecommendationTabs")) {
-            
-            if (ImGui::BeginTabItem("Trajectory", nullptr, targetTab_ == 0 ? ImGuiTabItemFlags_SetSelected : 0)) {
-                // Check for Deferred AI Results (Thread-safe UI update)
-                {
-                    std::lock_guard<std::mutex> lock(aiMutex_);
-                    if (aiResultReady_) {
-                        lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy
-                        ImGui::OpenPopup("AI Recommendation Analysis");
-                        aiResultReady_ = false;
-                    }
-                }
-                
-                drawTrajectoryConfig();
-                
-                ImGui::Separator();
-                drawSnapshotList();
-                
-                // AI Modal Rendering
-                UI::Components::InterpretationModal::Draw("AI Recommendation Analysis", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
-                    session_->saveInterpretationSnapshotDTO(snap);
-                });
-
-                ImGui::EndTabItem();
-            }
-
-            if (ImGui::BeginTabItem("Snapshots", nullptr, targetTab_ == 1 ? ImGuiTabItemFlags_SetSelected : 0)) {
-                drawSnapshotForm();
-                ImGui::Separator();
-                drawSnapshotList();
-                ImGui::EndTabItem();
-            }
-
-            if (ImGui::BeginTabItem("Epistemic Memory", nullptr, targetTab_ == 2 ? ImGuiTabItemFlags_SetSelected : 0)) {
-                auto snapshots = session_->getInterpretationSnapshots();
-                std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> filtered;
-
-                // Filter for Recommendation Context
-                std::copy_if(snapshots.begin(), snapshots.end(), std::back_inserter(filtered), [](const auto& s){
-                    return s.intent == "trajectory_reading";
-                });
-
-                std::reverse(filtered.begin(), filtered.end());
-                UI::Components::InterpretationHistory::Draw(filtered);
-                ImGui::EndTabItem();
-            }
-            ImGui::EndTabBar();
-            
-            targetTab_ = -1; // Reset after one frame of "Selection"
-        }
+        ImGui::PushID("StandaloneTrajectory");
+        drawTabContent();
+        ImGui::PopID();
     }
     ImGui::End();
 }

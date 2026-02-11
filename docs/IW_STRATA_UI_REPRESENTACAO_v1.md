@@ -289,6 +289,14 @@ Higiene de ingestao:
 - logs por contexto sao emitidos somente quando `mapped > 0` ou `skipped > 0`
 
 UI:
+- entrada canônica dos contextos: `View -> Analysis Workspace`
+- `Tools` permanece para funcionalidades operacionais/3D; contextos observacionais ficam no Workspace
+- Contexto Narrativo no Workspace com subabas:
+  - `Workspace Synthesis`
+  - `Narrative Observation Context` (inclui `Observation Log`, `Epistemic Memory`, `Context Graph`)
+- Contexto Discursivo no Workspace com abas de ingestao, historico e memoria epistemica
+- Trajectory no Workspace com abas de trajectory/snapshots/memoria e acoes 3D auxiliares explicitas
+- Recomendacoes no Workspace com `Strategic Global Synthesis` (auditoria e memoria)
 - Narrative: editor de metadata (`key/value`) + campos de evidencia (`iw.evidenceSnippet`, `iw.sourceSection`, `iw.pageRange`)
 - Narrative: coluna de metadata na grade com tooltip de detalhe
 - Narrative: selecao de observacoes para analise Qwen (`usar selecionados`)

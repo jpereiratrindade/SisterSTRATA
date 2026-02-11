@@ -8,6 +8,7 @@ SisterSTRATA é um instrumento científico digital projetado para a simulação 
 ## Principais Funcionalidades (v1.9.3)
 
 *   **Quarta Dimensão (Resiliência)**: Sistema de análise temporal que permite navegar por trajetórias históricas e simular futuros possíveis.
+*   **Analysis Workspace (Contextos Observacionais)**: Espaço dedicado para Contexto Narrativo, Discursivo, Trajectory e Recomendações, separado das operações 3D.
 *   **Simulação de Cenários**: Ferramentas integradas para projetar **Estabilidade**, **Fragmentação** de habitat e **Desmatamento**, com visualização imediata de impacto (Ghost Mode).
 *   **Trajectory Impact Profile (AI)**: O sistema analisa todo o histórico de mudanças do território para gerar perfis de impacto detalhados, identificando tendências de degradação estrutural e desvios de resiliência.
 *   **Visualização Híbrida**: Renderização avançada de Nuvens de Pontos (LIDAR/CSV) e Terrenos Sólidos (Mesh/OBJ) com mapeamento espacial automático de dados científicos ("Spatial Mapping").

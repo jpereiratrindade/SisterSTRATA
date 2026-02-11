@@ -103,10 +103,7 @@ void NarrativePanel::setSession(Application::Session* session) {
     session_ = session;
 }
 
-void NarrativePanel::draw(bool* open) {
-    if (!open || !*open) return;
-
-
+void NarrativePanel::handlePickingInput() {
     // --- Picking Logic ---
     if (pickingMode_) {
         // Change cursor to indicate picking (optional, ImGui supports this)
@@ -137,62 +134,85 @@ void NarrativePanel::draw(bool* open) {
             pickingMode_ = false;
         }
     }
+}
+
+void NarrativePanel::drawTabContent() {
+    if (ImGui::BeginTabBar("NarrativeTabs")) {
+
+        if (ImGui::BeginTabItem("Observation Log")) {
+            // Check for Deferred AI Results (Thread-safe UI update)
+            {
+                std::lock_guard<std::mutex> lock(aiMutex_);
+                if (aiResultReady_) {
+                    lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy
+                    ImGui::OpenPopup("AI Interpretation Result");
+                    aiResultReady_ = false;
+                }
+            }
+
+            drawIngestionForm();
+            ImGui::Separator();
+            drawObservationList();
+
+            // -- AI Modal Rendering --
+            UI::Components::InterpretationModal::Draw("AI Interpretation Result", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
+                session_->saveInterpretationSnapshotDTO(snap);
+            });
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Epistemic Memory")) {
+            auto snapshots = session_->getInterpretationSnapshots();
+            std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> filtered;
+
+            // Filter for Narrative Context (Theme Analysis)
+            std::copy_if(snapshots.begin(), snapshots.end(), std::back_inserter(filtered), [](const auto& s){
+                return s.intent == "theme_analysis";
+            });
+
+            std::reverse(filtered.begin(), filtered.end());
+            UI::Components::InterpretationHistory::Draw(filtered);
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Context Graph")) {
+            drawNarrativeGraph();
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
+}
+
+void NarrativePanel::drawInline(const char* idSuffix) {
+    if (!session_) {
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Error: No Session Connected");
+        return;
+    }
+
+    handlePickingInput();
+    ImGui::PushID(idSuffix ? idSuffix : "WorkspaceNarrative");
+    drawTabContent();
+    ImGui::PopID();
+}
+
+void NarrativePanel::draw(bool* open) {
+    if (!open || !*open) return;
 
     // Basic Window Setup
+    handlePickingInput();
     ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Narrative Observation Context", open)) {
-        
+
         if (!session_) {
             ImGui::TextColored(ImVec4(1, 0, 0, 1), "Error: No Session Connected");
             ImGui::End();
             return;
         }
 
-        if (ImGui::BeginTabBar("NarrativeTabs")) {
-            
-            if (ImGui::BeginTabItem("Observation Log")) {
-                // Check for Deferred AI Results (Thread-safe UI update)
-                {
-                    std::lock_guard<std::mutex> lock(aiMutex_);
-                    if (aiResultReady_) {
-                        lastAiSnapshot_ = stagedAiSnapshot_; // Safe copy
-                        ImGui::OpenPopup("AI Interpretation Result");
-                        aiResultReady_ = false;
-                    }
-                }
-                
-                drawIngestionForm();
-                ImGui::Separator();
-                drawObservationList();
-
-                // -- AI Modal Rendering --
-                UI::Components::InterpretationModal::Draw("AI Interpretation Result", showAiModal_, lastAiSnapshot_, [this](const auto& snap) {
-                    session_->saveInterpretationSnapshotDTO(snap);
-                });
-                ImGui::EndTabItem();
-            }
-
-            if (ImGui::BeginTabItem("Epistemic Memory")) {
-                auto snapshots = session_->getInterpretationSnapshots();
-                std::vector<Application::DTO::Cognitive::InterpretationSnapshotDTO> filtered;
-                
-                // Filter for Narrative Context (Theme Analysis)
-                std::copy_if(snapshots.begin(), snapshots.end(), std::back_inserter(filtered), [](const auto& s){
-                    return s.intent == "theme_analysis";
-                });
-                
-                std::reverse(filtered.begin(), filtered.end());
-                UI::Components::InterpretationHistory::Draw(filtered);
-                ImGui::EndTabItem();
-            }
-
-            if (ImGui::BeginTabItem("Context Graph")) {
-                drawNarrativeGraph();
-                ImGui::EndTabItem();
-            }
-
-            ImGui::EndTabBar();
-        }
+        ImGui::PushID("StandaloneNarrative");
+        drawTabContent();
+        ImGui::PopID();
     }
     ImGui::End();
 }
