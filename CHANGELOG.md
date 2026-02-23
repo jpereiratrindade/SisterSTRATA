@@ -1,5 +1,35 @@
 # Changelog
 
+## [v1.10.0] - 2026-02-23
+### Added
+- **Infrastructure Domain v0.1**: Introduced Shared Energy + Infrastructure orchestration model with new core domain modules:
+  - `src/core/domain/energy/*`
+  - `src/core/domain/identity/*`
+  - `src/core/domain/soil/*`
+  - `src/core/domain/infrastructure/*`
+  - `src/core/domain/simulation/*`
+- **Operational Energy Profiles**: Added profile-based demand/consumption breakdown for Identity (FocinhoTrack aggregate) and SETO aggregates.
+- **Configurable Infrastructure Run**: Added `InfrastructureEvaluationConfig` and overloaded `Session::runInfrastructureResilienceSimulation(...)` for baseline and custom FT runs.
+- **FT Builder in UI**: Added component-based FT configuration workflow inside `AnalysisWorkspacePanel` (compute/sensor/radio, events/day, node count cost estimate) with direct simulation submission.
+- **Infrastructure Tests**:
+  - Added `InfrastructureResilienceRunTest` coverage for artifact generation and custom FT config ingestion.
+  - Added core executable test for infrastructure flow (`TestInfrastructure.cpp`).
+- **Documentation**:
+  - Added `docs/INFRASTRUCTURE_RESILIENCE_IMPLEMENTATION_v0_1.md`.
+  - Added infrastructure/DDD links to `docs/README.md`.
+  - Added DDD reference docs at repo root:
+    - `STRATA_DDD_InfrastructureLayer_v0_1.md`
+    - `STRATA_DDD_SharedEnergyContext_v0_1.md`
+    - `STRATA_DDD_IdentityResilienceContext_v0_1.md`
+    - `STRATA_ScientificInstrumentationContext_DDD_MVP.md`
+
+### Fixed
+- **CMake target collision**: Renamed duplicate test target in `tests/core/CMakeLists.txt` to `core_infrastructure_tests`, resolving CMP0002 conflict against `tests/infrastructure`.
+
+### Changed
+- **Infrastructure CSV schema**: Added explicit requested/allocated/consumed columns for Identity and SETO in `EnvironmentController`.
+- **Core build composition**: Updated `src/core/CMakeLists.txt` to compile infrastructure resilience modules.
+
 ## [v1.9.9] - 2026-02-11
 ### Refactored
 - **NarrativeGraphWidget**: Extracted shared graph rendering logic from `NarrativePanel` and `AnalysisWorkspacePanel` into a reusable component, eliminating ~770 lines of duplicated code.

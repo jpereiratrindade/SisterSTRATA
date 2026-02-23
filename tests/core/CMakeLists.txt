@@ -39,3 +39,9 @@ add_executable(slope_fix_tests
 )
 target_link_libraries(slope_fix_tests PRIVATE core)
 add_test(NAME CoreSlopeFixTest COMMAND slope_fix_tests)
+
+add_executable(core_infrastructure_tests
+    TestInfrastructure.cpp
+)
+target_link_libraries(core_infrastructure_tests PRIVATE core)
+add_test(NAME CoreInfrastructureTest COMMAND core_infrastructure_tests)

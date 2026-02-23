@@ -2,6 +2,8 @@
 
 #include "core/domain/Workspace.hpp"
 #include "core/domain/fourth_dimension/Trajectory.hpp"
+#include "core/domain/identity/IdentityNode.hpp"
+#include "core/domain/soil/SoilMonitorNode.hpp"
 #include "application/ports/ILLMService.hpp"
 #include "application/dtos/DiscursiveSystemDTO.hpp"
 #include "application/dtos/RecommendationSnapshotDTO.hpp"
@@ -36,6 +38,29 @@
 #include <nlohmann/json.hpp>
 
 namespace Application {
+
+struct InfrastructureEvaluationConfig {
+    int days{365};
+    double identityEventsPerAnimalPerDay{20.0};
+    strata::domain::identity::IdentityEnergyProfile identityProfile{
+        .boot_wh_per_day = 0.5,
+        .idle_wh_per_day = 4.5,
+        .sensing_wh_per_event = 1.2,
+        .processing_wh_per_event = 0.6,
+        .communication_wh_per_event = 0.2
+    };
+    strata::domain::soil::SoilEnergyProfile soilProfile{
+        .boot_wh_per_day = 0.5,
+        .idle_wh_per_day = 7.5,
+        .sensing_base_wh_per_day = 1.5,
+        .communication_base_wh_per_day = 0.5,
+        .dynamic_measurement_max_wh = 40.0
+    };
+    int ftNodeCount{1};
+    double ftHardwareCostUsd{0.0};
+    nlohmann::json ftComponentSelection{nlohmann::json::array()};
+    std::string trigger{"analysis_workspace_manual_run"};
+};
 
 /**
  * @brief Application Session — thin facade delegating to dedicated services.
@@ -403,6 +428,14 @@ public:
     void simulateCondition(SimulationType type) {
         Services::SimulationService::simulateCondition(type, *workspace_, trajectory_);
     }
+
+    /**
+     * @brief Runs InfrastructureLayer v0.1 resilience simulation and writes report artifacts.
+     * @param days Number of discrete daily steps.
+     * @return Path to latest JSON report file, or empty on failure.
+     */
+    std::string runInfrastructureResilienceSimulation(int days = 365);
+    std::string runInfrastructureResilienceSimulation(const InfrastructureEvaluationConfig& config);
 
 private:
     void initServices() {

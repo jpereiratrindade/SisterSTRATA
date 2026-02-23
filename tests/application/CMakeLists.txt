@@ -11,6 +11,7 @@ add_test(NAME ApplicationUseCasesTest COMMAND application_tests)
 add_executable(application_mapper_tests
     CognitiveAssistanceServiceTest.cpp
     IngestionSynthesisReportTest.cpp
+    InfrastructureResilienceRunTest.cpp
     ImpactProfileMapperTest.cpp
     IWMapperTest.cpp
     NarrativeContextAnalyzerTest.cpp

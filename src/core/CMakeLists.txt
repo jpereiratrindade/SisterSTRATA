@@ -7,6 +7,11 @@ add_library(core
     domain/hydro/Watershed.cpp
     domain/hydro/HydrologyReport.cpp
     domain/fourth_dimension/TrajectoryPersistenceService.cpp
+    domain/energy/EnergyAllocationPolicy.cpp
+    domain/identity/IdentityNode.cpp
+    domain/soil/SoilMonitorNode.cpp
+    domain/infrastructure/InfrastructureOrchestrator.cpp
+    domain/simulation/EnvironmentController.cpp
 )
 
 target_include_directories(core PUBLIC

@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "ui/components/NarrativeGraphWidget.hpp"
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
@@ -34,6 +35,48 @@ static void addUnique(std::vector<std::string>& list, const std::string& value) 
     }
 }
 
+struct FTComputeOption {
+    const char* name;
+    double bootWhPerDay;
+    double idleWhPerDay;
+    double processingWhPerEvent;
+    double costUsd;
+};
+
+struct FTSensorOption {
+    const char* name;
+    double bootWhPerDay;
+    double idleWhPerDay;
+    double sensingWhPerEvent;
+    double costUsd;
+};
+
+struct FTRadioOption {
+    const char* name;
+    double bootWhPerDay;
+    double idleWhPerDay;
+    double communicationWhPerEvent;
+    double costUsd;
+};
+
+constexpr std::array<FTComputeOption, 3> kFTComputeCatalog{{
+    {"STM32U5 (Low Power)", 0.30, 1.20, 0.35, 14.0},
+    {"ESP32-S3 (General Purpose)", 0.50, 2.10, 0.60, 9.0},
+    {"Jetson Nano (Edge AI)", 3.00, 12.00, 2.80, 140.0}
+}};
+
+constexpr std::array<FTSensorOption, 3> kFTSensorCatalog{{
+    {"IR Camera QVGA", 0.10, 0.15, 0.90, 12.0},
+    {"RGB Camera HD", 0.20, 0.25, 1.80, 24.0},
+    {"RFID Reader", 0.05, 0.10, 0.30, 8.0}
+}};
+
+constexpr std::array<FTRadioOption, 3> kFTRadioCatalog{{
+    {"LoRa SX1262", 0.10, 0.20, 0.08, 11.0},
+    {"LTE Cat-M1", 0.40, 0.90, 0.45, 18.0},
+    {"WiFi 2.4GHz", 0.20, 0.60, 0.22, 6.0}
+}};
+
 } // namespace
 
 namespace UI::Panels {
@@ -41,6 +84,9 @@ namespace UI::Panels {
 void AnalysisWorkspacePanel::setSession(Application::Session* session) {
     session_ = session;
     reportsDirty_ = true;
+    infrastructureReportDirty_ = true;
+    infrastructureReport_.clear();
+    infrastructureStatusMessage_.clear();
     lastNarrativeCount_ = 0;
     contextProfiles_.clear();
 }
@@ -95,17 +141,21 @@ void AnalysisWorkspacePanel::draw(bool* open) {
     if (projectRoot != lastProjectRoot_) {
         lastProjectRoot_ = projectRoot;
         reportsDirty_ = true;
+        infrastructureReportDirty_ = true;
+        infrastructureReport_.clear();
+        infrastructureStatusMessage_.clear();
         selectedReportIndex_ = -1;
     }
 
     refreshReports();
+    refreshInfrastructureReport();
     ensureProfiles();
 
     ImGui::SetNextWindowSize(ImVec2(1280, 760), ImGuiCond_FirstUseEver);
 
     const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
     if (ImGui::Begin("STRATA - Analysis Workspace", open, windowFlags)) {
-        ImGui::TextDisabled("Analysis Workspace (observational, read-only)");
+        ImGui::TextDisabled("Analysis Workspace (observational + infraestrutura v0.1)");
         ImGui::Separator();
 
         const float totalHeight = ImGui::GetContentRegionAvail().y;
@@ -124,6 +174,10 @@ void AnalysisWorkspacePanel::draw(bool* open) {
             }
             if (ImGui::BeginTabItem("Recomendacoes")) {
                 drawRecommendationContextTab();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Infraestrutura")) {
+                drawInfrastructureContextTab();
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
@@ -246,6 +300,224 @@ void AnalysisWorkspacePanel::drawRecommendationContextTab() {
     ImGui::BulletText("Recomendacoes permanecem no nivel observacional/interpretativo");
 }
 
+void AnalysisWorkspacePanel::drawInfrastructureContextTab() {
+    if (!session_) {
+        ImGui::TextDisabled("Session indisponivel.");
+        return;
+    }
+
+    ftComputeIndex_ = std::clamp(ftComputeIndex_, 0, static_cast<int>(kFTComputeCatalog.size()) - 1);
+    ftSensorIndex_ = std::clamp(ftSensorIndex_, 0, static_cast<int>(kFTSensorCatalog.size()) - 1);
+    ftRadioIndex_ = std::clamp(ftRadioIndex_, 0, static_cast<int>(kFTRadioCatalog.size()) - 1);
+    infrastructureDays_ = std::max(1, infrastructureDays_);
+    ftNodeCount_ = std::max(1, ftNodeCount_);
+    ftEventsPerAnimalPerDay_ = std::max(0.0f, ftEventsPerAnimalPerDay_);
+
+    const auto& compute = kFTComputeCatalog[ftComputeIndex_];
+    const auto& sensor = kFTSensorCatalog[ftSensorIndex_];
+    const auto& radio = kFTRadioCatalog[ftRadioIndex_];
+
+    constexpr double kOperationalOverheadWhPerDay = 0.5;
+    constexpr double kReferenceAnimalDensity = 50.0;
+
+    const double identityBootWhPerDay = compute.bootWhPerDay + sensor.bootWhPerDay + radio.bootWhPerDay;
+    const double identityIdleWhPerDay = compute.idleWhPerDay + sensor.idleWhPerDay + radio.idleWhPerDay + kOperationalOverheadWhPerDay;
+    const double identitySensingWhPerEvent = sensor.sensingWhPerEvent;
+    const double identityProcessingWhPerEvent = compute.processingWhPerEvent;
+    const double identityCommunicationWhPerEvent = radio.communicationWhPerEvent;
+    const double identityPerEventWh = identitySensingWhPerEvent + identityProcessingWhPerEvent + identityCommunicationWhPerEvent;
+    const double identityBaseWhPerDay = identityBootWhPerDay + identityIdleWhPerDay;
+    const double expectedEventsPerDay = kReferenceAnimalDensity * ftEventsPerAnimalPerDay_;
+    const double expectedIdentityWhPerDay = identityBaseWhPerDay + (expectedEventsPerDay * identityPerEventWh);
+
+    const double ftCostPerNodeUsd = compute.costUsd + sensor.costUsd + radio.costUsd;
+    const double ftTotalCostUsd = ftCostPerNodeUsd * static_cast<double>(ftNodeCount_);
+
+    ImGui::TextWrapped("Monte o sistema FocinhoTrack (FT) por componentes e submeta a avaliacao de resiliencia energetica territorial.");
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Text("FT System Builder");
+    ImGui::Spacing();
+
+    ImGui::InputInt("Dias simulados", &infrastructureDays_);
+    ImGui::InputInt("Quantidade de FT (custo)", &ftNodeCount_);
+    ImGui::SliderFloat("Eventos por animal por dia", &ftEventsPerAnimalPerDay_, 0.0f, 100.0f, "%.1f");
+
+    if (ImGui::BeginCombo("Compute Module", compute.name)) {
+        for (int i = 0; i < static_cast<int>(kFTComputeCatalog.size()); ++i) {
+            const bool selected = (ftComputeIndex_ == i);
+            if (ImGui::Selectable(kFTComputeCatalog[i].name, selected)) {
+                ftComputeIndex_ = i;
+            }
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    if (ImGui::BeginCombo("Sensor Module", sensor.name)) {
+        for (int i = 0; i < static_cast<int>(kFTSensorCatalog.size()); ++i) {
+            const bool selected = (ftSensorIndex_ == i);
+            if (ImGui::Selectable(kFTSensorCatalog[i].name, selected)) {
+                ftSensorIndex_ = i;
+            }
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    if (ImGui::BeginCombo("Radio Module", radio.name)) {
+        for (int i = 0; i < static_cast<int>(kFTRadioCatalog.size()); ++i) {
+            const bool selected = (ftRadioIndex_ == i);
+            if (ImGui::Selectable(kFTRadioCatalog[i].name, selected)) {
+                ftRadioIndex_ = i;
+            }
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::Spacing();
+    ImGui::Text("Perfil energetico derivado (por FT)");
+    ImGui::BulletText("Boot Wh/dia: %.3f", identityBootWhPerDay);
+    ImGui::BulletText("Idle Wh/dia: %.3f", identityIdleWhPerDay);
+    ImGui::BulletText("Sensing Wh/evento: %.3f", identitySensingWhPerEvent);
+    ImGui::BulletText("Processing Wh/evento: %.3f", identityProcessingWhPerEvent);
+    ImGui::BulletText("Communication Wh/evento: %.3f", identityCommunicationWhPerEvent);
+    ImGui::BulletText("Energia base Wh/dia: %.3f", identityBaseWhPerDay);
+    ImGui::BulletText("Energia por evento Wh: %.3f", identityPerEventWh);
+    ImGui::BulletText("Estimativa Wh/dia (densidade 50): %.3f", expectedIdentityWhPerDay);
+
+    ImGui::Spacing();
+    ImGui::Text("Economia de hardware");
+    ImGui::BulletText("Custo FT por unidade (USD): %.2f", ftCostPerNodeUsd);
+    ImGui::BulletText("Custo total FT (USD): %.2f", ftTotalCostUsd);
+    ImGui::TextDisabled("Observacao: v0.1 usa um IdentityNode agregado. Quantidade FT impacta custo; energia permanece no perfil agregado.");
+
+    ImGui::Spacing();
+    if (ImGui::Button("Submeter FT para avaliacao")) {
+        Application::InfrastructureEvaluationConfig config;
+        config.days = infrastructureDays_;
+        config.identityEventsPerAnimalPerDay = ftEventsPerAnimalPerDay_;
+        config.identityProfile = {
+            .boot_wh_per_day = identityBootWhPerDay,
+            .idle_wh_per_day = identityIdleWhPerDay,
+            .sensing_wh_per_event = identitySensingWhPerEvent,
+            .processing_wh_per_event = identityProcessingWhPerEvent,
+            .communication_wh_per_event = identityCommunicationWhPerEvent
+        };
+        config.ftNodeCount = ftNodeCount_;
+        config.ftHardwareCostUsd = ftTotalCostUsd;
+        config.ftComponentSelection = nlohmann::json::array({
+            {
+                {"role", "compute"},
+                {"name", compute.name},
+                {"costUsd", compute.costUsd},
+                {"bootWhPerDay", compute.bootWhPerDay},
+                {"idleWhPerDay", compute.idleWhPerDay},
+                {"processingWhPerEvent", compute.processingWhPerEvent}
+            },
+            {
+                {"role", "sensor"},
+                {"name", sensor.name},
+                {"costUsd", sensor.costUsd},
+                {"bootWhPerDay", sensor.bootWhPerDay},
+                {"idleWhPerDay", sensor.idleWhPerDay},
+                {"sensingWhPerEvent", sensor.sensingWhPerEvent}
+            },
+            {
+                {"role", "radio"},
+                {"name", radio.name},
+                {"costUsd", radio.costUsd},
+                {"bootWhPerDay", radio.bootWhPerDay},
+                {"idleWhPerDay", radio.idleWhPerDay},
+                {"communicationWhPerEvent", radio.communicationWhPerEvent}
+            }
+        });
+        config.trigger = "analysis_workspace_ft_builder_submit";
+
+        const std::string reportPath = session_->runInfrastructureResilienceSimulation(config);
+        if (reportPath.empty()) {
+            infrastructureStatusMessage_ = "Falha ao submeter configuracao FT para avaliacao.";
+        } else {
+            infrastructureStatusMessage_ = "Avaliacao concluida: " + reportPath;
+        }
+        infrastructureReportDirty_ = true;
+        refreshInfrastructureReport();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Executar baseline")) {
+        const std::string reportPath = session_->runInfrastructureResilienceSimulation(365);
+        if (reportPath.empty()) {
+            infrastructureStatusMessage_ = "Falha ao executar simulacao baseline.";
+        } else {
+            infrastructureStatusMessage_ = "Baseline atualizado: " + reportPath;
+        }
+        infrastructureReportDirty_ = true;
+        refreshInfrastructureReport();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Recarregar")) {
+        infrastructureReportDirty_ = true;
+        refreshInfrastructureReport();
+    }
+
+    if (!infrastructureStatusMessage_.empty()) {
+        ImGui::Spacing();
+        ImGui::TextWrapped("%s", infrastructureStatusMessage_.c_str());
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+
+    if (!infrastructureReport_.is_object() || infrastructureReport_.empty()) {
+        ImGui::TextDisabled("Nenhum relatorio encontrado em reports/infrastructure.");
+        ImGui::TextDisabled("Use o botao acima para gerar o primeiro.");
+        return;
+    }
+
+    ImGui::Text("Arquivo");
+    ImGui::TextWrapped("%s", infrastructureReportPath_.c_str());
+
+    ImGui::Spacing();
+    ImGui::Text("Resumo da ultima execucao");
+    ImGui::Separator();
+
+    ImGui::Text("Gerado em: %s", infrastructureReport_.value("generatedAt", "unknown").c_str());
+    const auto runConfig = infrastructureReport_.value("runConfig", nlohmann::json::object());
+    ImGui::Text("Dias simulados: %d", runConfig.value("days", 0));
+    const auto ftHardware = runConfig.value("ftHardware", nlohmann::json::object());
+    if (!ftHardware.empty()) {
+        ImGui::Text("FT node count (custo): %d", ftHardware.value("nodeCount", 1));
+        ImGui::Text("FT cost estimate (USD): %.2f", ftHardware.value("estimatedHardwareCostUSD", 0.0));
+    }
+
+    const auto finalState = infrastructureReport_.value("finalState", nlohmann::json::object());
+    ImGui::Text("Pool final (Wh): %.2f", finalState.value("poolStorageWh", 0.0));
+
+    const auto identity = finalState.value("identity", nlohmann::json::object());
+    ImGui::Spacing();
+    ImGui::Text("Identity");
+    ImGui::BulletText("State: %s", identity.value("state", "unknown").c_str());
+    ImGui::BulletText("Reliability: %.4f", identity.value("reliabilityIndex", 0.0));
+    ImGui::BulletText("Consumed Wh: %.2f", identity.value("consumedWh", 0.0));
+    ImGui::BulletText("Processed events: %.2f/%.2f",
+                      identity.value("processedEvents", 0.0),
+                      identity.value("totalDailyEvents", 0.0));
+
+    const auto soil = finalState.value("soil", nlohmann::json::object());
+    ImGui::Spacing();
+    ImGui::Text("SETO");
+    ImGui::BulletText("State: %s", soil.value("state", "unknown").c_str());
+    ImGui::BulletText("Reliability: %.4f", soil.value("reliabilityIndex", 0.0));
+    ImGui::BulletText("Consumed Wh: %.2f", soil.value("consumedWh", 0.0));
+
+    const auto artifacts = infrastructureReport_.value("artifacts", nlohmann::json::object());
+    ImGui::Spacing();
+    ImGui::Text("Artefatos");
+    ImGui::TextWrapped("CSV latest: %s", artifacts.value("csvLatest", "unknown").c_str());
+    ImGui::TextWrapped("JSON latest: %s", artifacts.value("jsonLatest", "unknown").c_str());
+}
+
 void AnalysisWorkspacePanel::refreshReports() {
     if (!reportsDirty_) return;
 
@@ -298,6 +570,32 @@ void AnalysisWorkspacePanel::refreshReports() {
 
     if (!reports_.empty() && selectedReportIndex_ < 0) {
         selectedReportIndex_ = 0;
+    }
+}
+
+void AnalysisWorkspacePanel::refreshInfrastructureReport() {
+    if (!infrastructureReportDirty_) return;
+    infrastructureReportDirty_ = false;
+    infrastructureReport_.clear();
+    infrastructureReportPath_.clear();
+
+    if (!session_) return;
+
+    const std::filesystem::path latestReportPath =
+        std::filesystem::path(session_->getProjectRoot()) / "reports" / "infrastructure" / "InfrastructureResilience.latest.json";
+
+    if (!std::filesystem::exists(latestReportPath)) {
+        return;
+    }
+
+    try {
+        std::ifstream in(latestReportPath);
+        if (!in.is_open()) return;
+        in >> infrastructureReport_;
+        infrastructureReportPath_ = latestReportPath.string();
+    } catch (...) {
+        infrastructureReport_.clear();
+        infrastructureReportPath_.clear();
     }
 }
 

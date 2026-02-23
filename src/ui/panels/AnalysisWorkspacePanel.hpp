@@ -96,8 +96,19 @@ private:
     bool* showGlobalSynthesisPanel_ = nullptr;
     bool* showTimeline_ = nullptr;
     bool* showPatchAnalysis_ = nullptr;
+    nlohmann::json infrastructureReport_;
+    std::string infrastructureReportPath_;
+    bool infrastructureReportDirty_ = true;
+    std::string infrastructureStatusMessage_;
+    int infrastructureDays_ = 365;
+    int ftNodeCount_ = 1;
+    float ftEventsPerAnimalPerDay_ = 20.0f;
+    int ftComputeIndex_ = 0;
+    int ftSensorIndex_ = 0;
+    int ftRadioIndex_ = 0;
 
     void refreshReports();
+    void refreshInfrastructureReport();
     void ensureProfiles();
 
     const ReportEntry* getSelectedReport() const;
@@ -111,6 +122,7 @@ private:
     void drawDiscursiveContextTab();
     void drawTrajectoryContextTab();
     void drawRecommendationContextTab();
+    void drawInfrastructureContextTab();
 
     void drawNarrativeGraphWidget(const nlohmann::json& graph);
     void drawContextDetails();
