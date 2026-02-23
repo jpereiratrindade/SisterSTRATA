@@ -26,6 +26,9 @@ Registrar o que foi implementado no SisterSTRATA para o InfrastructureLayer v0.1
 - Simulador deterministico diario e exportacao CSV:
   - `src/core/domain/simulation/EnvironmentController.hpp`
   - `src/core/domain/simulation/EnvironmentController.cpp`
+  - Presets de cenario ecologico:
+    - `Normal`
+    - `SevereDrought` (seca severa forcada para estresse energetico)
 
 ### IdentityResilienceContext (FocinhoTrack agregado)
 
@@ -70,6 +73,9 @@ Registrar o que foi implementado no SisterSTRATA para o InfrastructureLayer v0.1
   - eventos por animal por dia
   - quantidade de FT para custo
 - Botao para submeter configuracao FT e botao baseline.
+- Seletor de cenario ecologico no painel:
+  - `Normal`
+  - `Seca Severa`
 - Exibicao do resumo do ultimo relatorio (pool, identity, SETO, artefatos).
 - Arquivos:
   - `src/ui/panels/AnalysisWorkspacePanel.hpp`
@@ -123,6 +129,15 @@ Campos importantes:
 - `consumedWh`: energia efetivamente usada apos estado operacional.
 
 No v0.1, `Identity` representa o bloco agregado do FocinhoTrack no territorio (nao multiploes nodos fisicos detalhados). `SETO` representa o bloco agregado de monitoramento eletrico do solo.
+
+## Cenarios ecologicos (v0.1)
+
+O cenario da execucao e salvo em `runConfig.ecologicalScenario` no JSON:
+
+- `normal_deterministic_v0_1`: sazonalidade deterministica padrao.
+- `severe_drought_v0_1`: reduz geracao solar e umidade para forcar condicao critica energetica.
+
+Objetivo: permitir stress test causal (por condicao ambiental), sem introduzir ruido estocastico nesta etapa.
 
 ## Sobre arquivos "repetidos"
 

@@ -39,8 +39,14 @@
 
 namespace Application {
 
+enum class InfrastructureEcologicalScenario {
+    Normal,
+    SevereDrought
+};
+
 struct InfrastructureEvaluationConfig {
     int days{365};
+    InfrastructureEcologicalScenario ecologicalScenario{InfrastructureEcologicalScenario::Normal};
     double identityEventsPerAnimalPerDay{20.0};
     strata::domain::identity::IdentityEnergyProfile identityProfile{
         .boot_wh_per_day = 0.5,

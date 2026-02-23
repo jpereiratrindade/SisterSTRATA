@@ -59,6 +59,12 @@ struct FTRadioOption {
     double costUsd;
 };
 
+struct EcologicalScenarioOption {
+    const char* name;
+    const char* description;
+    Application::InfrastructureEcologicalScenario scenario;
+};
+
 constexpr std::array<FTComputeOption, 3> kFTComputeCatalog{{
     {"STM32U5 (Low Power)", 0.30, 1.20, 0.35, 14.0},
     {"ESP32-S3 (General Purpose)", 0.50, 2.10, 0.60, 9.0},
@@ -75,6 +81,11 @@ constexpr std::array<FTRadioOption, 3> kFTRadioCatalog{{
     {"LoRa SX1262", 0.10, 0.20, 0.08, 11.0},
     {"LTE Cat-M1", 0.40, 0.90, 0.45, 18.0},
     {"WiFi 2.4GHz", 0.20, 0.60, 0.22, 6.0}
+}};
+
+constexpr std::array<EcologicalScenarioOption, 2> kEcologicalScenarioOptions{{
+    {"Normal", "Deterministico sazonal padrao.", Application::InfrastructureEcologicalScenario::Normal},
+    {"Seca Severa", "Forca estresse energetico territorial.", Application::InfrastructureEcologicalScenario::SevereDrought}
 }};
 
 } // namespace
@@ -309,6 +320,7 @@ void AnalysisWorkspacePanel::drawInfrastructureContextTab() {
     ftComputeIndex_ = std::clamp(ftComputeIndex_, 0, static_cast<int>(kFTComputeCatalog.size()) - 1);
     ftSensorIndex_ = std::clamp(ftSensorIndex_, 0, static_cast<int>(kFTSensorCatalog.size()) - 1);
     ftRadioIndex_ = std::clamp(ftRadioIndex_, 0, static_cast<int>(kFTRadioCatalog.size()) - 1);
+    infrastructureScenarioIndex_ = std::clamp(infrastructureScenarioIndex_, 0, static_cast<int>(kEcologicalScenarioOptions.size()) - 1);
     infrastructureDays_ = std::max(1, infrastructureDays_);
     ftNodeCount_ = std::max(1, ftNodeCount_);
     ftEventsPerAnimalPerDay_ = std::max(0.0f, ftEventsPerAnimalPerDay_);
@@ -316,6 +328,7 @@ void AnalysisWorkspacePanel::drawInfrastructureContextTab() {
     const auto& compute = kFTComputeCatalog[ftComputeIndex_];
     const auto& sensor = kFTSensorCatalog[ftSensorIndex_];
     const auto& radio = kFTRadioCatalog[ftRadioIndex_];
+    const auto& selectedScenario = kEcologicalScenarioOptions[infrastructureScenarioIndex_];
 
     constexpr double kOperationalOverheadWhPerDay = 0.5;
     constexpr double kReferenceAnimalDensity = 50.0;
@@ -340,6 +353,17 @@ void AnalysisWorkspacePanel::drawInfrastructureContextTab() {
     ImGui::Spacing();
 
     ImGui::InputInt("Dias simulados", &infrastructureDays_);
+    if (ImGui::BeginCombo("Cenario ecologico", selectedScenario.name)) {
+        for (int i = 0; i < static_cast<int>(kEcologicalScenarioOptions.size()); ++i) {
+            const bool selected = (infrastructureScenarioIndex_ == i);
+            if (ImGui::Selectable(kEcologicalScenarioOptions[i].name, selected)) {
+                infrastructureScenarioIndex_ = i;
+            }
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::TextDisabled("%s", selectedScenario.description);
     ImGui::InputInt("Quantidade de FT (custo)", &ftNodeCount_);
     ImGui::SliderFloat("Eventos por animal por dia", &ftEventsPerAnimalPerDay_, 0.0f, 100.0f, "%.1f");
 
@@ -386,6 +410,7 @@ void AnalysisWorkspacePanel::drawInfrastructureContextTab() {
     ImGui::BulletText("Energia base Wh/dia: %.3f", identityBaseWhPerDay);
     ImGui::BulletText("Energia por evento Wh: %.3f", identityPerEventWh);
     ImGui::BulletText("Estimativa Wh/dia (densidade 50): %.3f", expectedIdentityWhPerDay);
+    ImGui::TextDisabled("Nota: densidade 50 e apenas referencia de estimativa local da UI.");
 
     ImGui::Spacing();
     ImGui::Text("Economia de hardware");
@@ -397,6 +422,7 @@ void AnalysisWorkspacePanel::drawInfrastructureContextTab() {
     if (ImGui::Button("Submeter FT para avaliacao")) {
         Application::InfrastructureEvaluationConfig config;
         config.days = infrastructureDays_;
+        config.ecologicalScenario = selectedScenario.scenario;
         config.identityEventsPerAnimalPerDay = ftEventsPerAnimalPerDay_;
         config.identityProfile = {
             .boot_wh_per_day = identityBootWhPerDay,
@@ -446,7 +472,12 @@ void AnalysisWorkspacePanel::drawInfrastructureContextTab() {
     }
     ImGui::SameLine();
     if (ImGui::Button("Executar baseline")) {
-        const std::string reportPath = session_->runInfrastructureResilienceSimulation(365);
+        Application::InfrastructureEvaluationConfig config;
+        config.days = infrastructureDays_;
+        config.ecologicalScenario = selectedScenario.scenario;
+        config.trigger = "analysis_workspace_baseline_run";
+
+        const std::string reportPath = session_->runInfrastructureResilienceSimulation(config);
         if (reportPath.empty()) {
             infrastructureStatusMessage_ = "Falha ao executar simulacao baseline.";
         } else {
@@ -485,6 +516,10 @@ void AnalysisWorkspacePanel::drawInfrastructureContextTab() {
     ImGui::Text("Gerado em: %s", infrastructureReport_.value("generatedAt", "unknown").c_str());
     const auto runConfig = infrastructureReport_.value("runConfig", nlohmann::json::object());
     ImGui::Text("Dias simulados: %d", runConfig.value("days", 0));
+    const auto ecologicalScenario = runConfig.value("ecologicalScenario", nlohmann::json::object());
+    if (!ecologicalScenario.empty()) {
+        ImGui::Text("Cenario ecologico: %s", ecologicalScenario.value("name", "unknown").c_str());
+    }
     const auto ftHardware = runConfig.value("ftHardware", nlohmann::json::object());
     if (!ftHardware.empty()) {
         ImGui::Text("FT node count (custo): %d", ftHardware.value("nodeCount", 1));

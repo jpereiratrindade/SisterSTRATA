@@ -10,7 +10,9 @@
   - `src/core/domain/simulation/*`
 - **Operational Energy Profiles**: Added profile-based demand/consumption breakdown for Identity (FocinhoTrack aggregate) and SETO aggregates.
 - **Configurable Infrastructure Run**: Added `InfrastructureEvaluationConfig` and overloaded `Session::runInfrastructureResilienceSimulation(...)` for baseline and custom FT runs.
+- **Ecological Scenario Presets**: Added deterministic infrastructure scenarios (`Normal`, `SevereDrought`) wired from UI -> Session -> EnvironmentController and persisted in `runConfig.ecologicalScenario`.
 - **FT Builder in UI**: Added component-based FT configuration workflow inside `AnalysisWorkspacePanel` (compute/sensor/radio, events/day, node count cost estimate) with direct simulation submission.
+- **Infrastructure UI Scenario Control**: Added ecological scenario selector to force critical-energy runs without changing hardware profile parameters.
 - **Infrastructure Tests**:
   - Added `InfrastructureResilienceRunTest` coverage for artifact generation and custom FT config ingestion.
   - Added core executable test for infrastructure flow (`TestInfrastructure.cpp`).

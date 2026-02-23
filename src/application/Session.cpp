@@ -55,6 +55,53 @@ const char* operationalStateLabel(strata::domain::infrastructure::OperationalSta
     }
 }
 
+strata::domain::simulation::EnvironmentScenarioPreset toEnvironmentScenarioPreset(
+    Application::InfrastructureEcologicalScenario scenario) {
+    using AppScenario = Application::InfrastructureEcologicalScenario;
+    using SimScenario = strata::domain::simulation::EnvironmentScenarioPreset;
+    switch (scenario) {
+        case AppScenario::SevereDrought:
+            return SimScenario::SevereDrought;
+        case AppScenario::Normal:
+        default:
+            return SimScenario::Normal;
+    }
+}
+
+const char* ecologicalScenarioId(Application::InfrastructureEcologicalScenario scenario) {
+    using Scenario = Application::InfrastructureEcologicalScenario;
+    switch (scenario) {
+        case Scenario::SevereDrought:
+            return "severe_drought_v0_1";
+        case Scenario::Normal:
+        default:
+            return "normal_deterministic_v0_1";
+    }
+}
+
+nlohmann::json ecologicalScenarioParameters(Application::InfrastructureEcologicalScenario scenario) {
+    using Scenario = Application::InfrastructureEcologicalScenario;
+    switch (scenario) {
+        case Scenario::SevereDrought:
+            return {
+                {"deterministic", true},
+                {"solarScale", 0.25},
+                {"soilMoistureBias", -0.35},
+                {"extraSolarStressEveryDays", 15},
+                {"extraSolarStressScale", 0.5}
+            };
+        case Scenario::Normal:
+        default:
+            return {
+                {"deterministic", true},
+                {"solarScale", 1.0},
+                {"soilMoistureBias", 0.0},
+                {"extraSolarStressEveryDays", 0},
+                {"extraSolarStressScale", 1.0}
+            };
+    }
+}
+
 } // namespace
 
 namespace Application {
@@ -71,6 +118,7 @@ std::string Session::runInfrastructureResilienceSimulation(const InfrastructureE
     int days = config.days <= 0 ? 365 : config.days;
     const int ftNodeCount = std::max(1, config.ftNodeCount);
     const double ftHardwareCostUsd = std::max(0.0, config.ftHardwareCostUsd);
+    const InfrastructureEcologicalScenario ecologicalScenario = config.ecologicalScenario;
 
     try {
         const std::filesystem::path reportDir = projectRoot_ / "reports" / "infrastructure";
@@ -87,7 +135,9 @@ std::string Session::runInfrastructureResilienceSimulation(const InfrastructureE
         identity::IdentityNode identityNode(config.identityEventsPerAnimalPerDay, config.identityProfile);
         soil::SoilMonitorNode soilNode(config.soilProfile);
         infrastructure::InfrastructureOrchestrator orchestrator(pool, policy, identityNode, soilNode);
-        simulation::EnvironmentController controller(days);
+        simulation::EnvironmentController controller(
+            days,
+            toEnvironmentScenarioPreset(ecologicalScenario));
 
         controller.run(orchestrator, latestCsvPath.string());
         if (std::filesystem::exists(latestCsvPath)) {
@@ -117,6 +167,12 @@ std::string Session::runInfrastructureResilienceSimulation(const InfrastructureE
             {"days", days},
             {"poolCapacityWh", 10000.0},
             {"poolInitialWh", 5000.0},
+            {"ecologicalScenario",
+                {
+                    {"name", ecologicalScenarioId(ecologicalScenario)},
+                    {"parameters", ecologicalScenarioParameters(ecologicalScenario)}
+                }
+            },
             {"identity",
                 {
                     {"eventsPerAnimalPerDay", config.identityEventsPerAnimalPerDay},

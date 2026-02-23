@@ -2,11 +2,15 @@
 #include <fstream>
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 namespace strata::domain::simulation {
 
-EnvironmentController::EnvironmentController(int days_to_simulate)
-    : total_days_(days_to_simulate) 
+EnvironmentController::EnvironmentController(
+    int days_to_simulate,
+    EnvironmentScenarioPreset scenario_preset)
+    : total_days_(days_to_simulate)
+    , scenario_preset_(scenario_preset)
 {}
 
 infrastructure::EcologicalInput EnvironmentController::generateDeterministicEcoInput(int day) {
@@ -33,6 +37,19 @@ infrastructure::EcologicalInput EnvironmentController::generateDeterministicEcoI
     // Give it a boost on cloudy days
     if (day % 7 == 0) {
         eco.soil_moisture = std::min(1.0, eco.soil_moisture + 0.4);
+    }
+
+    // Scenario preset modifications (deterministic)
+    if (scenario_preset_ == EnvironmentScenarioPreset::SevereDrought) {
+        // Persistently low generation and drier conditions to force
+        // energy stress and expose resilience behavior.
+        eco.solar_wh *= 0.25;
+        eco.soil_moisture = std::clamp(eco.soil_moisture - 0.35, 0.0, 1.0);
+
+        // Additional stress every 15 days (dust/cloud bursts).
+        if (day % 15 == 0) {
+            eco.solar_wh *= 0.5;
+        }
     }
 
     return eco;

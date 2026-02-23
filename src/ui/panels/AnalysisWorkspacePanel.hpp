@@ -101,6 +101,7 @@ private:
     bool infrastructureReportDirty_ = true;
     std::string infrastructureStatusMessage_;
     int infrastructureDays_ = 365;
+    int infrastructureScenarioIndex_ = 0;
     int ftNodeCount_ = 1;
     float ftEventsPerAnimalPerDay_ = 20.0f;
     int ftComputeIndex_ = 0;

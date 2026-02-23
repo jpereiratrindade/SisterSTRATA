@@ -84,6 +84,7 @@ TEST(InfrastructureResilienceRunTest, AcceptsCustomFTConfiguration) {
 
     Application::InfrastructureEvaluationConfig config;
     config.days = 15;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::SevereDrought;
     config.identityEventsPerAnimalPerDay = 12.0;
     config.identityProfile = {
         .boot_wh_per_day = 0.4,
@@ -111,11 +112,50 @@ TEST(InfrastructureResilienceRunTest, AcceptsCustomFTConfiguration) {
 
     const auto runConfig = report.value("runConfig", json::object());
     EXPECT_EQ(runConfig.value("days", 0), 15);
+    EXPECT_EQ(runConfig["ecologicalScenario"].value("name", ""), "severe_drought_v0_1");
     EXPECT_EQ(runConfig["identity"].value("eventsPerAnimalPerDay", 0.0), 12.0);
     EXPECT_EQ(runConfig["ftHardware"].value("nodeCount", 0), 3);
     EXPECT_EQ(runConfig["ftHardware"].value("estimatedHardwareCostUSD", 0.0), 120.5);
     EXPECT_EQ(runConfig["ftHardware"]["components"].size(), 3u);
     EXPECT_EQ(report.value("trigger", ""), "test_custom_ft_configuration");
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(InfrastructureResilienceRunTest, SevereDroughtReducesFinalPoolStorage) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+
+    Application::InfrastructureEvaluationConfig normalConfig;
+    normalConfig.days = 180;
+    normalConfig.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    normalConfig.trigger = "test_normal_scenario";
+
+    const std::string normalReportPath = session.runInfrastructureResilienceSimulation(normalConfig);
+    ASSERT_FALSE(normalReportPath.empty());
+    std::ifstream normalIn(normalReportPath);
+    ASSERT_TRUE(normalIn.is_open());
+    json normalReport;
+    normalIn >> normalReport;
+    const double normalPool = normalReport["finalState"].value("poolStorageWh", 0.0);
+
+    Application::InfrastructureEvaluationConfig droughtConfig;
+    droughtConfig.days = 180;
+    droughtConfig.ecologicalScenario = Application::InfrastructureEcologicalScenario::SevereDrought;
+    droughtConfig.trigger = "test_severe_drought_scenario";
+
+    const std::string droughtReportPath = session.runInfrastructureResilienceSimulation(droughtConfig);
+    ASSERT_FALSE(droughtReportPath.empty());
+    std::ifstream droughtIn(droughtReportPath);
+    ASSERT_TRUE(droughtIn.is_open());
+    json droughtReport;
+    droughtIn >> droughtReport;
+    const double droughtPool = droughtReport["finalState"].value("poolStorageWh", 0.0);
+
+    EXPECT_LT(droughtPool, normalPool);
 
     fs::remove_all(tempRoot);
 }
