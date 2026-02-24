@@ -29,8 +29,99 @@ jobs:
         run: cmake --preset headless
 
       - name: Build
-        run: cmake --build --preset headless --target application_mapper_tests core_infrastructure_tests energy_allocation_policy_tests hydro_domain_tests
+        run: cmake --build --preset headless
 
       - name: Run ADR Gates
         run: |
           ctest --test-dir build/headless --output-on-failure -R "ApplicationMapperTest|CoreInfrastructureTest|CoreEnergyAllocationPolicyTest|CoreHydroDomainTest|MembraneDependencyGuard|CoreDomainBoundaryGuard|ExceptionBoundaryGuard"
+
+      - name: Run Full Headless Test Suite
+        run: |
+          ctest --test-dir build/headless --output-on-failure
+
+  f2-determinism-replay:
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            build-essential \
+            libglm-dev \
+            ripgrep \
+            libssl-dev
+
+      - name: Configure
+        run: cmake --preset headless
+
+      - name: Build Determinism Probe Test Binary
+        run: cmake --build --preset headless --target application_mapper_tests
+
+      - name: Run Determinism Replay Probe
+        run: |
+          ./build/headless/bin/application_mapper_tests \
+            --gtest_filter=InfrastructureResilienceRunTest.StateHashMatchesCanonicalPayloadAndReplayPayloadIsIdentical \
+            | tee build/headless/determinism_probe.log
+
+      - name: Extract Deterministic State Hash
+        run: |
+          HASH="$(rg -o 'DETERMINISM_STATE_HASH=[0-9a-f]{64}' build/headless/determinism_probe.log | head -n 1 | cut -d '=' -f 2)"
+          if [[ -z "${HASH}" ]]; then
+            echo "[determinism-replay] state hash marker not found in probe log."
+            exit 1
+          fi
+          mkdir -p build/headless/determinism
+          printf '%s\n' "${HASH}" > build/headless/determinism/state_hash.txt
+          echo "[determinism-replay] extracted state_hash=${HASH}"
+
+      - name: Upload Determinism Hash Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: determinism-state-hash-${{ matrix.os }}
+          path: build/headless/determinism/state_hash.txt
+
+  f2-determinism-compare:
+    needs: f2-determinism-replay
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Download Hash Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: determinism-state-hash-*
+          path: determinism-hashes
+
+      - name: Compare Determinism Hashes Across Runners
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find determinism-hashes -type f -name 'state_hash.txt' | sort)
+          if [[ "${#files[@]}" -lt 2 ]]; then
+            echo "::warning::Not enough determinism hash artifacts to compare."
+            exit 0
+          fi
+
+          base_hash="$(tr -d ' \n\r\t' < "${files[0]}")"
+          mismatch=0
+          for f in "${files[@]}"; do
+            current="$(tr -d ' \n\r\t' < "${f}")"
+            echo "[determinism-compare] ${f}: ${current}"
+            if [[ "${current}" != "${base_hash}" ]]; then
+              mismatch=1
+            fi
+          done
+
+          if [[ "${mismatch}" -ne 0 ]]; then
+            echo "::warning::Cross-runner determinism hash mismatch detected (F2 telemetry)."
+          else
+            echo "[determinism-compare] Cross-runner deterministic hashes are identical."
+          fi

@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -382,6 +383,7 @@ TEST(InfrastructureResilienceRunTest, StateHashMatchesCanonicalPayloadAndReplayP
     EXPECT_EQ(reportA.value("stateHash", ""), expectedHashA);
     EXPECT_EQ(reportB.value("stateHash", ""), expectedHashB);
     EXPECT_EQ(expectedHashA, expectedHashB);
+    std::cout << "DETERMINISM_STATE_HASH=" << expectedHashA << std::endl;
 
     fs::remove_all(tempRoot);
 }
