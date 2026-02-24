@@ -1,0 +1,72 @@
+{
+  "version": 4,
+  "configurePresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "STRATA_BUILD_WORLD3D": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "STRATA_BUILD_WORLD3D": "ON"
+      }
+    },
+    {
+      "name": "headless",
+      "displayName": "Headless",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/headless",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "STRATA_BUILD_WORLD3D": "OFF"
+      }
+    },
+    {
+      "name": "governance",
+      "displayName": "Governance",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/governance",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "STRATA_BUILD_WORLD3D": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "headless",
+      "configurePreset": "headless"
+    },
+    {
+      "name": "governance",
+      "configurePreset": "governance"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "headless-gates",
+      "configurePreset": "headless",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

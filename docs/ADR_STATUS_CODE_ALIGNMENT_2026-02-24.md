@@ -11,8 +11,8 @@ O STRATA possui governanca ADR ativa, catalogada e com enforcement executavel.
 
 Estado atual no catalogo canonico:
 
-- 6 ADRs no registro.
-- 5 `Accepted`.
+- 7 ADRs no registro.
+- 6 `Accepted`.
 - 1 `Superseded`.
 - 0 `Proposed`.
 
@@ -39,6 +39,7 @@ Estado atual:
 4. `ADR-003` - Infrastructure Evidence Axis (superseded draft) - `Superseded`
 5. `ADR-004` - Integration Contract Observability -> Infrastructure -> Fourth Dimension - `Accepted`
 6. `ADR-005` - Scientific Hardening Phase F1 - `Accepted`
+7. `ADR-006` - Domain Naming Disambiguation Soil vs SETO - `Accepted`
 
 ---
 
@@ -73,8 +74,8 @@ Evidencias:
 ## 4. Riscos Estruturais Remanescentes
 
 1. Inconsistencia historica de versionamento em partes antigas da documentacao (mitigada em `v1.10.2`, requer disciplina continua).
-2. Ocorrencias remanescentes de `catch (...)` silencioso fora do escopo estrito de enforcement.
-3. Convivencia semantica entre `domain/soils` (pedologia) e `domain/soil` (SETO), exigindo vigilancia de bounded context.
+2. Ocorrencias remanescentes de `catch (...)` estao restritas a boundary shields (`main`, callback `world3d`); evolucao esperada: enforcement automatico da politica de excecao de fronteira.
+3. Naming ambiguity `domain/soils` vs `domain/soil` foi mitigada com `ADR-006` e migracao para `domain/seto`; manter vigilancia para evitar regressao de nomenclatura legacy.
 
 ---
 

@@ -11,6 +11,7 @@ Make architectural/scientific invariants explicit, auditable, and directly tied 
 This matrix complements:
 - `docs/ADR_ENFORCEMENT_MATRIX_F1.md`
 - `docs/ADR_STATUS_CODE_ALIGNMENT_2026-02-24.md`
+- `docs/EXCEPTION_BOUNDARY_POLICY.md`
 - `adr/ADR-000_Architecture_Governance.md`
 - `adr/ADR-001_Infrastructure_as_Evidence_Axis.md`
 - `adr/ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md`
@@ -32,9 +33,8 @@ This matrix complements:
 
 ## 3. Current Residual Gaps
 
-1. Catch-all exception sites are now limited to boundary shields (`main`, `world3d` callback). Policy decision still required on whether to keep or replace them with typed exceptions.
-2. Naming decision is now formalized in `ADR-006`; filesystem/include migration from legacy `soil` naming to canonical `seto` remains pending.
-3. Build profile standardization (`CMakePresets.json`) is still absent.
+1. Boundary-level `catch(...)` sites are currently constrained to runtime shields (`main`, `world3d` callback) and are now governed by `docs/EXCEPTION_BOUNDARY_POLICY.md`; automated enforcement for this policy is still pending.
+2. Build profile standardization was introduced with `CMakePresets.json`, but team adoption in local/dev/CI scripts still needs consolidation.
 
 ## 4. F2 Exit Hint
 

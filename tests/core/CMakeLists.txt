@@ -49,11 +49,11 @@ add_test(NAME CoreInfrastructureTest COMMAND core_infrastructure_tests)
 add_executable(energy_allocation_policy_tests
     EnergyAllocationPolicyTest.cpp
 )
-target_link_libraries(energy_allocation_policy_tests PRIVATE core)
+target_link_libraries(energy_allocation_policy_tests PRIVATE core gtest gtest_main)
 add_test(NAME CoreEnergyAllocationPolicyTest COMMAND energy_allocation_policy_tests)
 
 add_executable(hydro_domain_tests
     HydroDomainTest.cpp
 )
-target_link_libraries(hydro_domain_tests PRIVATE core)
+target_link_libraries(hydro_domain_tests PRIVATE core gtest gtest_main)
 add_test(NAME CoreHydroDomainTest COMMAND hydro_domain_tests)
