@@ -1,7 +1,8 @@
-#include <iostream>
-#include <vector>
-#include <cassert>
 #include <string>
+#include <vector>
+
+#include <gtest/gtest.h>
+
 #include "core/domain/vegetation/VegetationSystemOriginal.hpp"
 #include "core/domain/vegetation/EcologicalScenario.hpp"
 #include "core/domain/vegetation/VegetationMappingService.hpp"
@@ -13,23 +14,19 @@
 using namespace Core::Domain::Vegetation;
 using namespace Core::Domain::FourthDimension;
 
-void testScenarioGrouping() {
-    std::cout << "Testing Scenario Grouping...\n";
+TEST(CoreVegVectorTest, GroupsHypothesesByScenarioId) {
     VegetationSystemOriginal system;
 
-    // Component 1 for Hypothesis_A
     ReliefCondition cond1;
     cond1.minSlope = 0.0f;
     cond1.maxSlope = 10.0f;
     VegetationOriginal h1(HypothesisID("Hypothesis_A"), VegetationType(VegetationCode::Agua), cond1);
 
-    // Component 2 for Hypothesis_A
     ReliefCondition cond2;
     cond2.minSlope = 10.0f;
     cond2.maxSlope = 30.0f;
     VegetationOriginal h2(HypothesisID("Hypothesis_A"), VegetationType(VegetationCode::FlorestalNatural), cond2);
 
-    // Component 1 for Hypothesis_B
     ReliefCondition cond3;
     cond3.minSlope = 0.0f;
     cond3.maxSlope = 45.0f;
@@ -40,70 +37,44 @@ void testScenarioGrouping() {
     system.addHypothesis(h3);
 
     const auto& scenarios = system.getScenarios();
-    assert(scenarios.size() == 2);
-    
-    // Check Hypothesis_A has 2 components
+    ASSERT_EQ(scenarios.size(), 2u);
+
     bool foundA = false;
     for (const auto& s : scenarios) {
         if (s.getId() == "Hypothesis_A") {
-            assert(s.getComponents().size() == 2);
+            EXPECT_EQ(s.getComponents().size(), 2u);
             foundA = true;
         }
     }
-    assert(foundA);
-
-    std::cout << "Scenario Grouping: OK\n";
+    EXPECT_TRUE(foundA);
 }
 
-void testScenarioResolution() {
-    std::cout << "Testing Scenario Resolution...\n";
-    
+TEST(CoreVegVectorTest, ResolvesScenarioToExpectedVegetationCodes) {
     EcologicalScenario scenario("Test_Vector");
-    
-    // Component 1: Water on flat ground
+
     ReliefCondition cond1;
     cond1.minSlope = 0.0f;
     cond1.maxSlope = 5.0f;
     scenario.addComponent(VegetationOriginal(HypothesisID("Test_Vector"), VegetationType(VegetationCode::Agua), cond1));
 
-    // Component 2: Forest on steeper ground
     ReliefCondition cond2;
     cond2.minSlope = 5.0f;
     cond2.maxSlope = 30.0f;
     scenario.addComponent(VegetationOriginal(HypothesisID("Test_Vector"), VegetationType(VegetationCode::FlorestalNatural), cond2));
 
-    // Setup mock vertices
     std::vector<Core::ValueObjects::TerrainVertex> vertices;
-    // Vertex 0: Flat (Up normal)
     Core::ValueObjects::TerrainVertex v0;
-    v0.normal = glm::vec3(0,0,1); // 0 degrees
+    v0.normal = glm::vec3(0, 0, 1);
     vertices.push_back(v0);
-    
-    // Vertex 1: Sloped
+
     Core::ValueObjects::TerrainVertex v1;
-    v1.normal = glm::vec3(0, 0.25f, 0.968f); // ~14.5 degrees
+    v1.normal = glm::vec3(0, 0.25f, 0.968f);
     vertices.push_back(v1);
 
-    Core::Domain::Hydro::HydroGrid hydro; // Empty
-    float spacing = 1.0f;
+    Core::Domain::Hydro::HydroGrid hydro;
+    const auto codes = VegetationMappingService::resolveScenarioToCodes(scenario, vertices, hydro, 1.0f);
 
-    auto codes = VegetationMappingService::resolveScenarioToCodes(scenario, vertices, hydro, spacing);
-    
-    assert(codes.size() == 2);
-    assert(codes[0] == static_cast<int>(VegetationCode::Agua));
-    assert(codes[1] == static_cast<int>(VegetationCode::FlorestalNatural));
-
-    std::cout << "Scenario Resolution: OK\n";
-}
-
-int main() {
-    try {
-        testScenarioGrouping();
-        testScenarioResolution();
-        std::cout << "All Vegetation Vector tests passed!\n";
-    } catch (const std::exception& e) {
-        std::cerr << "Test failed: " << e.what() << std::endl;
-        return 1;
-    }
-    return 0;
+    ASSERT_EQ(codes.size(), 2u);
+    EXPECT_EQ(codes[0], static_cast<int>(VegetationCode::Agua));
+    EXPECT_EQ(codes[1], static_cast<int>(VegetationCode::FlorestalNatural));
 }

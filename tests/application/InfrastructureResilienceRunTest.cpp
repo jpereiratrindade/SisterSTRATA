@@ -2,10 +2,14 @@
 
 #include "application/Session.hpp"
 #include <nlohmann/json.hpp>
+#include <openssl/sha.h>
 
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -25,6 +29,25 @@ json loadJsonFromPath(const std::string& path) {
     json report;
     in >> report;
     return report;
+}
+
+std::string sha256Hex(const std::string& payload) {
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256(
+        reinterpret_cast<const unsigned char*>(payload.data()),
+        payload.size(),
+        digest);
+
+    std::ostringstream out;
+    out << std::hex << std::setfill('0');
+    for (unsigned char byte : digest) {
+        out << std::setw(2) << static_cast<unsigned int>(byte);
+    }
+    return out.str();
+}
+
+bool nearlyEqual(double lhs, double rhs, double eps = 1e-9) {
+    return std::abs(lhs - rhs) <= eps;
 }
 
 } // namespace
@@ -251,6 +274,114 @@ TEST(InfrastructureResilienceRunTest, Tier1RequiresNonZeroSeed) {
         session.runInfrastructureResilienceSimulation(config),
         std::invalid_argument
     );
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(InfrastructureResilienceRunTest, CrossContextEnergyInvariantsHoldForSevereDrought) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 120;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::SevereDrought;
+    config.trigger = "cross_context_invariant_test";
+    config.determinism.seed = 424242u;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+
+    const std::string reportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(reportPath.empty());
+    const json report = loadJsonFromPath(reportPath);
+
+    const auto finalState = report.value("finalState", json::object());
+    const auto identity = finalState.value("identity", json::object());
+    const auto soil = finalState.value("soil", json::object());
+
+    const double poolStorage = finalState.value("poolStorageWh", -1.0);
+    const double idReq = identity.value("requestedWh", -1.0);
+    const double idAlloc = identity.value("allocatedWh", -1.0);
+    const double idCons = identity.value("consumedWh", -1.0);
+    const double idReliability = identity.value("reliabilityIndex", -1.0);
+    const double soilReq = soil.value("requestedWh", -1.0);
+    const double soilAlloc = soil.value("allocatedWh", -1.0);
+    const double soilCons = soil.value("consumedWh", -1.0);
+    const double soilReliability = soil.value("reliabilityIndex", -1.0);
+
+    EXPECT_GE(poolStorage, 0.0);
+
+    EXPECT_GE(idReq, 0.0);
+    EXPECT_GE(idAlloc, 0.0);
+    EXPECT_GE(idCons, 0.0);
+    EXPECT_LE(idAlloc, idReq + 1e-9);
+    EXPECT_LE(idCons, idAlloc + 1e-9);
+    EXPECT_GE(idReliability, 0.0);
+    EXPECT_LE(idReliability, 1.0);
+
+    EXPECT_GE(soilReq, 0.0);
+    EXPECT_GE(soilAlloc, 0.0);
+    EXPECT_GE(soilCons, 0.0);
+    EXPECT_LE(soilAlloc, soilReq + 1e-9);
+    EXPECT_LE(soilCons, soilAlloc + 1e-9);
+    EXPECT_GE(soilReliability, 0.0);
+    EXPECT_LE(soilReliability, 1.0);
+
+    EXPECT_LE(idAlloc + soilAlloc, idReq + soilReq + 1e-9);
+
+    const auto payload = report.value("deterministicStatePayload", json::object());
+    ASSERT_FALSE(payload.is_null());
+    const auto payloadIdentity = payload.value("identity", json::object());
+    const auto payloadSoil = payload.value("soil", json::object());
+
+    EXPECT_TRUE(nearlyEqual(payload.value("poolStorageWh", -2.0), poolStorage));
+    EXPECT_TRUE(nearlyEqual(payloadIdentity.value("requestedWh", -2.0), idReq));
+    EXPECT_TRUE(nearlyEqual(payloadIdentity.value("allocatedWh", -2.0), idAlloc));
+    EXPECT_TRUE(nearlyEqual(payloadIdentity.value("consumedWh", -2.0), idCons));
+    EXPECT_TRUE(nearlyEqual(payloadSoil.value("requestedWh", -2.0), soilReq));
+    EXPECT_TRUE(nearlyEqual(payloadSoil.value("allocatedWh", -2.0), soilAlloc));
+    EXPECT_TRUE(nearlyEqual(payloadSoil.value("consumedWh", -2.0), soilCons));
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(InfrastructureResilienceRunTest, StateHashMatchesCanonicalPayloadAndReplayPayloadIsIdentical) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 90;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.identityEventsPerAnimalPerDay = 22.0;
+    config.trigger = "determinism_hash_integrity_test";
+    config.determinism.seed = 909090u;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {};
+
+    const std::string reportPathA = session.runInfrastructureResilienceSimulation(config);
+    const std::string reportPathB = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(reportPathA.empty());
+    ASSERT_FALSE(reportPathB.empty());
+
+    const json reportA = loadJsonFromPath(reportPathA);
+    const json reportB = loadJsonFromPath(reportPathB);
+
+    const auto payloadA = reportA.value("deterministicStatePayload", json::object());
+    const auto payloadB = reportB.value("deterministicStatePayload", json::object());
+    const std::string canonicalPayloadA = payloadA.dump();
+    const std::string canonicalPayloadB = payloadB.dump();
+
+    EXPECT_EQ(canonicalPayloadA, canonicalPayloadB);
+
+    const std::string expectedHashA = sha256Hex(canonicalPayloadA);
+    const std::string expectedHashB = sha256Hex(canonicalPayloadB);
+    EXPECT_EQ(reportA.value("stateHash", ""), expectedHashA);
+    EXPECT_EQ(reportB.value("stateHash", ""), expectedHashB);
+    EXPECT_EQ(expectedHashA, expectedHashB);
 
     fs::remove_all(tempRoot);
 }

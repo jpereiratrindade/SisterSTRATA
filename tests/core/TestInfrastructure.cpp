@@ -1,4 +1,11 @@
-#include <iostream>
+#include <chrono>
+#include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <string>
+
+#include <gtest/gtest.h>
+
 #include "core/domain/energy/EnergyPool.hpp"
 #include "core/domain/energy/EnergyAllocationPolicy.hpp"
 #include "core/domain/identity/IdentityNode.hpp"
@@ -6,39 +13,76 @@
 #include "core/domain/infrastructure/InfrastructureOrchestrator.hpp"
 #include "core/domain/simulation/EnvironmentController.hpp"
 
-int main() {
+namespace {
+
+std::filesystem::path uniqueCsvPath() {
+    const auto stamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    return std::filesystem::temp_directory_path() /
+           ("strata_core_infrastructure_test_" + std::to_string(stamp) + ".csv");
+}
+
+bool nonNegative(double value) {
+    return value >= -1e-9;
+}
+
+} // namespace
+
+TEST(CoreInfrastructureTest, RunsDeterministicInfrastructureFlowAndRespectsEnergyInvariants) {
     using namespace strata::domain;
 
-    std::cout << "Starting Infrastructure DDD v0.1 Test...\n";
-
-    // 1. Initialize Energy Pool (Capacity: 10000 Wh, Initial: 5000 Wh)
     energy::EnergyPool pool(10000.0, 5000.0);
-
-    // 2. Policy
     energy::EqualitarianPolicy policy;
 
-    // 3. Nodes
-    // FocinhoTrack: 2.0 Wh per event, 5.0 Wh base consumption, let's say 20 events per animal/day
-    identity::IdentityNode identity_node(20.0, 2.0, 5.0);
+    identity::IdentityNode identityNode(20.0, 2.0, 5.0);
+    seto::SoilMonitorNode soilNode(10.0, 40.0);
 
-    // SETO: 10.0 Wh base consumption, max 40.0 Wh dynamic based on moisture
-    seto::SoilMonitorNode soil_node(10.0, 40.0);
-
-    // 4. Orchestrator
     infrastructure::InfrastructureOrchestrator orchestrator(
         pool,
         policy,
-        identity_node,
-        soil_node
+        identityNode,
+        soilNode
     );
 
-    // 5. Simulation Controller (365 days)
-    simulation::EnvironmentController controller(365);
-    
-    // 6. Run & Export CSV
-    std::string csv_path = "infrastructure_simulation_v01.csv";
-    controller.run(orchestrator, csv_path);
+    simulation::EnvironmentController controller(60);
+    const std::filesystem::path csvPath = uniqueCsvPath();
 
-    std::cout << "Done.\n";
-    return 0;
+    controller.run(orchestrator, csvPath.string());
+
+    ASSERT_TRUE(std::filesystem::exists(csvPath));
+    std::ifstream csvIn(csvPath);
+    ASSERT_TRUE(csvIn.is_open());
+
+    std::string header;
+    std::getline(csvIn, header);
+    EXPECT_NE(header.find("IdentityAlloc_Wh"), std::string::npos);
+    EXPECT_NE(header.find("SoilAlloc_Wh"), std::string::npos);
+
+    const auto& finalPool = orchestrator.getEnergyPool();
+    const auto& finalIdentity = orchestrator.getIdentityNode();
+    const auto& finalSoil = orchestrator.getSoilNode();
+
+    EXPECT_TRUE(nonNegative(finalPool.currentStorage()));
+
+    EXPECT_TRUE(nonNegative(finalIdentity.requestedEnergy()));
+    EXPECT_TRUE(nonNegative(finalIdentity.allocatedEnergy()));
+    EXPECT_TRUE(nonNegative(finalIdentity.consumedEnergy()));
+    EXPECT_LE(finalIdentity.allocatedEnergy(), finalIdentity.requestedEnergy() + 1e-9);
+    EXPECT_LE(finalIdentity.consumedEnergy(), finalIdentity.allocatedEnergy() + 1e-9);
+    EXPECT_GE(finalIdentity.reliabilityIndex(), 0.0);
+    EXPECT_LE(finalIdentity.reliabilityIndex(), 1.0);
+
+    EXPECT_TRUE(nonNegative(finalSoil.requestedEnergy()));
+    EXPECT_TRUE(nonNegative(finalSoil.allocatedEnergy()));
+    EXPECT_TRUE(nonNegative(finalSoil.consumedEnergy()));
+    EXPECT_LE(finalSoil.allocatedEnergy(), finalSoil.requestedEnergy() + 1e-9);
+    EXPECT_LE(finalSoil.consumedEnergy(), finalSoil.allocatedEnergy() + 1e-9);
+    EXPECT_GE(finalSoil.reliabilityIndex(), 0.0);
+    EXPECT_LE(finalSoil.reliabilityIndex(), 1.0);
+
+    EXPECT_LE(
+        finalIdentity.allocatedEnergy() + finalSoil.allocatedEnergy(),
+        finalIdentity.requestedEnergy() + finalSoil.requestedEnergy() + 1e-9
+    );
+
+    std::filesystem::remove(csvPath);
 }
