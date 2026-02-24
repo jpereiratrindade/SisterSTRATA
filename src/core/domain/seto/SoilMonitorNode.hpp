@@ -1,7 +1,7 @@
 #pragma once
 #include "../infrastructure/InfrastructureTypes.hpp"
 
-namespace strata::domain::soil {
+namespace strata::domain::seto {
 
 struct SoilEnergyProfile {
     double boot_wh_per_day{0.0};
@@ -58,4 +58,4 @@ private:
     strata::domain::infrastructure::OperationalState state{strata::domain::infrastructure::OperationalState::Full};
 };
 
-} // namespace strata::domain::soil
+} // namespace strata::domain::seto

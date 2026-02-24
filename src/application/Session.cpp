@@ -2,7 +2,7 @@
 #include "core/domain/energy/EnergyPool.hpp"
 #include "core/domain/energy/EnergyAllocationPolicy.hpp"
 #include "core/domain/identity/IdentityNode.hpp"
-#include "core/domain/soil/SoilMonitorNode.hpp"
+#include "core/domain/seto/SoilMonitorNode.hpp"
 #include "core/domain/infrastructure/InfrastructureOrchestrator.hpp"
 #include "core/domain/simulation/EnvironmentController.hpp"
 #include "infrastructure/logging/Logger.hpp"
@@ -108,7 +108,7 @@ nlohmann::json ecologicalScenarioParameters(Application::InfrastructureEcologica
 Application::DTO::DeterministicStatePayload buildDeterministicStatePayload(
     double poolStorageWh,
     const strata::domain::identity::IdentityNode& identity,
-    const strata::domain::soil::SoilMonitorNode& soil) {
+    const strata::domain::seto::SoilMonitorNode& soil) {
     using Application::DTO::DeterministicIdentityBreakdown;
     using Application::DTO::DeterministicIdentitySnapshot;
     using Application::DTO::DeterministicSoilBreakdown;
@@ -231,7 +231,7 @@ std::string Session::runInfrastructureResilienceSimulation(const InfrastructureE
         energy::EnergyPool pool(10000.0, 5000.0);
         energy::EqualitarianPolicy policy;
         identity::IdentityNode identityNode(config.identityEventsPerAnimalPerDay, config.identityProfile);
-        soil::SoilMonitorNode soilNode(config.soilProfile);
+        seto::SoilMonitorNode soilNode(config.soilProfile);
         infrastructure::InfrastructureOrchestrator orchestrator(pool, policy, identityNode, soilNode);
         simulation::EnvironmentController controller(
             days,

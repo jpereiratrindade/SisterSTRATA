@@ -3,7 +3,7 @@
 #include "../energy/EnergyPool.hpp"
 #include "../energy/EnergyAllocationPolicy.hpp"
 #include "../identity/IdentityNode.hpp"
-#include "../soil/SoilMonitorNode.hpp"
+#include "../seto/SoilMonitorNode.hpp"
 
 namespace strata::domain::infrastructure {
 
@@ -13,7 +13,7 @@ public:
         energy::EnergyPool pool,
         energy::EqualitarianPolicy policy,
         identity::IdentityNode identity_node,
-        soil::SoilMonitorNode soil_node
+        seto::SoilMonitorNode soil_node
     );
 
     // The strict daily flow contract
@@ -21,7 +21,7 @@ public:
 
     // Accessors for metrics
     const identity::IdentityNode& getIdentityNode() const { return identity_; }
-    const soil::SoilMonitorNode& getSoilNode() const { return soil_; }
+    const seto::SoilMonitorNode& getSoilNode() const { return soil_; }
     const energy::EnergyPool& getEnergyPool() const { return pool_; }
 
 private:
@@ -29,7 +29,7 @@ private:
     energy::EqualitarianPolicy policy_;
     
     identity::IdentityNode identity_;
-    soil::SoilMonitorNode soil_;
+    seto::SoilMonitorNode soil_;
 };
 
 } // namespace strata::domain::infrastructure

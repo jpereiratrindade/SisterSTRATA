@@ -1,6 +1,6 @@
 #include "SoilMonitorNode.hpp"
 
-namespace strata::domain::soil {
+namespace strata::domain::seto {
 
 SoilMonitorNode::SoilMonitorNode(double base_consumption, double max_dynamic_consumption)
     : SoilMonitorNode(
@@ -135,4 +135,4 @@ const SoilEnergyBreakdown& SoilMonitorNode::consumedBreakdown() const {
     return consumed_breakdown_;
 }
 
-} // namespace strata::domain::soil
+} // namespace strata::domain::seto

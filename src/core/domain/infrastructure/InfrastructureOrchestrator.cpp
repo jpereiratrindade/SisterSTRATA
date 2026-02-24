@@ -6,7 +6,7 @@ InfrastructureOrchestrator::InfrastructureOrchestrator(
     energy::EnergyPool pool,
     energy::EqualitarianPolicy policy,
     identity::IdentityNode identity_node,
-    soil::SoilMonitorNode soil_node
+    seto::SoilMonitorNode soil_node
 ) 
     : pool_(pool)
     , policy_(policy)

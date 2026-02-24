@@ -3,7 +3,7 @@
 #include "core/domain/Workspace.hpp"
 #include "core/domain/fourth_dimension/Trajectory.hpp"
 #include "core/domain/identity/IdentityNode.hpp"
-#include "core/domain/soil/SoilMonitorNode.hpp"
+#include "core/domain/seto/SoilMonitorNode.hpp"
 #include "application/ports/ILLMService.hpp"
 #include "application/dtos/DiscursiveSystemDTO.hpp"
 #include "application/dtos/RecommendationSnapshotDTO.hpp"
@@ -58,7 +58,7 @@ struct InfrastructureEvaluationConfig {
         .processing_wh_per_event = 0.6,
         .communication_wh_per_event = 0.2
     };
-    strata::domain::soil::SoilEnergyProfile soilProfile{
+    strata::domain::seto::SoilEnergyProfile soilProfile{
         .boot_wh_per_day = 0.5,
         .idle_wh_per_day = 7.5,
         .sensing_base_wh_per_day = 1.5,

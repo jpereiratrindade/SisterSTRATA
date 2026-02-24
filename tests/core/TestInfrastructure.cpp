@@ -2,7 +2,7 @@
 #include "core/domain/energy/EnergyPool.hpp"
 #include "core/domain/energy/EnergyAllocationPolicy.hpp"
 #include "core/domain/identity/IdentityNode.hpp"
-#include "core/domain/soil/SoilMonitorNode.hpp"
+#include "core/domain/seto/SoilMonitorNode.hpp"
 #include "core/domain/infrastructure/InfrastructureOrchestrator.hpp"
 #include "core/domain/simulation/EnvironmentController.hpp"
 
@@ -22,7 +22,7 @@ int main() {
     identity::IdentityNode identity_node(20.0, 2.0, 5.0);
 
     // SETO: 10.0 Wh base consumption, max 40.0 Wh dynamic based on moisture
-    soil::SoilMonitorNode soil_node(10.0, 40.0);
+    seto::SoilMonitorNode soil_node(10.0, 40.0);
 
     // 4. Orchestrator
     infrastructure::InfrastructureOrchestrator orchestrator(

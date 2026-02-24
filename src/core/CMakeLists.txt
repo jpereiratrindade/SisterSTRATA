@@ -9,7 +9,7 @@ add_library(core
     domain/fourth_dimension/TrajectoryPersistenceService.cpp
     domain/energy/EnergyAllocationPolicy.cpp
     domain/identity/IdentityNode.cpp
-    domain/soil/SoilMonitorNode.cpp
+    domain/seto/SoilMonitorNode.cpp
     domain/infrastructure/InfrastructureOrchestrator.cpp
     domain/simulation/EnvironmentController.cpp
 )

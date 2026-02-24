@@ -47,8 +47,8 @@ Registrar o que foi implementado no SisterSTRATA para o InfrastructureLayer v0.1
 - Breakdown separado de energia solicitada vs consumida.
 - Estados operacionais: `Full`, `Reduced`, `Survival`, `Suspended`.
 - Arquivos:
-  - `src/core/domain/soil/SoilMonitorNode.hpp`
-  - `src/core/domain/soil/SoilMonitorNode.cpp`
+  - `src/core/domain/seto/SoilMonitorNode.hpp`
+  - `src/core/domain/seto/SoilMonitorNode.cpp`
 
 ### Application Layer
 
