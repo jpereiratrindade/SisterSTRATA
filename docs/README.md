@@ -28,5 +28,6 @@ Indice rapido para os documentos cientificos do SisterSTRATA.
 - [ADR Index (canonico)](../adr/README.md)
 - [ADR-000 Architecture Governance](../adr/ADR-000_Architecture_Governance.md)
 - [ADR-001 Infrastructure as Evidence Axis](../adr/ADR-001_Infrastructure_as_Evidence_Axis.md)
-- [ADR-002 Integration Contract Observability -> Infrastructure -> Fourth Dimension](../adr/ADR-002_Integration_Contract_Observability_Infrastructure_FourthDimension.md)
+- [ADR-002 Deterministic Core as Non-Negotiable Constraint](../adr/ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md)
 - [ADR-003 Infrastructure Evidence Axis (superseded draft)](../adr/ADR-003_Infrastructure_Evidence_Axis_Superseded_Draft.md)
+- [ADR-004 Integration Contract Observability -> Infrastructure -> Fourth Dimension](../adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md)

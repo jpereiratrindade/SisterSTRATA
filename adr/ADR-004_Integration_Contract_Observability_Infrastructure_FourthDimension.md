@@ -1,4 +1,4 @@
-# ADR-002: Integration Contract for Observability -> Infrastructure -> Fourth Dimension
+# ADR-004: Integration Contract for Observability -> Infrastructure -> Fourth Dimension
 
 Status: Proposed  
 Date: 2026-02-24  

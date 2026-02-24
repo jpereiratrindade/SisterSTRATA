@@ -22,8 +22,9 @@ Current ADRs:
 
 - [ADR-000_Architecture_Governance.md](ADR-000_Architecture_Governance.md)
 - [ADR-001_Infrastructure_as_Evidence_Axis.md](ADR-001_Infrastructure_as_Evidence_Axis.md)
-- [ADR-002_Integration_Contract_Observability_Infrastructure_FourthDimension.md](ADR-002_Integration_Contract_Observability_Infrastructure_FourthDimension.md)
+- [ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md](ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md)
 - [ADR-003_Infrastructure_Evidence_Axis_Superseded_Draft.md](ADR-003_Infrastructure_Evidence_Axis_Superseded_Draft.md)
+- [ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md](ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md)
 
 Normative governance reference:
 

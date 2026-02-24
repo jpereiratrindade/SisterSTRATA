@@ -2,13 +2,13 @@
   "schemaVersion": "adr_catalog.v1",
   "reportType": "ArchitectureDecisionIndex",
   "type": "governance_observational_synthesis",
-  "generatedAt": "2026-02-24 08:46:58",
+  "generatedAt": "2026-02-24 08:52:32",
   "sourceDirectory": "adr",
-  "decisionCount": 4,
+  "decisionCount": 5,
   "statusBreakdown": {
-    "Accepted": 2,
-    "Proposed": 1,
-    "Superseded": 1
+    "Accepted": 3,
+    "Superseded": 1,
+    "Proposed": 1
   },
   "decisions": [
     {
@@ -36,11 +36,11 @@
     {
       "adrId": "ADR-002",
       "number": 2,
-      "title": "Integration Contract for Observability -> Infrastructure -> Fourth Dimension",
-      "status": "Proposed",
+      "title": "Deterministic Core as Non-Negotiable Constraint",
+      "status": "Accepted",
       "date": "2026-02-24",
-      "decisionType": "Cross-context integration contract",
-      "path": "adr/ADR-002_Integration_Contract_Observability_Infrastructure_FourthDimension.md",
+      "decisionType": "Determinism and reproducibility constraint",
+      "path": "adr/ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md",
       "supersedes": [],
       "supersededBy": []
     },
@@ -56,6 +56,17 @@
       "supersededBy": [
         "ADR-001"
       ]
+    },
+    {
+      "adrId": "ADR-004",
+      "number": 4,
+      "title": "Integration Contract for Observability -> Infrastructure -> Fourth Dimension",
+      "status": "Proposed",
+      "date": "2026-02-24",
+      "decisionType": "Cross-context integration contract",
+      "path": "adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md",
+      "supersedes": [],
+      "supersededBy": []
     }
   ]
 }

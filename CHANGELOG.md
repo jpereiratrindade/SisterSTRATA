@@ -7,7 +7,8 @@
   - Added `ADR-000_Architecture_Governance.md` as the foundational governance model.
   - Added numbered architectural decisions:
     - `ADR-001_Infrastructure_as_Evidence_Axis.md`
-    - `ADR-002_Integration_Contract_Observability_Infrastructure_FourthDimension.md`
+    - `ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md`
+    - `ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md`
 - **ADR Catalog Extractor (Analysis Layer)**:
   - Added `scripts/build_adr_catalog.py` to parse canonical ADR markdown and generate structured artifacts.
   - Added generated report targets:
