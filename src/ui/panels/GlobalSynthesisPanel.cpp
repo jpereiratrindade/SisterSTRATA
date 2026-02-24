@@ -1,8 +1,8 @@
 #include "GlobalSynthesisPanel.hpp"
 #include "imgui.h"
-#include "src/ui/components/InterpretationModal.hpp"
-#include "src/ui/components/InterpretationHistory.hpp"
-#include "src/application/mappers/CognitiveMappers.hpp"
+#include "ui/components/InterpretationModal.hpp"
+#include "ui/components/InterpretationHistory.hpp"
+#include "application/mappers/CognitiveMappers.hpp"
 #include <algorithm>
 #include <cstring>
 

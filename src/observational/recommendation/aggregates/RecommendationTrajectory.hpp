@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/observational/recommendation/entities/RecommendationSnapshot.hpp"
+#include "observational/recommendation/entities/RecommendationSnapshot.hpp"
 #include <vector>
 #include <map>
 #include <algorithm>

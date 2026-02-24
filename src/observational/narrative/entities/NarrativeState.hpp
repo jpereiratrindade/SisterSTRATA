@@ -5,11 +5,11 @@
 #include <map>
 #include <memory>
 #include <nlohmann/json.hpp>
-#include "src/observational/narrative/value_objects/SourceReference.hpp"
-#include "src/observational/narrative/value_objects/SemanticAxis.hpp"
-#include "src/observational/narrative/value_objects/TemporalContext.hpp"
-#include "src/observational/narrative/value_objects/ObservationIntent.hpp"
-#include "src/observational/narrative/value_objects/SpatialScope.hpp"
+#include "observational/narrative/value_objects/SourceReference.hpp"
+#include "observational/narrative/value_objects/SemanticAxis.hpp"
+#include "observational/narrative/value_objects/TemporalContext.hpp"
+#include "observational/narrative/value_objects/ObservationIntent.hpp"
+#include "observational/narrative/value_objects/SpatialScope.hpp"
 
 namespace SisterSTRATA::Observational::Narrative {
 

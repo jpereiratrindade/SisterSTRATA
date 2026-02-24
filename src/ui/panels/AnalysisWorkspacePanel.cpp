@@ -3,6 +3,7 @@
 #include "DiscursiveSystemPanel.hpp"
 #include "RecommendationTrajectoryPanel.hpp"
 #include "GlobalSynthesisPanel.hpp"
+#include "infrastructure/logging/Logger.hpp"
 #include "imgui.h"
 #include "ui/components/NarrativeGraphWidget.hpp"
 #include <algorithm>
@@ -591,8 +592,11 @@ void AnalysisWorkspacePanel::refreshReports() {
                 report.coveragePercent = summary.value("coveragePercent", 0.0);
                 report.parseOk = true;
             }
-        } catch (...) {
+        } catch (const std::exception& e) {
             report.parseOk = false;
+            LOG_WARN(
+                "AnalysisWorkspacePanel",
+                std::string("Failed to parse ingestion report ") + path.string() + ": " + e.what());
         }
 
         reports_.push_back(std::move(report));
@@ -628,7 +632,10 @@ void AnalysisWorkspacePanel::refreshInfrastructureReport() {
         if (!in.is_open()) return;
         in >> infrastructureReport_;
         infrastructureReportPath_ = latestReportPath.string();
-    } catch (...) {
+    } catch (const std::exception& e) {
+        LOG_WARN(
+            "AnalysisWorkspacePanel",
+            std::string("Failed to parse infrastructure report ") + latestReportPath.string() + ": " + e.what());
         infrastructureReport_.clear();
         infrastructureReportPath_.clear();
     }

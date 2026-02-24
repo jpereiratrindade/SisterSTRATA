@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/observational/narrative/entities/NarrativeState.hpp"
+#include "observational/narrative/entities/NarrativeState.hpp"
 #include <vector>
 #include <algorithm>
 #include <stdexcept>

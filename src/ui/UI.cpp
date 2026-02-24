@@ -1,4 +1,5 @@
 #include "ui/UI.hpp"
+#include "infrastructure/logging/Logger.hpp"
 #include "imgui.h"
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_vulkan.h>
@@ -142,7 +143,8 @@ bool loadUiState(const std::filesystem::path& path, bool& analysisWorkspaceOpen,
         analysisWorkspaceOpen = j.value("analysisWorkspaceOpen", false);
         multiViewportRequested = j.value("multiViewportRequested", true);
         return true;
-    } catch (...) {
+    } catch (const std::exception& e) {
+        LOG_WARN("UI", std::string("Failed to load UI state from ") + path.string() + ": " + e.what());
         return false;
     }
 }
@@ -154,7 +156,8 @@ void saveUiState(const std::filesystem::path& path, bool analysisWorkspaceOpen, 
         j["multiViewportRequested"] = multiViewportRequested;
         std::ofstream out(path);
         if (out.is_open()) out << j.dump(2);
-    } catch (...) {
+    } catch (const std::exception& e) {
+        LOG_WARN("UI", std::string("Failed to save UI state to ") + path.string() + ": " + e.what());
     }
 }
 

@@ -1,10 +1,10 @@
 #include <iostream>
-#include "../src/core/domain/energy/EnergyPool.hpp"
-#include "../src/core/domain/energy/EnergyAllocationPolicy.hpp"
-#include "../src/core/domain/identity/IdentityNode.hpp"
-#include "../src/core/domain/soil/SoilMonitorNode.hpp"
-#include "../src/core/domain/infrastructure/InfrastructureOrchestrator.hpp"
-#include "../src/core/domain/simulation/EnvironmentController.hpp"
+#include "core/domain/energy/EnergyPool.hpp"
+#include "core/domain/energy/EnergyAllocationPolicy.hpp"
+#include "core/domain/identity/IdentityNode.hpp"
+#include "core/domain/soil/SoilMonitorNode.hpp"
+#include "core/domain/infrastructure/InfrastructureOrchestrator.hpp"
+#include "core/domain/simulation/EnvironmentController.hpp"
 
 int main() {
     using namespace strata::domain;

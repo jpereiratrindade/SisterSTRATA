@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "src/application/services/cognitive/CognitiveAssistanceService.hpp"
+#include "application/services/cognitive/CognitiveAssistanceService.hpp"
 #include "application/ports/ILLMService.hpp"
-#include "src/application/dtos/cognitive/ContextBundleDTO.hpp"
+#include "application/dtos/cognitive/ContextBundleDTO.hpp"
 
 #include <optional>
 

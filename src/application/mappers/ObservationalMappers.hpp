@@ -3,9 +3,9 @@
 #include "application/dtos/DiscursiveSystemDTO.hpp"
 #include "application/dtos/RecommendationTrajectoryDTO.hpp"
 #include "application/dtos/NarrativeDTOs.hpp"
-#include "src/observational/discursive/entities/DiscursiveSystem.hpp"
-#include "src/observational/recommendation/aggregates/RecommendationTrajectory.hpp"
-#include "src/observational/narrative/entities/NarrativeState.hpp"
+#include "observational/discursive/entities/DiscursiveSystem.hpp"
+#include "observational/recommendation/aggregates/RecommendationTrajectory.hpp"
+#include "observational/narrative/entities/NarrativeState.hpp"
 #include <algorithm>
 #include <cctype>
 

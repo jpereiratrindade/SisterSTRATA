@@ -1,4 +1,4 @@
-#include "src/ui/panels/RecommendationTrajectoryPanel.hpp"
+#include "ui/panels/RecommendationTrajectoryPanel.hpp"
 #include "imgui.h"
 #include <cstring>
 #include <filesystem>

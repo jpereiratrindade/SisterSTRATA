@@ -1,9 +1,9 @@
 #pragma once
 
-#include "src/application/dtos/cognitive/ContextBundleDTO.hpp"
-#include "src/application/dtos/DiscursiveSystemDTO.hpp"
-#include "src/application/dtos/NarrativeDTOs.hpp"
-#include "src/application/dtos/RecommendationSnapshotDTO.hpp"
+#include "application/dtos/cognitive/ContextBundleDTO.hpp"
+#include "application/dtos/DiscursiveSystemDTO.hpp"
+#include "application/dtos/NarrativeDTOs.hpp"
+#include "application/dtos/RecommendationSnapshotDTO.hpp"
 #include <sstream>
 #include <vector>
 #include <iomanip>

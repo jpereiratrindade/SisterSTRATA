@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "src/application/mappers/ImpactProfileMapper.hpp"
+#include "application/mappers/ImpactProfileMapper.hpp"
 
 using namespace Application::Mappers;
 using namespace SisterSTRATA::Observational::ImpactProfile::Domain;

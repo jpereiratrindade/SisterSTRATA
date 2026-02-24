@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "src/observational/impact_profile/domain/value_objects/ReferenceFrame.hpp"
-#include "src/observational/impact_profile/domain/value_objects/StructuralDeviation.hpp"
-#include "src/observational/impact_profile/domain/value_objects/TemporalDeviationPattern.hpp"
+#include "observational/impact_profile/domain/value_objects/ReferenceFrame.hpp"
+#include "observational/impact_profile/domain/value_objects/StructuralDeviation.hpp"
+#include "observational/impact_profile/domain/value_objects/TemporalDeviationPattern.hpp"
 
 namespace SisterSTRATA::Observational::ImpactProfile::Domain {
 

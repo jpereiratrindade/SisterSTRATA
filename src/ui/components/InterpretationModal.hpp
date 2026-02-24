@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
+#include "application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
 #include <imgui.h>
 #include <string>
 #include <vector>

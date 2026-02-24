@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/application/dtos/RecommendationSnapshotDTO.hpp"
+#include "application/dtos/RecommendationSnapshotDTO.hpp"
 #include <string>
 #include <vector>
 #include <map>

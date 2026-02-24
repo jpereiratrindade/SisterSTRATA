@@ -1,7 +1,7 @@
 #pragma once
 
-#include "src/observational/interpretation/entities/InterpretationSnapshot.hpp"
-#include "src/application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
+#include "observational/interpretation/entities/InterpretationSnapshot.hpp"
+#include "application/dtos/cognitive/InterpretationSnapshotDTO.hpp"
 
 namespace Application::Mappers::Interpretation {
 

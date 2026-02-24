@@ -1,4 +1,5 @@
-#include "src/ui/panels/DiscursiveSystemPanel.hpp"
+#include "ui/panels/DiscursiveSystemPanel.hpp"
+#include "infrastructure/logging/Logger.hpp"
 #include "imgui.h"
 #include <cstring>
 #include <filesystem>
@@ -390,8 +391,8 @@ void DiscursiveSystemPanel::drawAIAnalysisSection() {
                             aiResultReady_ = true; // Signal the main thread to open the popup
                         });
                 }
-            } catch (const std::exception&) {
-                // Fallback / Log error
+            } catch (const std::exception& e) {
+                LOG_WARN("DiscursiveSystemPanel", std::string("AI discursive draft request failed: ") + e.what());
                 aiRequestPending_ = false;
                 ImGui::OpenPopup("AIAnalysisError");
             }
@@ -425,7 +426,8 @@ void DiscursiveSystemPanel::drawAIAnalysisSection() {
                         aiRequestPending_ = false;
                         aiResultReady_ = true;
                     });
-            } catch (...) {
+            } catch (const std::exception& e) {
+                LOG_WARN("DiscursiveSystemPanel", std::string("AI coherence request failed: ") + e.what());
                 aiRequestPending_ = false;
                 ImGui::OpenPopup("AIAnalysisError");
             }

@@ -2,12 +2,12 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
-#include "src/observational/narrative/aggregates/NarrativeObservationSystem.hpp"
-#include "src/observational/narrative/entities/NarrativeState.hpp"
-#include "src/observational/narrative/value_objects/SourceReference.hpp"
-#include "src/observational/narrative/value_objects/SemanticAxis.hpp"
-#include "src/observational/narrative/value_objects/TemporalContext.hpp"
-#include "src/observational/narrative/value_objects/ObservationIntent.hpp"
+#include "observational/narrative/aggregates/NarrativeObservationSystem.hpp"
+#include "observational/narrative/entities/NarrativeState.hpp"
+#include "observational/narrative/value_objects/SourceReference.hpp"
+#include "observational/narrative/value_objects/SemanticAxis.hpp"
+#include "observational/narrative/value_objects/TemporalContext.hpp"
+#include "observational/narrative/value_objects/ObservationIntent.hpp"
 
 using namespace SisterSTRATA::Observational::Narrative;
 

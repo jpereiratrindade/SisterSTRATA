@@ -1,6 +1,7 @@
 #include "application/Application.hpp"
 #include "world3d/World3D.hpp"
 #include "application/dtos/UIData.hpp"
+#include "infrastructure/logging/Logger.hpp"
 #include "infrastructure/llm/OllamaMockAdapter.hpp"
 #include "infrastructure/llm/OllamaAdapter.hpp"
 #include <iostream>
@@ -98,13 +99,19 @@ void Application::init() {
                 // Sidecar Save (Always allowed)
                 try {
                     this->session_->getNarrativeSystem().serialize(path + ".json");
-                } catch (...) {}
+                } catch (const std::exception& e) {
+                    LOG_WARN("Application", std::string("Failed to save narrative sidecar: ") + e.what());
+                }
                 try {
                     this->session_->getDiscursiveSystemRepository().serialize(path + ".discursive.json");
-                } catch (...) {}
+                } catch (const std::exception& e) {
+                    LOG_WARN("Application", std::string("Failed to save discursive sidecar: ") + e.what());
+                }
                 try {
                     this->session_->getRecommendationTrajectory().serialize(path + ".recommendation.json");
-                } catch (...) {}
+                } catch (const std::exception& e) {
+                    LOG_WARN("Application", std::string("Failed to save recommendation sidecar: ") + e.what());
+                }
                 std::cout << "[Application] Observational data saved to sidecars." << std::endl;
             }
         }; 

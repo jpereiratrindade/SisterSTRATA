@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
-#include "src/observational/recommendation/value_objects/SourceReference.hpp"
-#include "src/observational/recommendation/value_objects/TemporalContext.hpp"
+#include "observational/recommendation/value_objects/SourceReference.hpp"
+#include "observational/recommendation/value_objects/TemporalContext.hpp"
 
 namespace SisterSTRATA::Observational::Recommendation {
 

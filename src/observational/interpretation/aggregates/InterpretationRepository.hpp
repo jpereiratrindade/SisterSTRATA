@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/observational/interpretation/entities/InterpretationSnapshot.hpp"
+#include "observational/interpretation/entities/InterpretationSnapshot.hpp"
 #include <vector>
 #include <fstream>
 #include <nlohmann/json.hpp>

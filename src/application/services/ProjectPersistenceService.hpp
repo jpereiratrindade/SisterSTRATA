@@ -1,9 +1,9 @@
 #pragma once
 
-#include "src/observational/narrative/aggregates/NarrativeObservationSystem.hpp"
-#include "src/observational/discursive/aggregates/DiscursiveSystemRepository.hpp"
-#include "src/observational/recommendation/aggregates/RecommendationTrajectory.hpp"
-#include "src/observational/interpretation/aggregates/InterpretationRepository.hpp"
+#include "observational/narrative/aggregates/NarrativeObservationSystem.hpp"
+#include "observational/discursive/aggregates/DiscursiveSystemRepository.hpp"
+#include "observational/recommendation/aggregates/RecommendationTrajectory.hpp"
+#include "observational/interpretation/aggregates/InterpretationRepository.hpp"
 #include <filesystem>
 #include <string>
 

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "src/observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp"
-#include "src/core/domain/fourth_dimension/Trajectory.hpp"
+#include "observational/impact_profile/infrastructure/TrajectoryImpactAnalyzerImpl.hpp"
+#include "core/domain/fourth_dimension/Trajectory.hpp"
 
 using namespace SisterSTRATA::Observational::ImpactProfile::Infrastructure;
 using namespace SisterSTRATA::Observational::ImpactProfile::Domain;

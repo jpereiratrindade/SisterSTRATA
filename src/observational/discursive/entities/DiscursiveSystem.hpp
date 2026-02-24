@@ -4,12 +4,12 @@
 #include <vector>
 #include <map>
 #include <nlohmann/json.hpp>
-#include "src/observational/discursive/value_objects/DeclaredProblem.hpp"
-#include "src/observational/discursive/value_objects/DeclaredAction.hpp"
-#include "src/observational/discursive/value_objects/AllegedMechanism.hpp"
-#include "src/observational/discursive/value_objects/ExpectedEffect.hpp"
-#include "src/observational/discursive/value_objects/SourceReference.hpp"
-#include "src/observational/discursive/value_objects/TemporalContext.hpp"
+#include "observational/discursive/value_objects/DeclaredProblem.hpp"
+#include "observational/discursive/value_objects/DeclaredAction.hpp"
+#include "observational/discursive/value_objects/AllegedMechanism.hpp"
+#include "observational/discursive/value_objects/ExpectedEffect.hpp"
+#include "observational/discursive/value_objects/SourceReference.hpp"
+#include "observational/discursive/value_objects/TemporalContext.hpp"
 
 namespace SisterSTRATA::Observational::Discursive {
 

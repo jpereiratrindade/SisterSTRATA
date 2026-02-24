@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "src/observational/impact_profile/domain/entities/TrajectoryImpactProfile.hpp"
-#include "src/observational/impact_profile/domain/value_objects/ReferenceFrame.hpp"
-#include "src/observational/impact_profile/domain/value_objects/StructuralDeviation.hpp"
-#include "src/observational/impact_profile/domain/value_objects/TemporalDeviationPattern.hpp"
+#include "observational/impact_profile/domain/entities/TrajectoryImpactProfile.hpp"
+#include "observational/impact_profile/domain/value_objects/ReferenceFrame.hpp"
+#include "observational/impact_profile/domain/value_objects/StructuralDeviation.hpp"
+#include "observational/impact_profile/domain/value_objects/TemporalDeviationPattern.hpp"
 
 using namespace SisterSTRATA::Observational::ImpactProfile::Domain;
 

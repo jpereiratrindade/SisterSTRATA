@@ -1,4 +1,4 @@
-#include "src/ui/panels/NarrativePanel.hpp"
+#include "ui/panels/NarrativePanel.hpp"
 #include "imgui.h"
 #include "application/mappers/CognitiveMappers.hpp"
 #include "ui/components/InterpretationModal.hpp"

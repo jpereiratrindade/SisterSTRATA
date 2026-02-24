@@ -1,8 +1,8 @@
 #pragma once
 
-#include "src/core/domain/fourth_dimension/Trajectory.hpp"
-#include "src/observational/impact_profile/domain/entities/TrajectoryImpactProfile.hpp"
-#include "src/observational/impact_profile/domain/value_objects/ReferenceFrame.hpp"
+#include "core/domain/fourth_dimension/Trajectory.hpp"
+#include "observational/impact_profile/domain/entities/TrajectoryImpactProfile.hpp"
+#include "observational/impact_profile/domain/value_objects/ReferenceFrame.hpp"
 
 namespace SisterSTRATA::Observational::ImpactProfile::Domain {
 

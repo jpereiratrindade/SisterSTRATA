@@ -6,10 +6,10 @@
 #include "application/dtos/RecommendationSnapshotDTO.hpp"
 #include "application/dtos/RecommendationTrajectoryDTO.hpp"
 #include "application/mappers/ObservationalMappers.hpp"
-#include "src/application/mappers/IWMapper.hpp"
-#include "src/observational/narrative/aggregates/NarrativeObservationSystem.hpp"
-#include "src/observational/discursive/aggregates/DiscursiveSystemRepository.hpp"
-#include "src/observational/recommendation/aggregates/RecommendationTrajectory.hpp"
+#include "application/mappers/IWMapper.hpp"
+#include "observational/narrative/aggregates/NarrativeObservationSystem.hpp"
+#include "observational/discursive/aggregates/DiscursiveSystemRepository.hpp"
+#include "observational/recommendation/aggregates/RecommendationTrajectory.hpp"
 
 #include <nlohmann/json.hpp>
 #include <filesystem>

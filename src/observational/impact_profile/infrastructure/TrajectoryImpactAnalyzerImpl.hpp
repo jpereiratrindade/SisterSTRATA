@@ -1,7 +1,7 @@
 #pragma once
 
-#include "src/observational/impact_profile/domain/services/TrajectoryImpactAnalyzer.hpp"
-#include "src/core/domain/spatial_pattern/PatchAnalysis.hpp"
+#include "observational/impact_profile/domain/services/TrajectoryImpactAnalyzer.hpp"
+#include "core/domain/spatial_pattern/PatchAnalysis.hpp"
 #include <cmath>
 #include <numeric>
 

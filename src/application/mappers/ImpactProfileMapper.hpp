@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/observational/impact_profile/domain/entities/TrajectoryImpactProfile.hpp"
+#include "observational/impact_profile/domain/entities/TrajectoryImpactProfile.hpp"
 #include <sstream>
 #include <iomanip>
 

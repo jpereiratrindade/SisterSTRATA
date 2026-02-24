@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/observational/discursive/entities/DiscursiveSystem.hpp"
+#include "observational/discursive/entities/DiscursiveSystem.hpp"
 #include <vector>
 #include <algorithm>
 #include <stdexcept>

@@ -20,6 +20,14 @@
 - **Versioning alignment**:
   - Synced project/release metadata and documentation for `v1.10.2`.
 
+### Fixed
+- **Error handling in UI/Application**:
+  - Replaced silent `catch(...)` blocks in UI/Application save/load paths with `catch(const std::exception& e)` plus structured logging.
+- **Header include consistency**:
+  - Standardized internal includes to remove redundant `src/` prefixes and aligned include-dir exposure for observational targets.
+- **Scientific core test coverage**:
+  - Added direct core tests for `EnergyAllocationPolicy` and hydro domain flows (`DrainageSystem`, `Watershed`, `HydrologyReport`).
+
 ## [v1.10.1] - 2026-02-24
 ### Added
 - **Headless F1 pipeline**:

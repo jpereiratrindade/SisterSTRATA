@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/application/dtos/ObservationalCommonDTOs.hpp"
+#include "application/dtos/ObservationalCommonDTOs.hpp"
 #include <string>
 #include <vector>
 #include <map>
