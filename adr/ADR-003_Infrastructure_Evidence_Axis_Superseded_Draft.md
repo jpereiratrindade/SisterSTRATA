@@ -1,8 +1,9 @@
-# ADR-001: Infrastructure as Transversal Evidence Axis (not decision axis)
+# ADR-003: Infrastructure as Transversal Evidence Axis (superseded draft)
 
-Status: Proposed  
+Status: Superseded  
 Date: 2026-02-24  
-Decision Type: Domain boundary and ontology
+Decision Type: Domain boundary and ontology  
+Superseded by: ADR-001
 
 ## 1. Context
 

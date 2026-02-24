@@ -47,7 +47,7 @@ Naming convention:
 Examples:
 
 - `ADR-000_Architecture_Governance.md`
-- `ADR-001_Infrastructure_Evidence_Axis.md`
+- `ADR-001_Infrastructure_as_Evidence_Axis.md`
 
 ## 5. Lifecycle and status
 
@@ -55,6 +55,7 @@ Allowed statuses:
 
 - `Proposed`
 - `Accepted`
+- `Rejected`
 - `Superseded`
 - `Deprecated`
 

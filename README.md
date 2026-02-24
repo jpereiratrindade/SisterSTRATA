@@ -35,7 +35,9 @@ Para entender a filosofia, a governança dos modelos e a arquitetura de conhecim
 *   **[Fourth Dimension (Resilience)](docs/DDD_FourthDimensionSystem.md)**: O modelo de resiliência e coerência temporal.
 *   **[Contexto de Observação Narrativa](docs/DTO_NarrativeObservationContext.md)**: Sistema observacional para registrar interpretações discursivas do território.
 *   **[Architecture & DDD](docs/projeto_app_ddd_v10.md)**: Organização do código e princípios de design.
+*   **[STRATA Governance Model v0.1](STRATA_Governance_Model_v0_1.md)**: Governança estrutural e política normativa de causalidade/ADR.
 *   **[ADR Index (Governança Arquitetural)](adr/README.md)**: Registro canônico e histórico de decisões arquiteturais.
+*   **Architecture Decision Index (gerado)**: `reports/architecture/ArchitectureDecisionIndex.latest.json` e `.md` via `python3 scripts/build_adr_catalog.py`.
 
 ## Requisitos de Sistema
 
