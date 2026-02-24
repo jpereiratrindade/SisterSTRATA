@@ -26,7 +26,7 @@ void InfrastructureOrchestrator::dailyStep(const EcologicalInput& eco) {
     soil_.computeEnergyDemand();
 
     // 3. Recolher demandas
-    std::unordered_map<std::string, double> requests;
+    std::map<std::string, double> requests;
     requests["identity"] = identity_.requestedEnergy();
     requests["soil"] = soil_.requestedEnergy();
 

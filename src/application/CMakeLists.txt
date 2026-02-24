@@ -1,5 +1,7 @@
 # Core Application Logic (Session, Services, Ports)
 # Headless-safe
+find_package(OpenSSL REQUIRED)
+
 add_library(application
     Session.cpp
     services/IWIngestionService.cpp
@@ -16,6 +18,7 @@ target_link_libraries(application PUBLIC
     core
     infrastructure
     observational
+    OpenSSL::Crypto
 )
 target_compile_features(application PUBLIC cxx_std_20)
 

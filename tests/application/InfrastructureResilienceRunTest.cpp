@@ -6,6 +6,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -16,6 +17,14 @@ namespace {
 fs::path uniqueTempRoot() {
     const auto stamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     return fs::temp_directory_path() / ("strata_infra_report_test_" + std::to_string(stamp));
+}
+
+json loadJsonFromPath(const std::string& path) {
+    std::ifstream in(path);
+    EXPECT_TRUE(in.is_open());
+    json report;
+    in >> report;
+    return report;
 }
 
 } // namespace
@@ -156,6 +165,92 @@ TEST(InfrastructureResilienceRunTest, SevereDroughtReducesFinalPoolStorage) {
     const double droughtPool = droughtReport["finalState"].value("poolStorageWh", 0.0);
 
     EXPECT_LT(droughtPool, normalPool);
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(InfrastructureResilienceRunTest, SameSeedSameConfigSameHash) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 120;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.identityEventsPerAnimalPerDay = 18.0;
+    config.trigger = "determinism_replay_test";
+    config.determinism.seed = 123456u;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {};
+
+    const std::string reportPathA = session.runInfrastructureResilienceSimulation(config);
+    const std::string reportPathB = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(reportPathA.empty());
+    ASSERT_FALSE(reportPathB.empty());
+
+    const json reportA = loadJsonFromPath(reportPathA);
+    const json reportB = loadJsonFromPath(reportPathB);
+
+    const std::string hashA = reportA.value("stateHash", "");
+    const std::string hashB = reportB.value("stateHash", "");
+    EXPECT_FALSE(hashA.empty());
+    EXPECT_EQ(hashA.size(), 64u);
+    EXPECT_EQ(hashA, hashB);
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(InfrastructureResilienceRunTest, ReportContainsDeterminismMetadata) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 45;
+    config.trigger = "determinism_metadata_test";
+    config.determinism.seed = 20260224u;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"none"};
+
+    const std::string reportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(reportPath.empty());
+    const json report = loadJsonFromPath(reportPath);
+
+    const auto determinism = report.value("determinism", json::object());
+    EXPECT_EQ(determinism.value("seed", 0u), 20260224u);
+    EXPECT_EQ(determinism.value("tier", ""), "T1_SeededDeterministic");
+    EXPECT_TRUE(determinism.contains("entropySources"));
+
+    const auto payload = report.value("deterministicStatePayload", json::object());
+    EXPECT_EQ(payload.value("schemaVersion", 0), 1);
+    EXPECT_TRUE(payload.contains("identity"));
+    EXPECT_TRUE(payload.contains("soil"));
+    EXPECT_TRUE(report.contains("stateHash"));
+    EXPECT_EQ(report.value("stateHash", "").size(), 64u);
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(InfrastructureResilienceRunTest, Tier1RequiresNonZeroSeed) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 15;
+    config.determinism.seed = 0;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+
+    EXPECT_THROW(
+        session.runInfrastructureResilienceSimulation(config),
+        std::invalid_argument
+    );
 
     fs::remove_all(tempRoot);
 }

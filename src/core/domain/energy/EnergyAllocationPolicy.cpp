@@ -2,11 +2,11 @@
 
 namespace strata::domain::energy {
 
-std::unordered_map<std::string, double> EqualitarianPolicy::allocate(
+std::map<std::string, double> EqualitarianPolicy::allocate(
     double available_energy,
-    const std::unordered_map<std::string, double>& requests) {
+    const std::map<std::string, double>& requests) {
     
-    std::unordered_map<std::string, double> allocations;
+    std::map<std::string, double> allocations;
     if (requests.empty()) return allocations;
 
     // A simple v0.1 equalitarian policy that divides equally 

@@ -9,6 +9,7 @@
 #include "application/dtos/RecommendationSnapshotDTO.hpp"
 #include "application/dtos/RecommendationTrajectoryDTO.hpp"
 #include "application/dtos/NarrativeDTOs.hpp"
+#include "application/dtos/DeterminismDTO.hpp"
 #include "src/application/mappers/InterpretationMapper.hpp"
 #include "src/application/dtos/cognitive/ContextBundleDTO.hpp"
 #include "src/application/services/cognitive/CognitiveAssistanceService.hpp"
@@ -66,6 +67,7 @@ struct InfrastructureEvaluationConfig {
     double ftHardwareCostUsd{0.0};
     nlohmann::json ftComponentSelection{nlohmann::json::array()};
     std::string trigger{"analysis_workspace_manual_run"};
+    DTO::DeterminismConfig determinism{};
 };
 
 /**

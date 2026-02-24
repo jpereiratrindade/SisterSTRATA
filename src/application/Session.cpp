@@ -5,6 +5,7 @@
 #include "core/domain/soil/SoilMonitorNode.hpp"
 #include "core/domain/infrastructure/InfrastructureOrchestrator.hpp"
 #include "core/domain/simulation/EnvironmentController.hpp"
+#include <openssl/sha.h>
 #include <algorithm>
 #include <chrono>
 #include <ctime>
@@ -12,6 +13,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 
 namespace {
 
@@ -102,6 +104,99 @@ nlohmann::json ecologicalScenarioParameters(Application::InfrastructureEcologica
     }
 }
 
+Application::DTO::DeterministicStatePayload buildDeterministicStatePayload(
+    double poolStorageWh,
+    const strata::domain::identity::IdentityNode& identity,
+    const strata::domain::soil::SoilMonitorNode& soil) {
+    using Application::DTO::DeterministicIdentityBreakdown;
+    using Application::DTO::DeterministicIdentitySnapshot;
+    using Application::DTO::DeterministicSoilBreakdown;
+    using Application::DTO::DeterministicSoilSnapshot;
+    using Application::DTO::DeterministicStatePayload;
+
+    const auto& identityReq = identity.requestedBreakdown();
+    const auto& identityCons = identity.consumedBreakdown();
+    const auto& soilReq = soil.requestedBreakdown();
+    const auto& soilCons = soil.consumedBreakdown();
+
+    DeterministicStatePayload payload{};
+    payload.poolStorageWh = poolStorageWh;
+    payload.identity = DeterministicIdentitySnapshot{
+        .requestedWh = identity.requestedEnergy(),
+        .allocatedWh = identity.allocatedEnergy(),
+        .consumedWh = identity.consumedEnergy(),
+        .operationalStateCode = static_cast<int>(identity.currentState()),
+        .reliabilityIndex = identity.reliabilityIndex(),
+        .processedEvents = identity.processedEvents(),
+        .totalDailyEvents = identity.totalDailyEvents(),
+        .requestedBreakdownWh = DeterministicIdentityBreakdown{
+            .bootWh = identityReq.boot_wh,
+            .idleWh = identityReq.idle_wh,
+            .sensingWh = identityReq.sensing_wh,
+            .processingWh = identityReq.processing_wh,
+            .communicationWh = identityReq.communication_wh,
+            .totalWh = identityReq.total_wh
+        },
+        .consumedBreakdownWh = DeterministicIdentityBreakdown{
+            .bootWh = identityCons.boot_wh,
+            .idleWh = identityCons.idle_wh,
+            .sensingWh = identityCons.sensing_wh,
+            .processingWh = identityCons.processing_wh,
+            .communicationWh = identityCons.communication_wh,
+            .totalWh = identityCons.total_wh
+        }
+    };
+    payload.soil = DeterministicSoilSnapshot{
+        .requestedWh = soil.requestedEnergy(),
+        .allocatedWh = soil.allocatedEnergy(),
+        .consumedWh = soil.consumedEnergy(),
+        .operationalStateCode = static_cast<int>(soil.currentState()),
+        .reliabilityIndex = soil.reliabilityIndex(),
+        .requestedBreakdownWh = DeterministicSoilBreakdown{
+            .bootWh = soilReq.boot_wh,
+            .idleWh = soilReq.idle_wh,
+            .sensingBaseWh = soilReq.sensing_base_wh,
+            .communicationWh = soilReq.communication_wh,
+            .sensingDynamicWh = soilReq.sensing_dynamic_wh,
+            .totalWh = soilReq.total_wh
+        },
+        .consumedBreakdownWh = DeterministicSoilBreakdown{
+            .bootWh = soilCons.boot_wh,
+            .idleWh = soilCons.idle_wh,
+            .sensingBaseWh = soilCons.sensing_base_wh,
+            .communicationWh = soilCons.communication_wh,
+            .sensingDynamicWh = soilCons.sensing_dynamic_wh,
+            .totalWh = soilCons.total_wh
+        }
+    };
+
+    return payload;
+}
+
+void validateDeterminismConfig(const Application::DTO::DeterminismConfig& determinism) {
+    using Tier = Application::DTO::DeterminismTier;
+    if ((determinism.tier == Tier::T1_SeededDeterministic ||
+         determinism.tier == Tier::T2_ReplayVerified) &&
+        determinism.seed == 0) {
+        throw std::invalid_argument("determinism.seed must be non-zero for Tier 1/2");
+    }
+}
+
+std::string sha256Hex(const std::string& canonicalPayload) {
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256(
+        reinterpret_cast<const unsigned char*>(canonicalPayload.data()),
+        canonicalPayload.size(),
+        digest);
+
+    std::ostringstream out;
+    out << std::hex << std::setfill('0');
+    for (unsigned char byte : digest) {
+        out << std::setw(2) << static_cast<unsigned int>(byte);
+    }
+    return out.str();
+}
+
 } // namespace
 
 namespace Application {
@@ -114,6 +209,8 @@ std::string Session::runInfrastructureResilienceSimulation(int days) {
 
 std::string Session::runInfrastructureResilienceSimulation(const InfrastructureEvaluationConfig& config) {
     using namespace strata::domain;
+
+    validateDeterminismConfig(config.determinism);
 
     int days = config.days <= 0 ? 365 : config.days;
     const int ftNodeCount = std::max(1, config.ftNodeCount);
@@ -283,6 +380,17 @@ std::string Session::runInfrastructureResilienceSimulation(const InfrastructureE
                 }
             }
         };
+        const DTO::DeterministicStatePayload deterministicStatePayload = buildDeterministicStatePayload(
+            finalPool.currentStorage(),
+            finalIdentity,
+            finalSoil
+        );
+        const nlohmann::json deterministicStateJson = deterministicStatePayload;
+        const std::string canonicalDeterministicPayload = deterministicStateJson.dump();
+        const std::string stateHash = sha256Hex(canonicalDeterministicPayload);
+        report["determinism"] = config.determinism;
+        report["deterministicStatePayload"] = deterministicStatePayload;
+        report["stateHash"] = stateHash;
 
         {
             std::ofstream latestOut(latestJsonPath);
