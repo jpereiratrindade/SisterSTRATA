@@ -12,6 +12,7 @@ add_executable(application_mapper_tests
     CognitiveAssistanceServiceTest.cpp
     IngestionSynthesisReportTest.cpp
     InfrastructureResilienceRunTest.cpp
+    MembraneContractEnforcementTest.cpp
     ImpactProfileMapperTest.cpp
     IWMapperTest.cpp
     NarrativeContextAnalyzerTest.cpp

@@ -1,0 +1,50 @@
+name: STRATA-CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  f1-hardening:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bash \
+            build-essential \
+            cmake \
+            libsdl2-dev \
+            libssl-dev \
+            libvulkan-dev \
+            glslang-tools
+
+          if ! command -v glslc >/dev/null 2>&1; then
+            cat <<'EOF' | sudo tee /usr/local/bin/glslc >/dev/null
+          #!/usr/bin/env bash
+          set -euo pipefail
+          if [[ "$#" -lt 3 ]]; then
+            echo "glslc wrapper: expected '<input> -o <output>'"
+            exit 2
+          fi
+          input="$1"
+          output="${@: -1}"
+          exec glslangValidator -V "$input" -o "$output"
+          EOF
+            sudo chmod +x /usr/local/bin/glslc
+          fi
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --target application_mapper_tests core_infrastructure_tests
+
+      - name: Run ADR Gates
+        run: |
+          ctest --test-dir build --output-on-failure -R "ApplicationMapperTest|CoreInfrastructureTest|MembraneDependencyGuard"

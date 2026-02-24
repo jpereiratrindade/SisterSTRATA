@@ -13,3 +13,8 @@ add_subdirectory(core)
 add_subdirectory(observational)
 add_subdirectory(application)
 add_subdirectory(infrastructure)
+
+add_test(
+  NAME MembraneDependencyGuard
+  COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/check_membrane_dependencies.sh ${CMAKE_SOURCE_DIR}
+)
