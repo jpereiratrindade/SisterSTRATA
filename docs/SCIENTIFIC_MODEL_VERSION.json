@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-02-24",
+  "owner": "Scientific Governance Lead",
+  "engineVersion": "1.10.1",
+  "scientificModelVersion": "1.0.0",
+  "componentVersions": {
+    "coreDomainModel": "1.0.0",
+    "observationalContracts": "1.0.0",
+    "fourthDimensionModel": "1.0.0",
+    "infrastructureEvidenceContracts": "1.0.0"
+  }
+}
