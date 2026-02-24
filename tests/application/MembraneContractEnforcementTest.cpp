@@ -10,6 +10,7 @@
 #include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
+using json = nlohmann::json;
 
 namespace {
 
@@ -28,6 +29,13 @@ Application::DTO::MembraneEnvelopeDTO validEnvelope() {
             "SoilElectricalObservability.latest.json",
             "2026-02-24T00:00:00Z"
         });
+}
+
+void writeJson(const fs::path& path, const json& payload) {
+    fs::create_directories(path.parent_path());
+    std::ofstream out(path);
+    EXPECT_TRUE(out.is_open());
+    out << payload.dump(2);
 }
 
 void expectSourceReferenceEqual(
@@ -368,9 +376,99 @@ TEST(MembraneContractEnforcementTest, InfrastructureRunPreservesCrossContextStat
     fs::remove_all(tempRoot);
 }
 
-TEST(MembraneContractEnforcementTest, SessionIngestionRejectsInvalidMembraneEnvelopeAndPreservesState) {
-    using json = nlohmann::json;
+TEST(MembraneContractEnforcementTest, ValidObservationalIngestionThenInfrastructureRunPreservesCrossContextState) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path inputsRoot = projectRoot / "inputs";
+    const fs::path narrativesPath = inputsRoot / "narratives" / "NarrativeObservation.valid.json";
+    const fs::path discursivePath = inputsRoot / "discursive" / "DiscursiveSystem.valid.json";
 
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+    session.getWorkspace().createWorld("Membrane Ingestion World", 11, 7);
+
+    json narrativePayload;
+    narrativePayload["history"] = json::array();
+    narrativePayload["history"].push_back({
+        {"id", "OBS-INGEST-001"},
+        {"intent", {{"type", "describe"}}},
+        {"source", {{"sourceId", "SRC-OBS-001"}, {"sourceType", "DOCUMENT"}}},
+        {"temporalContext", {{"category", "CONTEMPORARY"}, {"label", "2026-Q1"}}},
+        {"axes", json::array({
+            {{"label", "Soil"}, {"description", "soil condition overview"}}
+        })}
+    });
+    writeJson(narrativesPath, narrativePayload);
+
+    json discursivePayload;
+    discursivePayload["systems"] = json::array();
+    discursivePayload["systems"].push_back({
+        {"id", "DS-INGEST-001"},
+        {"label", "Ingestion Discursive System"},
+        {"declaredProblems", json::array({"water stress"})},
+        {"declaredActions", json::array({"increase monitoring"})},
+        {"allegedMechanisms", json::array({"seasonal drought"})},
+        {"expectedEffects", json::array({"resilience reduction"})}
+    });
+    writeJson(discursivePath, discursivePayload);
+
+    EXPECT_NO_THROW(session.ingestFromIW(narrativesPath.string()));
+    EXPECT_NO_THROW(session.ingestFromIW(discursivePath.string()));
+
+    const auto* worldBefore = session.getWorkspace().getWorld().get();
+    ASSERT_NE(worldBefore, nullptr);
+
+    const std::string worldNameBefore = worldBefore->getName();
+    const auto worldWidthBefore = worldBefore->getResolution().width;
+    const auto worldHeightBefore = worldBefore->getResolution().height;
+    const auto datasetsBefore = session.getWorkspace().getDatasets().size();
+    const auto trajectorySlicesBefore = session.getTrajectory().getTimeSlices().size();
+    const auto narrativeBefore = session.getNarrativeHistoryDTO();
+    const auto discursiveBefore = session.getDiscursiveSystemDTOs();
+    const auto recommendationBefore = session.getRecommendationTrajectoryDTO();
+    const auto contextGraphBefore = session.getNarrativeContextGraph().dump();
+
+    ASSERT_FALSE(narrativeBefore.empty());
+    ASSERT_FALSE(discursiveBefore.empty());
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 35;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "ingestion_then_infra_isolation_guard";
+
+    const std::string reportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(reportPath.empty());
+
+    const auto* worldAfter = session.getWorkspace().getWorld().get();
+    ASSERT_NE(worldAfter, nullptr);
+    const auto narrativeAfter = session.getNarrativeHistoryDTO();
+    const auto discursiveAfter = session.getDiscursiveSystemDTOs();
+    const auto recommendationAfter = session.getRecommendationTrajectoryDTO();
+    const auto contextGraphAfter = session.getNarrativeContextGraph().dump();
+
+    EXPECT_EQ(worldAfter->getName(), worldNameBefore);
+    EXPECT_EQ(worldAfter->getResolution().width, worldWidthBefore);
+    EXPECT_EQ(worldAfter->getResolution().height, worldHeightBefore);
+    EXPECT_EQ(session.getWorkspace().getDatasets().size(), datasetsBefore);
+    EXPECT_EQ(session.getTrajectory().getTimeSlices().size(), trajectorySlicesBefore);
+
+    ASSERT_EQ(narrativeAfter.size(), narrativeBefore.size());
+    for (size_t i = 0; i < narrativeBefore.size(); ++i) {
+        expectNarrativeStateEqual(narrativeBefore[i], narrativeAfter[i]);
+    }
+
+    ASSERT_EQ(discursiveAfter.size(), discursiveBefore.size());
+    for (size_t i = 0; i < discursiveBefore.size(); ++i) {
+        expectDiscursiveStateEqual(discursiveBefore[i], discursiveAfter[i]);
+    }
+
+    expectRecommendationTrajectoryEqual(recommendationBefore, recommendationAfter);
+    EXPECT_EQ(contextGraphAfter, contextGraphBefore);
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(MembraneContractEnforcementTest, SessionIngestionRejectsInvalidMembraneEnvelopeAndPreservesState) {
     const fs::path tempRoot = uniqueTempRoot();
     const fs::path projectRoot = tempRoot / "project";
     const fs::path inputsDir = projectRoot / "inputs";
