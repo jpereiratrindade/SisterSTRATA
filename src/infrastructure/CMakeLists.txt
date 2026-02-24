@@ -15,10 +15,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(httplib)
 
-find_package(SDL2 REQUIRED)
-
-add_library(infrastructure
-    window/Window.cpp
+set(INFRASTRUCTURE_SOURCES
     threading/ThreadPool.cpp
     threading/CommandQueue.hpp
     filesystem/StdFileSystem.hpp
@@ -26,19 +23,40 @@ add_library(infrastructure
     llm/OllamaAdapter.cpp
 )
 
+if(STRATA_BUILD_WORLD3D)
+    find_package(SDL2 REQUIRED)
+    list(APPEND INFRASTRUCTURE_SOURCES
+        window/Window.cpp
+    )
+endif()
+
+add_library(infrastructure
+    ${INFRASTRUCTURE_SOURCES}
+)
+
 target_include_directories(infrastructure PUBLIC
     ${CMAKE_SOURCE_DIR}/src
-    ${SDL2_INCLUDE_DIRS}
 )
+
+if(STRATA_BUILD_WORLD3D)
+    target_include_directories(infrastructure PUBLIC
+        ${SDL2_INCLUDE_DIRS}
+    )
+endif()
 
 find_package(Threads REQUIRED)
 
 target_link_libraries(infrastructure PUBLIC 
     application 
-    ${SDL2_LIBRARIES}
     Threads::Threads
     httplib::httplib
     nlohmann_json::nlohmann_json
 )
+
+if(STRATA_BUILD_WORLD3D)
+    target_link_libraries(infrastructure PUBLIC
+        ${SDL2_LIBRARIES}
+    )
+endif()
 
 target_compile_features(infrastructure PUBLIC cxx_std_20)
