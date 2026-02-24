@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <chrono>
+#include <stdexcept>
 #include <nlohmann/json.hpp>
 
 using Application::Services::IWIngestionService;
@@ -158,4 +159,23 @@ TEST_F(IWIngestionServiceTest, IngestBundleDirectory) {
 
     EXPECT_GE(discursive->getSystems().size(), 1u);
     EXPECT_GE(narrative->getHistory().size(), 1u);
+}
+
+TEST_F(IWIngestionServiceTest, RejectsDecisionDirectiveInRuntimeIngestionFlow) {
+    json payload;
+    payload["decisionDirective"] = "mutate_core_state";
+    payload["systems"] = json::array();
+    json system;
+    system["id"] = "DS-INVALID-1";
+    system["label"] = "Invalid Directive";
+    system["declaredProblems"] = json::array({"invalid"});
+    payload["systems"].push_back(system);
+
+    auto filePath = tempDir / "inputs" / "DiscursiveSystem.invalid.json";
+    writeJson(filePath, payload);
+
+    EXPECT_THROW(service->ingestFromIW(filePath.string()), std::logic_error);
+    EXPECT_TRUE(discursive->getSystems().empty());
+    EXPECT_TRUE(narrative->getHistory().empty());
+    EXPECT_TRUE(recommendation.getSnapshots().empty());
 }

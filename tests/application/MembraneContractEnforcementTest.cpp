@@ -5,6 +5,9 @@
 
 #include <chrono>
 #include <filesystem>
+#include <fstream>
+#include <stdexcept>
+#include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
 
@@ -148,6 +151,46 @@ TEST(MembraneContractEnforcementTest, InfrastructureRunCannotMutateEcologicalCor
     EXPECT_EQ(worldAfter->getResolution().height, worldHeightBefore);
     EXPECT_EQ(session.getWorkspace().getDatasets().size(), datasetsBefore);
     EXPECT_EQ(session.getTrajectory().getTimeSlices().size(), trajectorySlicesBefore);
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(MembraneContractEnforcementTest, SessionIngestionRejectsInvalidMembraneEnvelopeAndPreservesState) {
+    using json = nlohmann::json;
+
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path inputsDir = projectRoot / "inputs";
+    const fs::path payloadPath = inputsDir / "DiscursiveSystem.invalid.json";
+
+    fs::create_directories(inputsDir);
+
+    json payload;
+    payload["decisionDirective"] = "mutate_core_state";
+    payload["systems"] = json::array();
+    payload["systems"].push_back({
+        {"id", "DS-INVALID-SESSION-1"},
+        {"label", "Invalid"},
+        {"declaredProblems", json::array({"invalid"})}
+    });
+
+    {
+        std::ofstream out(payloadPath);
+        ASSERT_TRUE(out.is_open());
+        out << payload.dump(2);
+    }
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+
+    const auto discursiveBefore = session.getDiscursiveSystemCount();
+    const auto narrativeBefore = session.getNarrativeHistoryDTO().size();
+    const auto recommendationBefore = session.getRecommendationSnapshotCount();
+
+    EXPECT_THROW(session.ingestFromIW(payloadPath.string()), std::logic_error);
+    EXPECT_EQ(session.getDiscursiveSystemCount(), discursiveBefore);
+    EXPECT_EQ(session.getNarrativeHistoryDTO().size(), narrativeBefore);
+    EXPECT_EQ(session.getRecommendationSnapshotCount(), recommendationBefore);
 
     fs::remove_all(tempRoot);
 }

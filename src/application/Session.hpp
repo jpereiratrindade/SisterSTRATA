@@ -30,6 +30,7 @@
 #include "application/services/ProjectPersistenceService.hpp"
 #include "application/services/SimulationService.hpp"
 #include "application/services/NarrativeContextAnalyzer.hpp"
+#include "application/services/MembraneContractEnforcement.hpp"
 
 #include <memory>
 #include <vector>
@@ -293,6 +294,10 @@ public:
         ingestionService_->scanForIngestion();
     }
 
+    void validateMembraneEvidenceBoundary(const DTO::MembraneEnvelopeDTO& envelope) const {
+        Services::MembraneContract::validateEnvelope(envelope);
+    }
+
     // ─────────────────────────────────────────────
     //  LLM / Cognitive
     // ─────────────────────────────────────────────
@@ -459,7 +464,10 @@ private:
             *discursiveSystemRepository_,
             recommendationTrajectory_,
             *persistenceService_,
-            projectRoot_
+            projectRoot_,
+            [this](const DTO::MembraneEnvelopeDTO& envelope) {
+                validateMembraneEvidenceBoundary(envelope);
+            }
         );
     }
 

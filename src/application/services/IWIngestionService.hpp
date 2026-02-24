@@ -1,6 +1,7 @@
 #pragma once
 
 #include "application/dtos/DiscursiveSystemDTO.hpp"
+#include "application/dtos/MembraneEvidenceDTOs.hpp"
 #include "application/dtos/NarrativeDTOs.hpp"
 #include "application/dtos/RecommendationSnapshotDTO.hpp"
 #include "application/dtos/RecommendationTrajectoryDTO.hpp"
@@ -18,6 +19,7 @@
 #include <set>
 #include <array>
 #include <optional>
+#include <functional>
 
 namespace Application::Services {
 
@@ -35,6 +37,8 @@ class ProjectPersistenceService;
  */
 class IWIngestionService {
 public:
+    using MembraneBoundaryValidator = std::function<void(const Application::DTO::MembraneEnvelopeDTO&)>;
+
     struct ArtifactReport {
         std::string artifactId;
         std::string sourceMode; // bundle|standalone
@@ -73,7 +77,8 @@ public:
         SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository& discursive,
         SisterSTRATA::Observational::Recommendation::RecommendationTrajectory& recommendation,
         ProjectPersistenceService& persistence,
-        const std::filesystem::path& projectRoot);
+        const std::filesystem::path& projectRoot,
+        MembraneBoundaryValidator membraneBoundaryValidator = {});
 
     void setProjectRoot(const std::filesystem::path& root);
 
@@ -107,6 +112,8 @@ private:
     static double computeIngestionCoverage(const IWIngestSummary& summary);
     static std::string nowIsoLike();
     static std::string nowFileToken();
+    static std::optional<std::string> extractDecisionDirective(const std::map<std::string, json>& docs);
+    static bool extractCausalInterpretationAllowed(const std::map<std::string, json>& docs);
     static bool hasDiscursiveContent(const Application::DTO::DiscursiveSystemDTO& dto);
     static bool hasNarrativeContent(const Application::DTO::NarrativeStateDTO& dto);
     static bool hasRecommendationContent(const Application::DTO::RecommendationSnapshotDTO& dto);
@@ -119,6 +126,11 @@ private:
                                           const std::vector<std::string>& precedence);
     void mergeDiscursiveSupplements(Application::DTO::DiscursiveSystemDTO& dto,
                                    const std::map<std::string, json>& docs) const;
+    Application::DTO::MembraneEnvelopeDTO buildMembraneEnvelope(
+        const std::string& safeArtifact,
+        const std::string& sourceMode,
+        const std::map<std::string, json>& docs) const;
+    void enforceMembrane(const Application::DTO::MembraneEnvelopeDTO& envelope) const;
 
     // --- CRUD upsert wrappers ---
     bool upsertDiscursiveSystemDTO(const Application::DTO::DiscursiveSystemDTO& dto);
@@ -157,6 +169,7 @@ private:
     SisterSTRATA::Observational::Recommendation::RecommendationTrajectory& recommendation_;
     ProjectPersistenceService& persistence_;
     std::filesystem::path projectRoot_;
+    MembraneBoundaryValidator membraneBoundaryValidator_;
 };
 
 } // namespace Application::Services

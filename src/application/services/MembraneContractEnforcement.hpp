@@ -8,10 +8,10 @@
 
 namespace Application::Services::MembraneContract {
 
-class ContractViolation : public std::runtime_error {
+class ContractViolation : public std::logic_error {
 public:
     explicit ContractViolation(const std::string& message)
-        : std::runtime_error(message) {}
+        : std::logic_error(message) {}
 };
 
 inline void validateEnvelope(const DTO::MembraneEnvelopeDTO& envelope) {

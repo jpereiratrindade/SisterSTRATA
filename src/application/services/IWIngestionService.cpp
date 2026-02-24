@@ -1,4 +1,5 @@
 #include "application/services/IWIngestionService.hpp"
+#include "application/services/MembraneContractEnforcement.hpp"
 #include "application/services/ProjectPersistenceService.hpp"
 #include "application/services/NarrativeContextAnalyzer.hpp"
 #include "infrastructure/logging/Logger.hpp"
@@ -20,12 +21,14 @@ IWIngestionService::IWIngestionService(
     SisterSTRATA::Observational::Discursive::DiscursiveSystemRepository& discursive,
     SisterSTRATA::Observational::Recommendation::RecommendationTrajectory& recommendation,
     ProjectPersistenceService& persistence,
-    const std::filesystem::path& projectRoot)
+    const std::filesystem::path& projectRoot,
+    MembraneBoundaryValidator membraneBoundaryValidator)
     : narrative_(narrative),
       discursive_(discursive),
       recommendation_(recommendation),
       persistence_(persistence),
-      projectRoot_(projectRoot) {}
+      projectRoot_(projectRoot),
+      membraneBoundaryValidator_(std::move(membraneBoundaryValidator)) {}
 
 void IWIngestionService::setProjectRoot(const std::filesystem::path& root) {
     projectRoot_ = root;
@@ -202,6 +205,31 @@ std::string IWIngestionService::nowFileToken() {
     return out.str();
 }
 
+std::optional<std::string> IWIngestionService::extractDecisionDirective(const std::map<std::string, json>& docs) {
+    for (const auto& [_, doc] : docs) {
+        if (!doc.contains("decisionDirective")) continue;
+        const auto& value = doc["decisionDirective"];
+        if (value.is_null()) continue;
+        if (value.is_string()) {
+            return value.get<std::string>();
+        }
+        return value.dump();
+    }
+    return std::nullopt;
+}
+
+bool IWIngestionService::extractCausalInterpretationAllowed(const std::map<std::string, json>& docs) {
+    for (const auto& [_, doc] : docs) {
+        if (doc.contains("causalInterpretationAllowed") &&
+            doc["causalInterpretationAllowed"].is_boolean()) {
+            if (doc["causalInterpretationAllowed"].get<bool>()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool IWIngestionService::hasDiscursiveContent(const Application::DTO::DiscursiveSystemDTO& dto) {
     return !dto.declaredProblems.empty() || !dto.declaredActions.empty() ||
            !dto.allegedMechanisms.empty() || !dto.expectedEffects.empty();
@@ -365,6 +393,35 @@ void IWIngestionService::mergeDiscursiveSupplements(Application::DTO::Discursive
     setMetadataIfMissing("iw.interpretationLayers", pickSection("InterpretationLayers.json", "interpretationLayers"));
     setMetadataIfMissing("iw.temporalWindowReferences", pickSection("TemporalWindowReference.json", "temporalWindowReferences"));
     setMetadataIfMissing("iw.sourceProfile", pickSection("SourceProfile.json", "sourceProfile"));
+}
+
+Application::DTO::MembraneEnvelopeDTO IWIngestionService::buildMembraneEnvelope(
+    const std::string& safeArtifact,
+    const std::string& sourceMode,
+    const std::map<std::string, json>& docs) const {
+    std::string context;
+    if (sourceMode == "bundle") {
+        context = "IWBundleIngestion";
+    } else if (sourceMode == "standalone") {
+        context = "IWStandaloneIngestion";
+    }
+
+    return Application::DTO::MembraneEnvelopeDTO(
+        "observational_evidence",
+        extractCausalInterpretationAllowed(docs),
+        extractDecisionDirective(docs),
+        {
+            context,
+            safeArtifact,
+            nowIsoLike()
+        });
+}
+
+void IWIngestionService::enforceMembrane(const Application::DTO::MembraneEnvelopeDTO& envelope) const {
+    Application::Services::MembraneContract::validateEnvelope(envelope);
+    if (membraneBoundaryValidator_) {
+        membraneBoundaryValidator_(envelope);
+    }
 }
 
 // ===========================================================================
@@ -644,6 +701,9 @@ void IWIngestionService::ingestIWPayload(const std::map<std::string, json>& docs
                                           IWIngestSummary& summary,
                                           const std::string& sourceMode) {
     const std::string safeArtifact = sanitizeArtifactToken(artifactId);
+    const auto envelope = buildMembraneEnvelope(safeArtifact, sourceMode, docs);
+    enforceMembrane(envelope);
+
     ArtifactReport artifactReport;
     artifactReport.artifactId = safeArtifact;
     artifactReport.sourceMode = sourceMode;
