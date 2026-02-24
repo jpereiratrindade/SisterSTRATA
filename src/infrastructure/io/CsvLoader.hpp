@@ -107,6 +107,7 @@ public:
         };
 
         std::vector<Row> rows;
+        size_t invalidPolylineRowCount = 0;
         std::string line;
         while (std::getline(file, line)) {
             if (line.empty() || line[0] == '#') continue;
@@ -135,10 +136,16 @@ public:
                     row.color = glm::vec3(r, g, b);
                     row.hasColor = true;
                 }
-            } catch (...) {
+            } catch (const std::exception&) {
+                ++invalidPolylineRowCount;
                 continue;
             }
             rows.push_back(row);
+        }
+
+        if (invalidPolylineRowCount > 0) {
+            std::cerr << "[CsvLoader] Ignored " << invalidPolylineRowCount
+                      << " invalid polyline row(s) while parsing " << path << std::endl;
         }
 
         if (rows.empty()) return data;
@@ -226,6 +233,7 @@ public:
 
         if (isGrid) {
             int y = 0;
+            size_t invalidGridValueCount = 0;
             while (std::getline(file, line)) {
                 if (line.empty() || line[0] == '#') continue;
                 
@@ -255,10 +263,16 @@ public:
                              float b = (h & 0xFF) / 255.0f;
                              data.colors.push_back({r, g, b});
                         }
-                    } catch(...) {}
+                    } catch (const std::exception&) {
+                        ++invalidGridValueCount;
+                    }
                     x++;
                 }
                 y++;
+            }
+            if (invalidGridValueCount > 0) {
+                std::cerr << "[CsvLoader] Ignored " << invalidGridValueCount
+                          << " invalid grid value(s) while parsing " << path << std::endl;
             }
         } else {
             // Standard Point Cloud Loader

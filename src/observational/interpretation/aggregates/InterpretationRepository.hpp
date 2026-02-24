@@ -3,6 +3,7 @@
 #include "observational/interpretation/entities/InterpretationSnapshot.hpp"
 #include <vector>
 #include <fstream>
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 namespace SisterSTRATA::Observational::Interpretation {
@@ -40,7 +41,10 @@ public:
             if (j.contains("interpretations")) {
                 m_snapshots = j.at("interpretations").get<std::vector<InterpretationSnapshot>>();
             }
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            std::cerr << "[InterpretationRepository] Failed to deserialize "
+                      << filepath << ": " << e.what() << std::endl;
+        }
     }
 
 private:

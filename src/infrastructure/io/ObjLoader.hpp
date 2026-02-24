@@ -29,6 +29,7 @@ public:
         std::vector<glm::vec3> temp_colors;
         std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
         std::vector<unsigned int> pointIndices;
+        size_t invalidPointTokenCount = 0;
 
         std::ifstream file(path);
         if (!file.is_open()) {
@@ -115,11 +116,17 @@ public:
                         if (vIdx > 0) {
                             pointIndices.push_back(static_cast<unsigned int>(vIdx));
                         }
-                    } catch (...) {
+                    } catch (const std::exception&) {
+                        ++invalidPointTokenCount;
                         continue;
                     }
                 }
             }
+        }
+
+        if (invalidPointTokenCount > 0) {
+            std::cerr << "[ObjLoader] Ignored " << invalidPointTokenCount
+                      << " invalid point token(s) while parsing " << path << std::endl;
         }
 
         if (vertexIndices.empty() && pointIndices.empty() && !temp_positions.empty()) {

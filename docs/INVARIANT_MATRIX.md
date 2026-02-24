@@ -31,7 +31,7 @@ This matrix complements:
 
 ## 3. Current Residual Gaps
 
-1. Catch-all exception sites still exist in non-core layers (`infrastructure`, `world3d`, `main`, `observational`) and need explicit telemetry policy.
+1. Catch-all exception sites are now limited to boundary shields (`main`, `world3d` callback). Policy decision still required on whether to keep or replace them with typed exceptions.
 2. `soil` vs `soils` naming ambiguity remains unresolved at bounded-context naming level.
 3. Build profile standardization (`CMakePresets.json`) is still absent.
 

@@ -84,7 +84,10 @@ bool OllamaAdapter::isAvailable() const {
                     modelName_ = foundModel;
                     return true;
                 }
-            } catch (...) {}
+            } catch (const std::exception& e) {
+                std::cerr << "[Infrastructure] Failed to parse /api/tags response: "
+                          << e.what() << std::endl;
+            }
         }
     }
     return false;

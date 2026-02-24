@@ -23,6 +23,7 @@
 ### Fixed
 - **Error handling in UI/Application**:
   - Replaced silent `catch(...)` blocks in UI/Application save/load paths with `catch(const std::exception& e)` plus structured logging.
+  - Replaced silent `catch(...)` blocks in infrastructure/observational parsing paths with typed exceptions and aggregated telemetry warnings.
 - **Header include consistency**:
   - Standardized internal includes to remove redundant `src/` prefixes and aligned include-dir exposure for observational targets.
 - **Scientific core test coverage**:

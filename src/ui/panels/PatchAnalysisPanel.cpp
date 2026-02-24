@@ -13,6 +13,7 @@
 #include <fstream>
 #include <cstdio>
 #include <cstring>
+#include <iostream>
 
 namespace {
 
@@ -293,7 +294,10 @@ void PatchAnalysisPanel::draw(bool* open) {
                         if (elevGrid.width == grid.width && elevGrid.height == grid.height) {
                             grid.elevation = elevGrid.values;
                         }
-                    } catch(...) {}
+                    } catch (const std::exception& e) {
+                        std::cerr << "[PatchAnalysisPanel] Failed to load elevation companion grid: "
+                                  << e.what() << std::endl;
+                    }
                 }
             }
 
