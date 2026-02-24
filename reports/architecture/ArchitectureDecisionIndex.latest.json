@@ -2,13 +2,12 @@
   "schemaVersion": "adr_catalog.v1",
   "reportType": "ArchitectureDecisionIndex",
   "type": "governance_observational_synthesis",
-  "generatedAt": "2026-02-24 09:50:53",
+  "generatedAt": "2026-02-24 15:02:11",
   "sourceDirectory": "adr",
   "decisionCount": 6,
   "statusBreakdown": {
-    "Accepted": 4,
-    "Superseded": 1,
-    "Proposed": 1
+    "Accepted": 5,
+    "Superseded": 1
   },
   "decisions": [
     {
@@ -61,7 +60,7 @@
       "adrId": "ADR-004",
       "number": 4,
       "title": "Integration Contract for Observability -> Infrastructure -> Fourth Dimension",
-      "status": "Proposed",
+      "status": "Accepted",
       "date": "2026-02-24",
       "decisionType": "Cross-context integration contract",
       "path": "adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md",

@@ -1,6 +1,6 @@
 # ADR-004: Integration Contract for Observability -> Infrastructure -> Fourth Dimension
 
-Status: Proposed  
+Status: Accepted  
 Date: 2026-02-24  
 Decision Type: Cross-context integration contract
 
@@ -157,3 +157,19 @@ Move this ADR from `Proposed` to `Accepted` when:
 1. explicit DTOs/ports exist for the three membranes,
 2. tests prevent automatic feedback to Core Simulation,
 3. human validation confirms minimum payload viability in workspace flows.
+
+## Implementation Evidence
+
+Runtime membrane enforcement introduced in commit 2c6cda5.
+
+- Double guard:
+  - IWIngestionService (ingestion boundary)
+  - Session boundary (core frontier)
+- Hard-fail semantics via std::logic_error
+- Regression tests:
+  - IWIngestionServiceTest.RejectsDecisionDirectiveInRuntimeIngestionFlow
+  - MembraneContractEnforcementTest.SessionIngestionRejectsInvalidMembraneEnvelopeAndPreservesState
+- CI enforcement:
+  - Workflow: STRATA-CI
+  - Required check: f1-hardening
+  - Verified in GitHub Actions run #8 (success)
