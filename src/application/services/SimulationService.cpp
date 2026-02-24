@@ -41,11 +41,11 @@ void SimulationService::simulateCondition(SimulationType type,
     else if (type == SimulationType::Fragmentation) {
         addSlice(1, baseline, "Baseline (Intact)");
 
-        // Checkerboard pattern (High Fragmentation)
+        // Checkerboard pattern (High Fragmentation), stable even on tiny grids.
         std::vector<int> fragmented(size);
         for(int y=0; y<h; ++y) {
             for(int x=0; x<w; ++x) {
-                fragmented[y*w + x] = ((x/10 + y/10) % 2 == 0) ? 1 : -1;
+                fragmented[y*w + x] = (((x + y) % 2) == 0) ? 1 : -1;
             }
         }
         addSlice(2, fragmented, "Simulated Fragmentation");

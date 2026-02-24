@@ -5,6 +5,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <chrono>
 #include <nlohmann/json.hpp>
 
 using Application::Services::IWIngestionService;
@@ -21,8 +22,13 @@ protected:
     std::unique_ptr<ProjectPersistenceService> persistence;
     std::unique_ptr<IWIngestionService> service;
 
+    static std::filesystem::path uniqueTempRoot() {
+        const auto stamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+        return std::filesystem::temp_directory_path() / ("sisterstrata_test_ingestion_" + std::to_string(stamp));
+    }
+
     void SetUp() override {
-        tempDir = std::filesystem::temp_directory_path() / "sisterstrata_test_ingestion";
+        tempDir = uniqueTempRoot();
         std::filesystem::remove_all(tempDir);
         std::filesystem::create_directories(tempDir);
 
@@ -61,7 +67,7 @@ TEST_F(IWIngestionServiceTest, IngestStandaloneDiscursiveFile) {
     system["expectedEffects"] = json::array({"Improved fertility"});
     payload["systems"].push_back(system);
 
-    auto filePath = tempDir / "inputs" / "test_discursive.json";
+    auto filePath = tempDir / "inputs" / "DiscursiveSystem.json";
     writeJson(filePath, payload);
 
     EXPECT_NO_THROW(service->ingestFromIW(filePath.string()));
@@ -85,7 +91,7 @@ TEST_F(IWIngestionServiceTest, IngestStandaloneNarrativeFile) {
     obs["axes"].push_back(axis);
     payload["history"].push_back(obs);
 
-    auto filePath = tempDir / "inputs" / "test_narrative.json";
+    auto filePath = tempDir / "inputs" / "NarrativeObservation.json";
     writeJson(filePath, payload);
 
     EXPECT_NO_THROW(service->ingestFromIW(filePath.string()));

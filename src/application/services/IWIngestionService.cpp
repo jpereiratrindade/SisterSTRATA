@@ -317,6 +317,18 @@ const json* IWIngestionService::pickPrimaryPayload(const std::map<std::string, j
     return nullptr;
 }
 
+const json* pickPayloadByKeys(const std::map<std::string, json>& docs,
+                              const std::vector<std::string>& keys) {
+    for (const auto& [_, doc] : docs) {
+        for (const auto& key : keys) {
+            if (doc.contains(key)) {
+                return &doc;
+            }
+        }
+    }
+    return nullptr;
+}
+
 void IWIngestionService::mergeDiscursiveSupplements(Application::DTO::DiscursiveSystemDTO& dto,
                                                      const std::map<std::string, json>& docs) const {
     auto pickSection = [&](const std::string& fileName, const std::string& key) -> std::optional<json> {
@@ -639,7 +651,11 @@ void IWIngestionService::ingestIWPayload(const std::map<std::string, json>& docs
     // Discursive
     size_t discMapped = 0;
     size_t discSkipped = 0;
-    if (const json* discPayload = pickPrimaryPayload(docs, {"DiscursiveSystem.json", "IWBundle.json"})) {
+    const json* discPayload = pickPrimaryPayload(docs, {"DiscursiveSystem.json", "IWBundle.json"});
+    if (!discPayload) {
+        discPayload = pickPayloadByKeys(docs, {"systems", "discursiveSystem", "allegedMechanisms"});
+    }
+    if (discPayload) {
         auto discSystems = Application::Mappers::IW::IWMapper::toDiscursiveSystemDTOs(*discPayload);
         for (size_t i = 0; i < discSystems.size(); ++i) {
             auto dto = discSystems[i];
@@ -678,7 +694,11 @@ void IWIngestionService::ingestIWPayload(const std::map<std::string, json>& docs
     // Narrative
     size_t narrMapped = 0;
     size_t narrSkipped = 0;
-    if (const json* narrPayload = pickPrimaryPayload(docs, {"NarrativeObservation.json", "IWBundle.json"})) {
+    const json* narrPayload = pickPrimaryPayload(docs, {"NarrativeObservation.json", "IWBundle.json"});
+    if (!narrPayload) {
+        narrPayload = pickPayloadByKeys(docs, {"history", "narrativeObservations"});
+    }
+    if (narrPayload) {
         auto narratives = Application::Mappers::IW::IWMapper::toNarrativeStateDTOs(*narrPayload);
         for (size_t i = 0; i < narratives.size(); ++i) {
             auto dto = narratives[i];
@@ -724,7 +744,11 @@ void IWIngestionService::ingestIWPayload(const std::map<std::string, json>& docs
     // Recommendation
     size_t recMapped = 0;
     size_t recSkipped = 0;
-    if (const json* recPayload = pickPrimaryPayload(docs, {"TrajectoryAnalogies.json", "IWBundle.json"})) {
+    const json* recPayload = pickPrimaryPayload(docs, {"TrajectoryAnalogies.json", "IWBundle.json"});
+    if (!recPayload) {
+        recPayload = pickPayloadByKeys(docs, {"snapshots", "trajectoryAnalogies"});
+    }
+    if (recPayload) {
         auto recommendations = Application::Mappers::IW::IWMapper::toRecommendationSnapshotDTOs(*recPayload);
         for (size_t i = 0; i < recommendations.size(); ++i) {
             auto dto = recommendations[i];
