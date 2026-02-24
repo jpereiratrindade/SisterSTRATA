@@ -36,4 +36,11 @@ It is allowed only at process/runtime boundaries when all conditions are true:
 
 ## 6. F2 Follow-up
 
-Automate this policy with static checks (grep/AST) in CI so new forbidden `catch(...)` usage fails merge.
+Automated guard is active via:
+
+- script: `scripts/check_exception_boundaries.sh`
+- CI gate: `ExceptionBoundaryGuard` in `.github/workflows/strata-ci.yml`
+
+Future evolution:
+
+- replace grep-based guard with AST-aware checks for deeper semantic enforcement.

@@ -74,7 +74,7 @@ Evidencias:
 ## 4. Riscos Estruturais Remanescentes
 
 1. Inconsistencia historica de versionamento em partes antigas da documentacao (mitigada em `v1.10.2`, requer disciplina continua).
-2. Ocorrencias remanescentes de `catch (...)` estao restritas a boundary shields (`main`, callback `world3d`); evolucao esperada: enforcement automatico da politica de excecao de fronteira.
+2. Ocorrencias remanescentes de `catch (...)` estao restritas a boundary shields (`main`, callback `world3d`) e agora possuem enforcement automatico no gate `ExceptionBoundaryGuard`; evolucao futura: verificacao AST para semantica mais forte.
 3. Naming ambiguity `domain/soils` vs `domain/soil` foi mitigada com `ADR-006` e migracao para `domain/seto`; manter vigilancia para evitar regressao de nomenclatura legacy.
 
 ---

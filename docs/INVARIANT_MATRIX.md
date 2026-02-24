@@ -30,11 +30,12 @@ This matrix complements:
 | Infrastructure/Fourth-Dimension dependency membrane must remain unidirectional. | ADR-001, ADR-004 | Forbidden coupling across bounded contexts. | `scripts/check_membrane_dependencies.sh` | `.github/workflows/strata-ci.yml` (`MembraneDependencyGuard`) | Protected |
 | Scientific versioning metadata and release governance artifacts must remain valid and complete. | ADR-000, ADR-005 (+ policy docs) | Inconsistent scientific versioning and weak release traceability. | `scripts/validate_governance.sh`, `docs/SCIENTIFIC_MODEL_VERSION.json` schema checks | `.github/workflows/strata-ci.yml` (`Run Governance Gates`) | Protected |
 | Core scientific algorithms (energy/hydro domain) must keep deterministic and expected behavior. | ADR-002, ADR-005 | Silent scientific regressions in core domain behavior. | `tests/core/EnergyAllocationPolicyTest.cpp`, `tests/core/HydroDomainTest.cpp` | `.github/workflows/strata-ci.yml` (`CoreEnergyAllocationPolicyTest`, `CoreHydroDomainTest`) | Protected |
+| Broad exception shields (`catch(...)`) are allowed only at explicit runtime boundaries (`main`, world3d callback). | ADR-000, ADR-005 (+ `docs/EXCEPTION_BOUNDARY_POLICY.md`) | Silent failure swallowing in core/application/infrastructure flows. | `scripts/check_exception_boundaries.sh` | `.github/workflows/strata-ci.yml` (`ExceptionBoundaryGuard`) | Protected |
 
 ## 3. Current Residual Gaps
 
-1. Boundary-level `catch(...)` sites are currently constrained to runtime shields (`main`, `world3d` callback) and are now governed by `docs/EXCEPTION_BOUNDARY_POLICY.md`; automated enforcement for this policy is still pending.
-2. Build profile standardization was introduced with `CMakePresets.json`, but team adoption in local/dev/CI scripts still needs consolidation.
+1. Build profile standardization was introduced with `CMakePresets.json`, but team adoption in local/dev/CI scripts still needs consolidation.
+2. Core tests still mix legacy `assert` binaries and Google Test suites; full migration remains pending for consistency and richer CI reporting.
 
 ## 4. F2 Exit Hint
 
