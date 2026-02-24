@@ -41,7 +41,6 @@ jobs:
 
   f2-determinism-replay:
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -93,6 +92,8 @@ jobs:
     needs: f2-determinism-replay
     runs-on: ubuntu-latest
     if: always()
+    env:
+      STRATA_DETERMINISM_COMPARE_MODE: ${{ github.ref == 'refs/heads/main' && 'enforce' || 'warn' }}
 
     steps:
       - name: Download Hash Artifacts
@@ -103,25 +104,4 @@ jobs:
 
       - name: Compare Determinism Hashes Across Runners
         run: |
-          set -euo pipefail
-          mapfile -t files < <(find determinism-hashes -type f -name 'state_hash.txt' | sort)
-          if [[ "${#files[@]}" -lt 2 ]]; then
-            echo "::warning::Not enough determinism hash artifacts to compare."
-            exit 0
-          fi
-
-          base_hash="$(tr -d ' \n\r\t' < "${files[0]}")"
-          mismatch=0
-          for f in "${files[@]}"; do
-            current="$(tr -d ' \n\r\t' < "${f}")"
-            echo "[determinism-compare] ${f}: ${current}"
-            if [[ "${current}" != "${base_hash}" ]]; then
-              mismatch=1
-            fi
-          done
-
-          if [[ "${mismatch}" -ne 0 ]]; then
-            echo "::warning::Cross-runner determinism hash mismatch detected (F2 telemetry)."
-          else
-            echo "[determinism-compare] Cross-runner deterministic hashes are identical."
-          fi
+          bash scripts/compare_determinism_hashes.sh determinism-hashes "${STRATA_DETERMINISM_COMPARE_MODE}"
