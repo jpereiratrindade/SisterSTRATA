@@ -1,6 +1,6 @@
 # Architecture Decision Index
 
-Generated at: `2026-02-24 15:02:11`
+Generated at: `2026-02-24 15:18:37`
 Source directory: `adr`
 Decision count: `6`
 

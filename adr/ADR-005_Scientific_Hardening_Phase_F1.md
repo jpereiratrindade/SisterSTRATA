@@ -13,8 +13,8 @@ STRATA already has accepted architectural commitments for:
 - infrastructure as evidence axis (`ADR-001`),
 - deterministic core constraint (`ADR-002`).
 
-However, not all of these commitments are fully enforced by executable safeguards.
-`ADR-004` remains `Proposed` and requires implementation-level enforcement.
+At decision proposal time, not all of these commitments were fully enforced by executable safeguards.
+`ADR-004` was still `Proposed` and required implementation-level enforcement.
 
 To transition STRATA from research-grade evolution to scientific infrastructure operation,
 an explicit hardening phase is required.
@@ -28,7 +28,7 @@ From this ADR onward:
 1. Any change that violates `ADR-001` or `ADR-002` is classified as an **architectural regression**, and must be detectable by automated tests linked to the corresponding ADR invariant.
 2. During F1, no new domain functionality is introduced into Core Domain.
 3. FT/SETO evolution is restricted to hardening work (determinism, membrane, traceability).
-4. `ADR-004` remains `Proposed` until automated tests prove membrane enforcement, including explicit failing cases for forbidden `infrastructure -> ecological state mutation` feedback.
+4. `ADR-004` must only be promoted to `Accepted` after automated tests prove membrane enforcement, including explicit failing cases for forbidden `infrastructure -> ecological state mutation` feedback.
 
 ## 3. Freeze Policy (F1)
 
@@ -102,3 +102,11 @@ Trade-off:
 - `adr/ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md`
 - `adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md`
 - `STRATA_Governance_Model_v0_1.md`
+
+## 8. Completion Evidence (Post-Decision)
+
+F1 completion evidence was recorded on 2026-02-24:
+
+- `ADR-004` promoted to `Accepted` in commit `b21d72b`.
+- Runtime membrane double guard in commit `2c6cda5`.
+- Required CI check `f1-hardening` passed in `STRATA-CI` run `#9`.

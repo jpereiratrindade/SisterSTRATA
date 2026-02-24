@@ -2,7 +2,7 @@
   "schemaVersion": "adr_catalog.v1",
   "reportType": "ArchitectureDecisionIndex",
   "type": "governance_observational_synthesis",
-  "generatedAt": "2026-02-24 15:02:11",
+  "generatedAt": "2026-02-24 15:18:37",
   "sourceDirectory": "adr",
   "decisionCount": 6,
   "statusBreakdown": {

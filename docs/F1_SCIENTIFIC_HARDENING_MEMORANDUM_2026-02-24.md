@@ -62,3 +62,19 @@ A partir do commit que introduz `ADR-005`, toda alteracao que viole:
 - `ADR-002` (determinismo do core),
 
 deve ser tratada como regressao arquitetural.
+
+---
+
+## 6. Encerramento Formal da F1
+
+Data de encerramento formal: 2026-02-24
+
+Declaracao institucional:
+
+`F1 Scientific Hardening Phase: Completed.`
+
+Evidencias de encerramento:
+
+- `ADR-004` promovido para `Accepted` no commit `b21d72b`.
+- Check requerido `f1-hardening` aprovado no workflow `STRATA-CI`, run `#9`.
+- Catalogo ADR atualizado com 5 decisoes `Accepted`.

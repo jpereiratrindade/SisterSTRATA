@@ -5,7 +5,7 @@
 
 SisterSTRATA é um instrumento científico digital projetado para a simulação de ecossistemas complexos. Ele integra modelos de pedosfera (Solo), hidrologia e vegetação em um ambiente 3D de alta performance, focando na consistência causal e integridade científica.
 
-## Principais Funcionalidades (v1.9.3)
+## Principais Funcionalidades (v1.10.2)
 
 *   **Quarta Dimensão (Resiliência)**: Sistema de análise temporal que permite navegar por trajetórias históricas e simular futuros possíveis.
 *   **Analysis Workspace (Contextos Observacionais)**: Espaço dedicado para Contexto Narrativo, Discursivo, Trajectory e Recomendações, separado das operações 3D.
@@ -33,7 +33,7 @@ Para entender a filosofia, a governança dos modelos e a arquitetura de conhecim
 *   **[Análise de Trajetória de Patch (DDD)](docs/DDD_PatchTrajectory_Analysis.md)**: Definição do modelo multi-estado para patches.
 *   **[Arquitetura Vetorial de Hipóteses](docs/Arquitetura_Vetorial_Hipoteses.md)**: Formalização matemática do espaço vetorial de parâmetros.
 *   **[Fourth Dimension (Resilience)](docs/DDD_FourthDimensionSystem.md)**: O modelo de resiliência e coerência temporal.
-*   **[Contexto de Observação Narrativa](docs/DTO_NarrativeObservationContext.md)**: Sistema observacional para registrar interpretações discursivas do território.
+*   **[Contexto de Observação Narrativa](docs/NARRATIVE_OBSERVATION_CONTEXT_CONTRACTS.md)**: Sistema observacional para registrar interpretações discursivas do território.
 *   **[Architecture & DDD](docs/projeto_app_ddd_v10.md)**: Organização do código e princípios de design.
 *   **[STRATA Governance Model v0.1](STRATA_Governance_Model_v0_1.md)**: Governança estrutural e política normativa de causalidade/ADR.
 *   **[ADR Index (Governança Arquitetural)](adr/README.md)**: Registro canônico e histórico de decisões arquiteturais.

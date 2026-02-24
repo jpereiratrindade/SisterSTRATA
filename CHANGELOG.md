@@ -1,19 +1,36 @@
 # Changelog
 
+## [v1.10.2] - 2026-02-24
+### Added
+- **Governance hardening artifacts**:
+  - Added `docs/SCIENTIFIC_MODEL_VERSIONING.md`.
+  - Added `docs/BREAKING_CHANGES_POLICY.md`.
+  - Added `docs/RELEASE_STABILITY_CRITERIA.md`.
+  - Added canonical machine-readable version file `docs/SCIENTIFIC_MODEL_VERSION.json`.
+- **ADR/F1 execution hardening**:
+  - Added `ADR-005` and associated F1 enforcement matrix/memorandum.
+  - Added deterministic execution metadata and runtime state hash emission.
+  - Added membrane contract DTO/ports and runtime double guard.
+
+### Changed
+- **ADR lifecycle**:
+  - Promoted `ADR-004` from `Proposed` to `Accepted` with implementation evidence and CI gate traceability.
+- **CI hardening gates**:
+  - `STRATA-CI` now enforces governance validation and membrane dependency guard in headless mode.
+- **Versioning alignment**:
+  - Synced project/release metadata and documentation for `v1.10.2`.
+
+## [v1.10.1] - 2026-02-24
+### Added
+- **Headless F1 pipeline**:
+  - Introduced headless scientific gates in CI for reproducible F1 validation.
+
+### Changed
+- **Build decoupling**:
+  - Decoupled World3D/UI from mandatory scientific gates (`STRATA_BUILD_WORLD3D=OFF` path in CI).
+
 ## [v1.10.0] - 2026-02-23
 ### Added
-- **ADR Governance (Systematic Discipline)**:
-  - Added canonical ADR registry in `/adr` with index and lifecycle rules.
-  - Added `ADR-000_Architecture_Governance.md` as the foundational governance model.
-  - Added numbered architectural decisions:
-    - `ADR-001_Infrastructure_as_Evidence_Axis.md`
-    - `ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md`
-    - `ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md`
-- **ADR Catalog Extractor (Analysis Layer)**:
-  - Added `scripts/build_adr_catalog.py` to parse canonical ADR markdown and generate structured artifacts.
-  - Added generated report targets:
-    - `reports/architecture/ArchitectureDecisionIndex.latest.json`
-    - `reports/architecture/ArchitectureDecisionIndex.latest.md`
 - **Infrastructure Domain v0.1**: Introduced Shared Energy + Infrastructure orchestration model with new core domain modules:
   - `src/core/domain/energy/*`
   - `src/core/domain/identity/*`
