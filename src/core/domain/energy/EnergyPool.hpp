@@ -14,7 +14,7 @@ struct EnergyPool {
 
     // Method to apply daily generation (saturates at capacity) Option B
     void updateGeneration(double solar_generation_wh) {
-        daily_generation_wh = solar_generation_wh;
+        daily_generation_wh = (solar_generation_wh > 0.0) ? solar_generation_wh : 0.0;
         current_storage_wh += daily_generation_wh;
         if (current_storage_wh > total_capacity_wh) {
             current_storage_wh = total_capacity_wh;

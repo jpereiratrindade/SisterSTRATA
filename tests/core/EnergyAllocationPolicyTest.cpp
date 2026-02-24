@@ -5,6 +5,7 @@
 #include <string>
 
 #include "core/domain/energy/EnergyAllocationPolicy.hpp"
+#include "core/domain/energy/EnergyPool.hpp"
 
 namespace {
 
@@ -67,6 +68,13 @@ void testEnoughEnergySatisfiesAllRequests() {
     assert(nearlyEqual(allocations.at("c"), 3.0));
 }
 
+void testEnergyPoolRejectsNegativeGeneration() {
+    strata::domain::energy::EnergyPool pool(100.0, 25.0);
+    pool.updateGeneration(-10.0);
+    assert(nearlyEqual(pool.daily_generation_wh, 0.0));
+    assert(nearlyEqual(pool.currentStorage(), 25.0));
+}
+
 } // namespace
 
 int main() {
@@ -74,6 +82,7 @@ int main() {
     testFairAllocationWithCap();
     testNonPositiveRequestsAndNonNegativeBudget();
     testEnoughEnergySatisfiesAllRequests();
+    testEnergyPoolRejectsNegativeGeneration();
     std::cout << "EnergyAllocationPolicy tests passed.\n";
     return 0;
 }

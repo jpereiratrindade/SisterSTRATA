@@ -24,6 +24,8 @@
 - **Error handling in UI/Application**:
   - Replaced silent `catch(...)` blocks in UI/Application save/load paths with `catch(const std::exception& e)` plus structured logging.
   - Replaced silent `catch(...)` blocks in infrastructure/observational parsing paths with typed exceptions and aggregated telemetry warnings.
+- **Energy pool robustness**:
+  - `EnergyPool::updateGeneration` now clamps negative generation input to zero to prevent accidental storage subtraction from invalid telemetry.
 - **Header include consistency**:
   - Standardized internal includes to remove redundant `src/` prefixes and aligned include-dir exposure for observational targets.
 - **Scientific core test coverage**:

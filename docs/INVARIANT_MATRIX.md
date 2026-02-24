@@ -16,6 +16,7 @@ This matrix complements:
 - `adr/ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md`
 - `adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md`
 - `adr/ADR-005_Scientific_Hardening_Phase_F1.md`
+- `adr/ADR-006_Domain_Naming_Disambiguation_Soil_vs_SETO.md`
 
 ## 2. Invariant -> Test -> Gate
 
@@ -32,7 +33,7 @@ This matrix complements:
 ## 3. Current Residual Gaps
 
 1. Catch-all exception sites are now limited to boundary shields (`main`, `world3d` callback). Policy decision still required on whether to keep or replace them with typed exceptions.
-2. `soil` vs `soils` naming ambiguity remains unresolved at bounded-context naming level.
+2. Naming decision is now formalized in `ADR-006`; filesystem/include migration from legacy `soil` naming to canonical `seto` remains pending.
 3. Build profile standardization (`CMakePresets.json`) is still absent.
 
 ## 4. F2 Exit Hint
