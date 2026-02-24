@@ -35,6 +35,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -420,18 +421,24 @@ public:
     }
 
     void loadSidecarData(const std::string& path) {
-         try {
+        try {
             getNarrativeSystem().deserialize(path + ".json");
             std::cout << "[Session] Sidecar: Narrative loaded." << std::endl;
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            std::cerr << "[Session] Sidecar: Narrative load failed: " << e.what() << std::endl;
+        }
         try {
             getDiscursiveSystemRepository().deserialize(path + ".discursive.json");
             std::cout << "[Session] Sidecar: Discursive loaded." << std::endl;
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            std::cerr << "[Session] Sidecar: Discursive load failed: " << e.what() << std::endl;
+        }
         try {
             getRecommendationTrajectory().deserialize(path + ".recommendation.json");
             std::cout << "[Session] Sidecar: Recommendation loaded." << std::endl;
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            std::cerr << "[Session] Sidecar: Recommendation load failed: " << e.what() << std::endl;
+        }
     }
 
     // ─────────────────────────────────────────────

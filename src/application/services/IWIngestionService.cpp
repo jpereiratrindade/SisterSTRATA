@@ -10,6 +10,7 @@
 #include <ctime>
 #include <algorithm>
 #include <cctype>
+#include <exception>
 #include <unordered_set>
 
 namespace Application::Services {
@@ -109,7 +110,9 @@ void IWIngestionService::scanForIngestion() {
             std::filesystem::create_directories(inputsDir / "narratives");
             std::filesystem::create_directories(inputsDir / "discursive");
             LOG_INFO("IWIngestion", std::string("Created input directories at ") + inputsDir.string());
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            LOG_WARN("IWIngestion", std::string("Failed to create input directories: ") + e.what());
+        }
         return;
     }
 
@@ -253,7 +256,8 @@ std::optional<json> IWIngestionService::loadJsonFile(const std::filesystem::path
         json j;
         file >> j;
         return j;
-    } catch (...) {
+    } catch (const std::exception& e) {
+        LOG_WARN("IWIngestion", std::string("Failed to parse JSON file '") + filePath.string() + "': " + e.what());
         return std::nullopt;
     }
 }

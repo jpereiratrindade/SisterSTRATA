@@ -5,6 +5,7 @@
 #include "core/domain/soil/SoilMonitorNode.hpp"
 #include "core/domain/infrastructure/InfrastructureOrchestrator.hpp"
 #include "core/domain/simulation/EnvironmentController.hpp"
+#include "infrastructure/logging/Logger.hpp"
 #include <openssl/sha.h>
 #include <algorithm>
 #include <chrono>
@@ -406,7 +407,8 @@ std::string Session::runInfrastructureResilienceSimulation(const InfrastructureE
         }
 
         return latestJsonPath.string();
-    } catch (...) {
+    } catch (const std::exception& e) {
+        LOG_ERROR("Session", std::string("runInfrastructureResilienceSimulation failed: ") + e.what());
         return {};
     }
 }

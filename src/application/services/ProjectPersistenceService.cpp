@@ -26,8 +26,6 @@ void ProjectPersistenceService::initializePersistence() {
             discursive_.deserialize(discursivePath.string());
         } catch (const std::exception& e) {
             LOG_ERROR("ProjectPersistence", std::string("Failed to load discursive: ") + e.what());
-        } catch (...) {
-            LOG_ERROR("ProjectPersistence", "Failed to load discursive (unknown error)");
         }
     }
 
@@ -37,8 +35,6 @@ void ProjectPersistenceService::initializePersistence() {
             narrative_.deserialize(narrativePath.string());
         } catch (const std::exception& e) {
             LOG_ERROR("ProjectPersistence", std::string("Failed to load narrative: ") + e.what());
-        } catch (...) {
-            LOG_ERROR("ProjectPersistence", "Failed to load narrative (unknown error)");
         }
     }
 
@@ -48,8 +44,6 @@ void ProjectPersistenceService::initializePersistence() {
             recommendation_.deserialize(recPath.string());
         } catch (const std::exception& e) {
             LOG_ERROR("ProjectPersistence", std::string("Failed to load recommendation: ") + e.what());
-        } catch (...) {
-            LOG_ERROR("ProjectPersistence", "Failed to load recommendation (unknown error)");
         }
     }
 
@@ -59,8 +53,6 @@ void ProjectPersistenceService::initializePersistence() {
             interpretation_.deserialize(interpPath.string());
         } catch (const std::exception& e) {
             LOG_ERROR("ProjectPersistence", std::string("Failed to load interpretation: ") + e.what());
-        } catch (...) {
-            LOG_ERROR("ProjectPersistence", "Failed to load interpretation (unknown error)");
         }
     }
 }

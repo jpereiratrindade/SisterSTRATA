@@ -18,3 +18,8 @@ add_test(
   NAME MembraneDependencyGuard
   COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/check_membrane_dependencies.sh ${CMAKE_SOURCE_DIR}
 )
+
+add_test(
+  NAME CoreDomainBoundaryGuard
+  COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/check_core_domain_dependencies.sh ${CMAKE_SOURCE_DIR}
+)

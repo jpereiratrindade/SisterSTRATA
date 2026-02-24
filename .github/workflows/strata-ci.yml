@@ -33,4 +33,4 @@ jobs:
 
       - name: Run ADR Gates
         run: |
-          ctest --test-dir build --output-on-failure -R "ApplicationMapperTest|CoreInfrastructureTest|MembraneDependencyGuard"
+          ctest --test-dir build --output-on-failure -R "ApplicationMapperTest|CoreInfrastructureTest|MembraneDependencyGuard|CoreDomainBoundaryGuard"
