@@ -2,11 +2,11 @@
   "schemaVersion": "adr_catalog.v1",
   "reportType": "ArchitectureDecisionIndex",
   "type": "governance_observational_synthesis",
-  "generatedAt": "2026-02-24 08:52:32",
+  "generatedAt": "2026-02-24 09:50:53",
   "sourceDirectory": "adr",
-  "decisionCount": 5,
+  "decisionCount": 6,
   "statusBreakdown": {
-    "Accepted": 3,
+    "Accepted": 4,
     "Superseded": 1,
     "Proposed": 1
   },
@@ -65,6 +65,17 @@
       "date": "2026-02-24",
       "decisionType": "Cross-context integration contract",
       "path": "adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md",
+      "supersedes": [],
+      "supersededBy": []
+    },
+    {
+      "adrId": "ADR-005",
+      "number": 5,
+      "title": "Establish Scientific Hardening Phase (F1)",
+      "status": "Accepted",
+      "date": "2026-02-24",
+      "decisionType": "Institutional hardening phase and execution policy",
+      "path": "adr/ADR-005_Scientific_Hardening_Phase_F1.md",
       "supersedes": [],
       "supersededBy": []
     }

@@ -25,6 +25,7 @@ Current ADRs:
 - [ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md](ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md)
 - [ADR-003_Infrastructure_Evidence_Axis_Superseded_Draft.md](ADR-003_Infrastructure_Evidence_Axis_Superseded_Draft.md)
 - [ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md](ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md)
+- [ADR-005_Scientific_Hardening_Phase_F1.md](ADR-005_Scientific_Hardening_Phase_F1.md)
 
 Normative governance reference:
 

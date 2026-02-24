@@ -1,12 +1,12 @@
 # Architecture Decision Index
 
-Generated at: `2026-02-24 08:52:32`
+Generated at: `2026-02-24 09:50:53`
 Source directory: `adr`
-Decision count: `5`
+Decision count: `6`
 
 ## Status Breakdown
 
-- `Accepted`: 3
+- `Accepted`: 4
 - `Proposed`: 1
 - `Superseded`: 1
 
@@ -19,3 +19,4 @@ Decision count: `5`
 | ADR-002 | Accepted | 2026-02-24 | Determinism and reproducibility constraint | adr/ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md | - | - |
 | ADR-003 | Superseded | 2026-02-24 | Domain boundary and ontology | adr/ADR-003_Infrastructure_Evidence_Axis_Superseded_Draft.md | - | ADR-001 |
 | ADR-004 | Proposed | 2026-02-24 | Cross-context integration contract | adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md | - | - |
+| ADR-005 | Accepted | 2026-02-24 | Institutional hardening phase and execution policy | adr/ADR-005_Scientific_Hardening_Phase_F1.md | - | - |

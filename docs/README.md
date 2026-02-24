@@ -31,3 +31,7 @@ Indice rapido para os documentos cientificos do SisterSTRATA.
 - [ADR-002 Deterministic Core as Non-Negotiable Constraint](../adr/ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md)
 - [ADR-003 Infrastructure Evidence Axis (superseded draft)](../adr/ADR-003_Infrastructure_Evidence_Axis_Superseded_Draft.md)
 - [ADR-004 Integration Contract Observability -> Infrastructure -> Fourth Dimension](../adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md)
+- [ADR-005 Scientific Hardening Phase F1](../adr/ADR-005_Scientific_Hardening_Phase_F1.md)
+- [Memorando F1 Scientific Hardening](F1_SCIENTIFIC_HARDENING_MEMORANDUM_2026-02-24.md)
+- [Matriz ADR -> Enforcement (F1)](ADR_ENFORCEMENT_MATRIX_F1.md)
+- [Relatorio ADR x Codigo (2026-02-24)](ADR_STATUS_CODE_ALIGNMENT_2026-02-24.md)
