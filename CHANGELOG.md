@@ -2,6 +2,12 @@
 
 ## [v1.10.0] - 2026-02-23
 ### Added
+- **ADR Governance (Systematic Discipline)**:
+  - Added canonical ADR registry in `/adr` with index and lifecycle rules.
+  - Added `ADR-000_Architecture_Governance.md` as the foundational governance model.
+  - Added numbered architectural decisions:
+    - `ADR-001_Infrastructure_Evidence_Axis.md`
+    - `ADR-002_Integration_Contract_Observability_Infrastructure_FourthDimension.md`
 - **Infrastructure Domain v0.1**: Introduced Shared Energy + Infrastructure orchestration model with new core domain modules:
   - `src/core/domain/energy/*`
   - `src/core/domain/identity/*`

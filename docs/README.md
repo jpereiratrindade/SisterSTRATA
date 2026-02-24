@@ -24,3 +24,7 @@ Indice rapido para os documentos cientificos do SisterSTRATA.
 - [DDD SharedEnergyContext v0.1](../STRATA_DDD_SharedEnergyContext_v0_1.md)
 - [DDD IdentityResilienceContext v0.1](../STRATA_DDD_IdentityResilienceContext_v0_1.md)
 - [DDD ScientificInstrumentationContext MVP](../STRATA_ScientificInstrumentationContext_DDD_MVP.md)
+- [ADR Index (canonico)](../adr/README.md)
+- [ADR-000 Architecture Governance](../adr/ADR-000_Architecture_Governance.md)
+- [ADR-001 Infrastructure Evidence Axis](../adr/ADR-001_Infrastructure_Evidence_Axis.md)
+- [ADR-002 Integration Contract Observability -> Infrastructure -> Fourth Dimension](../adr/ADR-002_Integration_Contract_Observability_Infrastructure_FourthDimension.md)
