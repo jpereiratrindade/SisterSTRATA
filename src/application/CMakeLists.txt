@@ -22,14 +22,16 @@ target_link_libraries(application PUBLIC
 )
 target_compile_features(application PUBLIC cxx_std_20)
 
-# GUI Host Application (The "App" class that wires UI and World3D)
-add_library(application_host
-    Application.cpp
-)
+if(STRATA_BUILD_WORLD3D)
+    # GUI Host Application (The "App" class that wires UI and World3D)
+    add_library(application_host
+        Application.cpp
+    )
 
-target_link_libraries(application_host PUBLIC
-    application
-    world3d
-    ui
-)
-target_compile_features(application_host PUBLIC cxx_std_20)
+    target_link_libraries(application_host PUBLIC
+        application
+        world3d
+        ui
+    )
+    target_compile_features(application_host PUBLIC cxx_std_20)
+endif()
