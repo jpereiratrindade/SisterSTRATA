@@ -29,8 +29,8 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSTRATA_BUILD_WORLD3D=OFF
 
       - name: Build
-        run: cmake --build build --target application_mapper_tests core_infrastructure_tests
+        run: cmake --build build --target application_mapper_tests core_infrastructure_tests energy_allocation_policy_tests hydro_domain_tests
 
       - name: Run ADR Gates
         run: |
-          ctest --test-dir build --output-on-failure -R "ApplicationMapperTest|CoreInfrastructureTest|MembraneDependencyGuard|CoreDomainBoundaryGuard"
+          ctest --test-dir build --output-on-failure -R "ApplicationMapperTest|CoreInfrastructureTest|CoreEnergyAllocationPolicyTest|CoreHydroDomainTest|MembraneDependencyGuard|CoreDomainBoundaryGuard"

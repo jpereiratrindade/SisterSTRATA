@@ -36,6 +36,7 @@ Indice rapido para os documentos cientificos do SisterSTRATA.
 - [ADR-005 Scientific Hardening Phase F1](../adr/ADR-005_Scientific_Hardening_Phase_F1.md)
 - [Memorando F1 Scientific Hardening](F1_SCIENTIFIC_HARDENING_MEMORANDUM_2026-02-24.md)
 - [Matriz ADR -> Enforcement (F1)](ADR_ENFORCEMENT_MATRIX_F1.md)
+- [Invariant Matrix (ADR -> Test -> Gate)](INVARIANT_MATRIX.md)
 - [Relatorio ADR x Codigo (2026-02-24)](ADR_STATUS_CODE_ALIGNMENT_2026-02-24.md)
 - [Scientific Model Versioning Policy](SCIENTIFIC_MODEL_VERSIONING.md)
 - [Breaking Changes Policy](BREAKING_CHANGES_POLICY.md)
