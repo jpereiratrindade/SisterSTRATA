@@ -37,7 +37,9 @@
 #include <map>
 #include <exception>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <nlohmann/json.hpp>
 
 namespace Application {
@@ -422,18 +424,21 @@ public:
 
     void loadSidecarData(const std::string& path) {
         try {
+            validateSidecarPayloadBoundary(path + ".json", "Narrative");
             getNarrativeSystem().deserialize(path + ".json");
             std::cout << "[Session] Sidecar: Narrative loaded." << std::endl;
         } catch (const std::exception& e) {
             std::cerr << "[Session] Sidecar: Narrative load failed: " << e.what() << std::endl;
         }
         try {
+            validateSidecarPayloadBoundary(path + ".discursive.json", "Discursive");
             getDiscursiveSystemRepository().deserialize(path + ".discursive.json");
             std::cout << "[Session] Sidecar: Discursive loaded." << std::endl;
         } catch (const std::exception& e) {
             std::cerr << "[Session] Sidecar: Discursive load failed: " << e.what() << std::endl;
         }
         try {
+            validateSidecarPayloadBoundary(path + ".recommendation.json", "Recommendation");
             getRecommendationTrajectory().deserialize(path + ".recommendation.json");
             std::cout << "[Session] Sidecar: Recommendation loaded." << std::endl;
         } catch (const std::exception& e) {
@@ -458,6 +463,28 @@ public:
     std::string runInfrastructureResilienceSimulation(const InfrastructureEvaluationConfig& config);
 
 private:
+    void validateSidecarPayloadBoundary(const std::string& sidecarPath, const std::string& label) const {
+        std::ifstream in(sidecarPath);
+        if (!in.is_open()) {
+            return;
+        }
+
+        nlohmann::json payload;
+        in >> payload;
+
+        const bool hasDecisionDirective =
+            payload.contains("decisionDirective") && !payload["decisionDirective"].is_null();
+        const bool causalInterpretationAllowed =
+            payload.contains("causalInterpretationAllowed") &&
+            payload["causalInterpretationAllowed"].is_boolean() &&
+            payload["causalInterpretationAllowed"].get<bool>();
+
+        if (hasDecisionDirective || causalInterpretationAllowed) {
+            throw std::logic_error(
+                label + " sidecar violates membrane boundary (forbidden decision/causal directives)");
+        }
+    }
+
     void initServices() {
         persistenceService_ = std::make_unique<Services::ProjectPersistenceService>(
             projectRoot_,

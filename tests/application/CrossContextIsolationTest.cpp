@@ -985,3 +985,94 @@ TEST(CrossContextIsolationTest, MixedDatasetWorldLoadingWithSidecarsDoesNotChang
 
     fs::remove_all(tempRoot);
 }
+
+TEST(CrossContextIsolationTest, MaliciousWorldSidecarPayloadDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path datasetsRoot = projectRoot / "datasets";
+    const fs::path csvPath = datasetsRoot / "malicious_points.csv";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+    session.getWorkspace().createWorld("Malicious Sidecar Guard World", 22, 11);
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 46;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "baseline_without_malicious_sidecar_loading";
+    config.determinism.seed = 20260302;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    const std::string baselineReportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    fs::create_directories(datasetsRoot);
+    {
+        std::ofstream csvOut(csvPath);
+        ASSERT_TRUE(csvOut.is_open());
+        csvOut << "0,0,0\n";
+        csvOut << "1,0,0\n";
+        csvOut << "0,1,0\n";
+    }
+
+    json maliciousNarrative;
+    maliciousNarrative["decisionDirective"] = "mutate_core_state";
+    maliciousNarrative["history"] = json::array({
+        {
+            {"id", "NARR-MAL-001"},
+            {"intent", {{"type", "describe"}}}
+        }
+    });
+    writeJson(csvPath.string() + ".json", maliciousNarrative);
+
+    json maliciousDiscursive;
+    maliciousDiscursive["causalInterpretationAllowed"] = true;
+    maliciousDiscursive["systems"] = json::array({
+        {
+            {"id", "DISC-MAL-001"},
+            {"declaredProblems", json::array({"attempted directive"})}
+        }
+    });
+    writeJson(csvPath.string() + ".discursive.json", maliciousDiscursive);
+
+    json maliciousRecommendation;
+    maliciousRecommendation["decisionDirective"] = "override_policy";
+    maliciousRecommendation["snapshots"] = json::array({
+        {
+            {"id", "REC-MAL-001"},
+            {"recommendationText", "malicious payload"}
+        }
+    });
+    writeJson(csvPath.string() + ".recommendation.json", maliciousRecommendation);
+
+    const auto narrativeCountBefore = session.getNarrativeHistoryDTO().size();
+    const auto discursiveCountBefore = session.getDiscursiveSystemDTOs().size();
+    const auto recommendationCountBefore = session.getRecommendationTrajectoryDTO().snapshots.size();
+
+    EXPECT_NO_THROW(session.loadWorld(csvPath.string()));
+
+    EXPECT_EQ(session.getNarrativeHistoryDTO().size(), narrativeCountBefore);
+    EXPECT_EQ(session.getDiscursiveSystemDTOs().size(), discursiveCountBefore);
+    EXPECT_EQ(session.getRecommendationTrajectoryDTO().snapshots.size(), recommendationCountBefore);
+
+    config.trigger = "after_malicious_sidecar_loading";
+    const std::string afterMaliciousLoadReportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterMaliciousLoadReportPath.empty());
+    const json afterMaliciousLoadReport = readJson(afterMaliciousLoadReportPath);
+    ASSERT_TRUE(afterMaliciousLoadReport.contains("stateHash"));
+    ASSERT_TRUE(afterMaliciousLoadReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterMaliciousLoadReport.contains("finalState"));
+
+    EXPECT_EQ(afterMaliciousLoadReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(
+        afterMaliciousLoadReport["deterministicStatePayload"],
+        baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterMaliciousLoadReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
