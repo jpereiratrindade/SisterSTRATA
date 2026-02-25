@@ -96,10 +96,11 @@ Registrar o que foi implementado no SisterSTRATA para o InfrastructureLayer v0.1
 ## Como executar
 
 ```bash
-cmake -S . -B build
-cmake --build build
-./build/bin/application_mapper_tests --gtest_filter=InfrastructureResilienceRunTest.*
-./build/bin/core_infrastructure_tests
+cmake --preset headless
+cmake --build --preset headless
+ctest --test-dir build/headless --output-on-failure -R "ApplicationMapper_InfrastructureResilience|CoreInfrastructureTest"
+# canonical local F2 path (same gate groups used in CI):
+./scripts/run_f2_headless_suite.sh
 ```
 
 ## Onde os resultados aparecem no workspace

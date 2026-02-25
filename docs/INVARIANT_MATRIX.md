@@ -46,7 +46,7 @@ This matrix complements:
 
 ## 3. Current Residual Gaps
 
-1. Build profile standardization was introduced with `CMakePresets.json`, but team adoption in local/dev/CI scripts still needs consolidation.
+1. Preset-based headless execution is now canonical in CI and local helper workflow (`scripts/run_f2_headless_suite.sh`), but periodic drift audits are still needed to keep ad-hoc contributor commands aligned.
 2. Scenario-level enforcement now includes observational/cognitive/impact-profile/persistence/world-loading adversarial coupling protection; additional cross-context scenario families are still pending (for example oversized sidecar payload stress and schema-valid edge-case permutations).
 3. Determinism trend tracking was added in CI (`f2-determinism-stability-window`) in monitoring mode; promotion from `warn` to `enforce` follows the objective criteria in `docs/RELEASE_STABILITY_CRITERIA.md` (section "Determinism Stability Window Promotion").
 
