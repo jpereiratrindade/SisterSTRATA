@@ -33,7 +33,7 @@ jobs:
 
       - name: Run ADR Gates
         run: |
-          ctest --test-dir build/headless --output-on-failure -R "ApplicationMapper_MembraneContract|ApplicationMapper_CrossContextIsolation|ApplicationMapper_InfrastructureResilience|CoreInfrastructureTest|CoreEnergyAllocationPolicyTest|CoreHydroDomainTest|MembraneDependencyGuard|CoreDomainBoundaryGuard|ExceptionBoundaryGuard"
+          ctest --test-dir build/headless --output-on-failure -R "ApplicationMapper_MembraneContract|ApplicationMapper_CrossContextIsolation|ApplicationMapper_InfrastructureResilience|CoreWorkspaceTest|CorePatchAnalysisTest|CoreSoilRasterizerTest|CorePatchTrajectoryTest|CoreTrajectoryLODTest|CoreVegVectorTest|CoreSlopeFixTest|CoreInfrastructureTest|CoreEnergyAllocationPolicyTest|CoreHydroDomainTest|MembraneDependencyGuard|CoreDomainBoundaryGuard|ExceptionBoundaryGuard"
 
       - name: Run Full Headless Test Suite
         run: |
