@@ -5,6 +5,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
 #include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
@@ -363,6 +364,82 @@ TEST(CrossContextIsolationTest, ValidObservationalIngestionThenInfrastructureRun
 
     expectRecommendationTrajectoryEqual(recommendationBefore, recommendationAfter);
     EXPECT_EQ(contextGraphAfter, contextGraphBefore);
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(CrossContextIsolationTest, InvalidObservationalIngestionThenInfrastructureRunPreservesCrossContextState) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path inputsRoot = projectRoot / "inputs";
+    const fs::path invalidDiscursivePath = inputsRoot / "discursive" / "DiscursiveSystem.invalid.json";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+    session.getWorkspace().createWorld("Membrane Attack Simulation World", 10, 6);
+
+    json invalidDiscursivePayload;
+    invalidDiscursivePayload["decisionDirective"] = "mutate_core_state";
+    invalidDiscursivePayload["systems"] = json::array();
+    invalidDiscursivePayload["systems"].push_back({
+        {"id", "DS-ATTACK-001"},
+        {"label", "Invalid runtime directive"},
+        {"declaredProblems", json::array({"cross_context_mutation_attempt"})}
+    });
+    writeJson(invalidDiscursivePath, invalidDiscursivePayload);
+
+    const auto* worldBefore = session.getWorkspace().getWorld().get();
+    ASSERT_NE(worldBefore, nullptr);
+
+    const std::string worldNameBefore = worldBefore->getName();
+    const auto worldWidthBefore = worldBefore->getResolution().width;
+    const auto worldHeightBefore = worldBefore->getResolution().height;
+    const auto datasetsBefore = session.getWorkspace().getDatasets().size();
+    const auto trajectorySlicesBefore = session.getTrajectory().getTimeSlices().size();
+    const auto narrativeBefore = session.getNarrativeHistoryDTO();
+    const auto discursiveBefore = session.getDiscursiveSystemDTOs();
+    const auto recommendationBefore = session.getRecommendationTrajectoryDTO();
+    const auto contextGraphBefore = session.getNarrativeContextGraph().dump();
+
+    EXPECT_THROW(session.ingestFromIW(invalidDiscursivePath.string()), std::logic_error);
+
+    const auto* worldAfterRejectedIngestion = session.getWorkspace().getWorld().get();
+    ASSERT_NE(worldAfterRejectedIngestion, nullptr);
+    EXPECT_EQ(worldAfterRejectedIngestion->getName(), worldNameBefore);
+    EXPECT_EQ(worldAfterRejectedIngestion->getResolution().width, worldWidthBefore);
+    EXPECT_EQ(worldAfterRejectedIngestion->getResolution().height, worldHeightBefore);
+    EXPECT_EQ(session.getWorkspace().getDatasets().size(), datasetsBefore);
+    EXPECT_EQ(session.getTrajectory().getTimeSlices().size(), trajectorySlicesBefore);
+    EXPECT_EQ(session.getNarrativeHistoryDTO().size(), narrativeBefore.size());
+    EXPECT_EQ(session.getDiscursiveSystemDTOs().size(), discursiveBefore.size());
+    expectRecommendationTrajectoryEqual(recommendationBefore, session.getRecommendationTrajectoryDTO());
+    EXPECT_EQ(session.getNarrativeContextGraph().dump(), contextGraphBefore);
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 30;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::SevereDrought;
+    config.trigger = "invalid_ingestion_then_infra_isolation_guard";
+
+    const std::string reportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(reportPath.empty());
+
+    const auto* worldAfterRun = session.getWorkspace().getWorld().get();
+    ASSERT_NE(worldAfterRun, nullptr);
+    const auto narrativeAfterRun = session.getNarrativeHistoryDTO();
+    const auto discursiveAfterRun = session.getDiscursiveSystemDTOs();
+    const auto recommendationAfterRun = session.getRecommendationTrajectoryDTO();
+    const auto contextGraphAfterRun = session.getNarrativeContextGraph().dump();
+
+    EXPECT_EQ(worldAfterRun->getName(), worldNameBefore);
+    EXPECT_EQ(worldAfterRun->getResolution().width, worldWidthBefore);
+    EXPECT_EQ(worldAfterRun->getResolution().height, worldHeightBefore);
+    EXPECT_EQ(session.getWorkspace().getDatasets().size(), datasetsBefore);
+    EXPECT_EQ(session.getTrajectory().getTimeSlices().size(), trajectorySlicesBefore);
+
+    ASSERT_EQ(narrativeAfterRun.size(), narrativeBefore.size());
+    ASSERT_EQ(discursiveAfterRun.size(), discursiveBefore.size());
+    expectRecommendationTrajectoryEqual(recommendationBefore, recommendationAfterRun);
+    EXPECT_EQ(contextGraphAfterRun, contextGraphBefore);
 
     fs::remove_all(tempRoot);
 }
