@@ -1756,3 +1756,121 @@ TEST(
 
     fs::remove_all(tempRoot);
 }
+
+TEST(
+    CrossContextIsolationTest,
+    BundleIngestionThenSidecarReloadTransportChainDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path baselineProjectRoot = tempRoot / "baseline_project";
+    const fs::path chainProjectRoot = tempRoot / "chain_project";
+    const fs::path inputsRoot = chainProjectRoot / "inputs";
+    const fs::path bundleRoot = inputsRoot / "bundle_transport_chain_valid";
+    const fs::path datasetsRoot = chainProjectRoot / "datasets";
+    const fs::path csvPath = datasetsRoot / "transport_chain_points.csv";
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 62;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "baseline_without_bundle_transport_chain";
+    config.determinism.seed = 20260308;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    Application::Session baseline;
+    baseline.setProjectRoot(baselineProjectRoot.string());
+    baseline.getWorkspace().createWorld("Bundle Transport Chain Baseline World", 36, 18);
+    const std::string baselineReportPath = baseline.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    fs::create_directories(bundleRoot);
+    fs::create_directories(datasetsRoot);
+    {
+        std::ofstream csvOut(csvPath);
+        ASSERT_TRUE(csvOut.is_open());
+        csvOut << "0,0,0\n";
+        csvOut << "1,0,0\n";
+        csvOut << "0,1,0\n";
+    }
+
+    json manifestPayload;
+    manifestPayload["artifactId"] = "BUNDLE-TRANSPORT-CHAIN-001";
+    writeJson(bundleRoot / "Manifest.json", manifestPayload);
+
+    json narrativePayload;
+    narrativePayload["history"] = json::array();
+    narrativePayload["history"].push_back({
+        {"id", "OBS-TRANSPORT-001"},
+        {"intent", {{"type", "describe"}}},
+        {"source", {{"sourceId", "SRC-TRANSPORT-001"}, {"sourceType", "DOCUMENT"}}},
+        {"temporalContext", {{"category", "CONTEMPORARY"}, {"label", "2026-Q1"}}},
+        {"axes", json::array({
+            {{"label", "Soil"}, {"description", "valid transport-chain ingestion payload"}}
+        })}
+    });
+    writeJson(bundleRoot / "NarrativeObservation.json", narrativePayload);
+
+    json discursivePayload;
+    discursivePayload["systems"] = json::array();
+    discursivePayload["systems"].push_back({
+        {"id", "DS-TRANSPORT-001"},
+        {"label", "Transport chain valid discursive system"},
+        {"declaredProblems", json::array({"water stress"})},
+        {"declaredActions", json::array({"increase monitoring"})},
+        {"allegedMechanisms", json::array({"seasonal drought"})},
+        {"expectedEffects", json::array({"resilience reduction"})}
+    });
+    writeJson(bundleRoot / "DiscursiveSystem.json", discursivePayload);
+
+    json recommendationPayload;
+    recommendationPayload["snapshots"] = json::array();
+    recommendationPayload["snapshots"].push_back({
+        {"id", "REC-TRANSPORT-001"},
+        {"recommendationText", "maintain observational isolation"},
+        {"contextConditions", json::array({"normal_scenario"})},
+        {"intendedAction", "preserve_pipeline"},
+        {"expectedOutcome", "no causal leakage"}
+    });
+    writeJson(bundleRoot / "TrajectoryAnalogies.json", recommendationPayload);
+
+    Application::Session chainWriter;
+    chainWriter.setProjectRoot(chainProjectRoot.string());
+    chainWriter.getWorkspace().createWorld("Bundle Transport Chain Writer World", 36, 18);
+
+    EXPECT_NO_THROW(chainWriter.ingestFromIWDirectory(inputsRoot.string()));
+    ASSERT_FALSE(chainWriter.getNarrativeHistoryDTO().empty());
+    ASSERT_FALSE(chainWriter.getDiscursiveSystemDTOs().empty());
+    ASSERT_FALSE(chainWriter.getRecommendationTrajectoryDTO().snapshots.empty());
+
+    EXPECT_NO_THROW(chainWriter.saveNarrativeToFile(csvPath.string() + ".json"));
+    EXPECT_NO_THROW(
+        chainWriter.saveDiscursiveSystemsToFile(csvPath.string() + ".discursive.json"));
+    EXPECT_NO_THROW(
+        chainWriter.saveRecommendationTrajectoryToFile(csvPath.string() + ".recommendation.json"));
+
+    Application::Session replay;
+    replay.setProjectRoot(chainProjectRoot.string());
+    replay.getWorkspace().createWorld("Bundle Transport Chain Replay World", 36, 18);
+    EXPECT_NO_THROW(replay.loadWorld(csvPath.string()));
+
+    ASSERT_FALSE(replay.getNarrativeHistoryDTO().empty());
+    ASSERT_FALSE(replay.getDiscursiveSystemDTOs().empty());
+    ASSERT_FALSE(replay.getRecommendationTrajectoryDTO().snapshots.empty());
+
+    config.trigger = "after_bundle_ingestion_sidecar_reload_transport_chain";
+    const std::string afterChainReportPath = replay.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterChainReportPath.empty());
+    const json afterChainReport = readJson(afterChainReportPath);
+    ASSERT_TRUE(afterChainReport.contains("stateHash"));
+    ASSERT_TRUE(afterChainReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterChainReport.contains("finalState"));
+
+    EXPECT_EQ(afterChainReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(afterChainReport["deterministicStatePayload"], baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterChainReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
