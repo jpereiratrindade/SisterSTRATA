@@ -1874,3 +1874,145 @@ TEST(
 
     fs::remove_all(tempRoot);
 }
+
+TEST(
+    CrossContextIsolationTest,
+    InterleavedIngestionReloadReingestionCyclesDoNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path baselineProjectRoot = tempRoot / "baseline_project";
+    const fs::path chainProjectRoot = tempRoot / "chain_project";
+    const fs::path inputsRoot = chainProjectRoot / "inputs";
+    const fs::path bundleCycleA = inputsRoot / "bundle_cycle_a";
+    const fs::path bundleCycleB = inputsRoot / "bundle_cycle_b";
+    const fs::path datasetsRoot = chainProjectRoot / "datasets";
+    const fs::path csvPath = datasetsRoot / "interleaved_cycles_points.csv";
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 64;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::SevereDrought;
+    config.trigger = "baseline_without_interleaved_cycles";
+    config.determinism.seed = 20260309;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    Application::Session baseline;
+    baseline.setProjectRoot(baselineProjectRoot.string());
+    baseline.getWorkspace().createWorld("Interleaved Cycles Baseline World", 38, 19);
+    const std::string baselineReportPath = baseline.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    fs::create_directories(bundleCycleA);
+    fs::create_directories(bundleCycleB);
+    fs::create_directories(datasetsRoot);
+    {
+        std::ofstream csvOut(csvPath);
+        ASSERT_TRUE(csvOut.is_open());
+        csvOut << "0,0,0\n";
+        csvOut << "1,0,0\n";
+        csvOut << "0,1,0\n";
+    }
+
+    auto writeValidBundle = [&](const fs::path& bundleDir, const std::string& suffix) {
+        json manifestPayload;
+        manifestPayload["artifactId"] = "BUNDLE-INTERLEAVED-" + suffix;
+        writeJson(bundleDir / "Manifest.json", manifestPayload);
+
+        json narrativePayload;
+        narrativePayload["history"] = json::array();
+        narrativePayload["history"].push_back({
+            {"id", "OBS-INTERLEAVED-" + suffix},
+            {"intent", {{"type", "describe"}}},
+            {"source", {{"sourceId", "SRC-INTERLEAVED-" + suffix}, {"sourceType", "DOCUMENT"}}},
+            {"temporalContext", {{"category", "CONTEMPORARY"}, {"label", "2026-Q1"}}},
+            {"axes", json::array({
+                {{"label", "Soil"}, {"description", "valid interleaved cycle payload " + suffix}}
+            })}
+        });
+        writeJson(bundleDir / "NarrativeObservation.json", narrativePayload);
+
+        json discursivePayload;
+        discursivePayload["systems"] = json::array();
+        discursivePayload["systems"].push_back({
+            {"id", "DS-INTERLEAVED-" + suffix},
+            {"label", "Interleaved cycle valid discursive system " + suffix},
+            {"declaredProblems", json::array({"water stress"})},
+            {"declaredActions", json::array({"increase monitoring"})},
+            {"allegedMechanisms", json::array({"seasonal drought"})},
+            {"expectedEffects", json::array({"resilience reduction"})}
+        });
+        writeJson(bundleDir / "DiscursiveSystem.json", discursivePayload);
+
+        json recommendationPayload;
+        recommendationPayload["snapshots"] = json::array();
+        recommendationPayload["snapshots"].push_back({
+            {"id", "REC-INTERLEAVED-" + suffix},
+            {"recommendationText", "maintain observational isolation " + suffix},
+            {"contextConditions", json::array({"severe_drought"})},
+            {"intendedAction", "preserve_pipeline"},
+            {"expectedOutcome", "no causal leakage"}
+        });
+        writeJson(bundleDir / "TrajectoryAnalogies.json", recommendationPayload);
+    };
+
+    writeValidBundle(bundleCycleA, "A");
+    writeValidBundle(bundleCycleB, "B");
+
+    Application::Session chain;
+    chain.setProjectRoot(chainProjectRoot.string());
+    chain.getWorkspace().createWorld("Interleaved Cycles Chain World", 38, 19);
+
+    // Cycle A: ingest valid bundle and materialize sidecars for world dataset.
+    EXPECT_NO_THROW(chain.ingestFromIW((bundleCycleA / "Manifest.json").string()));
+    EXPECT_NO_THROW(chain.saveNarrativeToFile(csvPath.string() + ".json"));
+    EXPECT_NO_THROW(chain.saveDiscursiveSystemsToFile(csvPath.string() + ".discursive.json"));
+    EXPECT_NO_THROW(chain.saveRecommendationTrajectoryToFile(csvPath.string() + ".recommendation.json"));
+    EXPECT_NO_THROW(chain.loadWorld(csvPath.string()));
+
+    const auto narrativeAfterCycleA = chain.getNarrativeHistoryDTO().size();
+    const auto discursiveAfterCycleA = chain.getDiscursiveSystemDTOs().size();
+    const auto recommendationAfterCycleA = chain.getRecommendationTrajectoryDTO().snapshots.size();
+
+    // Cycle B: ingest second valid bundle, then reload sidecars.
+    EXPECT_NO_THROW(chain.ingestFromIW((bundleCycleB / "Manifest.json").string()));
+    EXPECT_NO_THROW(chain.saveNarrativeToFile(csvPath.string() + ".json"));
+    EXPECT_NO_THROW(chain.saveDiscursiveSystemsToFile(csvPath.string() + ".discursive.json"));
+    EXPECT_NO_THROW(chain.saveRecommendationTrajectoryToFile(csvPath.string() + ".recommendation.json"));
+    EXPECT_NO_THROW(chain.loadSidecarData(csvPath.string()));
+
+    const auto narrativeAfterCycleB = chain.getNarrativeHistoryDTO().size();
+    const auto discursiveAfterCycleB = chain.getDiscursiveSystemDTOs().size();
+    const auto recommendationAfterCycleB = chain.getRecommendationTrajectoryDTO().snapshots.size();
+
+    EXPECT_GE(narrativeAfterCycleB, narrativeAfterCycleA);
+    EXPECT_GE(discursiveAfterCycleB, discursiveAfterCycleA);
+    EXPECT_GE(recommendationAfterCycleB, recommendationAfterCycleA);
+
+    // Re-ingest cycle A again and reload world to emulate long-running interleaving.
+    EXPECT_NO_THROW(chain.ingestFromIW((bundleCycleA / "Manifest.json").string()));
+    EXPECT_NO_THROW(chain.saveNarrativeToFile(csvPath.string() + ".json"));
+    EXPECT_NO_THROW(chain.saveDiscursiveSystemsToFile(csvPath.string() + ".discursive.json"));
+    EXPECT_NO_THROW(chain.saveRecommendationTrajectoryToFile(csvPath.string() + ".recommendation.json"));
+    EXPECT_NO_THROW(chain.loadWorld(csvPath.string()));
+
+    ASSERT_FALSE(chain.getNarrativeHistoryDTO().empty());
+    ASSERT_FALSE(chain.getDiscursiveSystemDTOs().empty());
+    ASSERT_FALSE(chain.getRecommendationTrajectoryDTO().snapshots.empty());
+
+    config.trigger = "after_interleaved_ingestion_reload_reingestion_cycles";
+    const std::string afterChainReportPath = chain.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterChainReportPath.empty());
+    const json afterChainReport = readJson(afterChainReportPath);
+    ASSERT_TRUE(afterChainReport.contains("stateHash"));
+    ASSERT_TRUE(afterChainReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterChainReport.contains("finalState"));
+
+    EXPECT_EQ(afterChainReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(afterChainReport["deterministicStatePayload"], baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterChainReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
