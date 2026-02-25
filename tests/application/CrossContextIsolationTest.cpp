@@ -1196,3 +1196,121 @@ TEST(CrossContextIsolationTest, SchemaValidSemanticPoisoningSidecarDoesNotChange
 
     fs::remove_all(tempRoot);
 }
+
+TEST(CrossContextIsolationTest, OversizedSchemaValidSidecarPayloadDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path datasetsRoot = projectRoot / "datasets";
+    const fs::path csvPath = datasetsRoot / "oversized_sidecar_points.csv";
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 54;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "baseline_without_oversized_sidecar_loading";
+    config.determinism.seed = 20260304;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    Application::Session baseline;
+    baseline.setProjectRoot(projectRoot.string());
+    baseline.getWorkspace().createWorld("Oversized Sidecar Guard Baseline World", 28, 14);
+    const std::string baselineReportPath = baseline.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    fs::create_directories(datasetsRoot);
+    {
+        std::ofstream csvOut(csvPath);
+        ASSERT_TRUE(csvOut.is_open());
+        csvOut << "0,0,0\n";
+        csvOut << "1,0,0\n";
+        csvOut << "0,1,0\n";
+    }
+
+    const std::string oversizedText(32768, 'x');
+
+    Application::Session sidecarWriter;
+    sidecarWriter.setProjectRoot(projectRoot.string());
+    sidecarWriter.getWorkspace().createWorld("Oversized Sidecar Guard Writer World", 28, 14);
+
+    Application::DTO::NarrativeStateDTO narrative{};
+    narrative.id = "NARR-OVERSIZED-001";
+    narrative.source = {
+        .sourceType = "field_report",
+        .sourceId = "SRC-OVERSIZED-001",
+        .productionDate = "2026-03-04T10:00:00Z",
+        .author = std::string("observer")
+    };
+    narrative.temporalContext = {
+        .category = "weekly",
+        .label = "week-10"
+    };
+    narrative.intent = {.intentType = "describe_observation"};
+    narrative.axes.push_back({
+        .label = "soil",
+        .description = oversizedText,
+        .abstractionLevel = "micro"
+    });
+    sidecarWriter.registerNarrativeStateDTO(narrative);
+
+    Application::DTO::DiscursiveSystemDTO discursive{};
+    discursive.id = "DISC-OVERSIZED-001";
+    discursive.declaredProblems = {oversizedText.substr(0, 4096)};
+    discursive.declaredActions = {"keep isolation guarantees"};
+    discursive.allegedMechanisms = {"payload-size stress"};
+    discursive.expectedEffects = {"no deterministic coupling"};
+    discursive.temporalContext = {
+        .category = "monthly",
+        .label = "march"
+    };
+    sidecarWriter.registerDiscursiveSystemDTO(discursive);
+
+    Application::DTO::RecommendationSnapshotDTO recommendation{};
+    recommendation.id = "REC-OVERSIZED-001";
+    recommendation.recommendationText = oversizedText.substr(0, 8192);
+    recommendation.contextConditions = {"oversized_payload"};
+    recommendation.intendedAction = "preserve_pipeline";
+    recommendation.expectedOutcome = "deterministic isolation";
+    recommendation.sourceReference = {
+        .sourceType = "recommendation_engine",
+        .sourceId = "SRC-REC-OVERSIZED-001",
+        .productionDate = "2026-03-04T10:05:00Z",
+        .author = std::string("system")
+    };
+    recommendation.temporalContext = {
+        .category = "immediate",
+        .label = "current-cycle"
+    };
+    sidecarWriter.addRecommendationSnapshotDTO(recommendation);
+
+    EXPECT_NO_THROW(sidecarWriter.saveNarrativeToFile(csvPath.string() + ".json"));
+    EXPECT_NO_THROW(sidecarWriter.saveDiscursiveSystemsToFile(csvPath.string() + ".discursive.json"));
+    EXPECT_NO_THROW(
+        sidecarWriter.saveRecommendationTrajectoryToFile(csvPath.string() + ".recommendation.json"));
+
+    Application::Session replay;
+    replay.setProjectRoot(projectRoot.string());
+    replay.getWorkspace().createWorld("Oversized Sidecar Guard Replay World", 28, 14);
+    EXPECT_NO_THROW(replay.loadWorld(csvPath.string()));
+
+    ASSERT_FALSE(replay.getNarrativeHistoryDTO().empty());
+    ASSERT_FALSE(replay.getDiscursiveSystemDTOs().empty());
+    ASSERT_FALSE(replay.getRecommendationTrajectoryDTO().snapshots.empty());
+
+    config.trigger = "after_oversized_schema_valid_sidecar_loading";
+    const std::string afterLoadReportPath = replay.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterLoadReportPath.empty());
+    const json afterLoadReport = readJson(afterLoadReportPath);
+    ASSERT_TRUE(afterLoadReport.contains("stateHash"));
+    ASSERT_TRUE(afterLoadReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterLoadReport.contains("finalState"));
+
+    EXPECT_EQ(afterLoadReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(afterLoadReport["deterministicStatePayload"], baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterLoadReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
