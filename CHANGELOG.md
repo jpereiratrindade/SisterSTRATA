@@ -1,5 +1,26 @@
 # Changelog
 
+## [v1.10.3] - 2026-02-25
+### Added
+- **F2 hardening gates**:
+  - Added `GitArtifactHygieneGuard` with `scripts/check_git_artifact_hygiene.sh` to block tracked build artifacts in CI.
+  - Added cross-context adversarial scenario test `InvalidObservationalIngestionThenInfrastructureRunPreservesCrossContextState`.
+- **Release/governance artifacts**:
+  - Added `docs/releases/v1.10.3.md`.
+
+### Changed
+- **Determinism hardening**:
+  - Cross-runner determinism compare is now merge-blocking in PR and `main`.
+  - CI now pins deterministic execution context (`TZ/LANG/LC_ALL`) and compiler/toolchain (`gcc-12`, `g++-12`) with stricter floating-point flags.
+- **CI gate observability**:
+  - Split ADR gates into three families (application contracts, core scientific suites, static guards) for clearer failure diagnostics.
+- **Version alignment**:
+  - Synced `CMakeLists.txt`, `Doxyfile`, and `docs/SCIENTIFIC_MODEL_VERSION.json` to `1.10.3`.
+
+### Fixed
+- **Membrane static guard precision**:
+  - Removed regex ambiguity in `check_membrane_dependencies.sh` and documented guard scope as include-level/static in the invariant matrix.
+
 ## [v1.10.2] - 2026-02-24
 ### Added
 - **Governance hardening artifacts**:
