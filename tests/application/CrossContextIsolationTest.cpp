@@ -1314,3 +1314,127 @@ TEST(CrossContextIsolationTest, OversizedSchemaValidSidecarPayloadDoesNotChangeI
 
     fs::remove_all(tempRoot);
 }
+
+TEST(
+    CrossContextIsolationTest,
+    MixedEscapingAndUnicodeSchemaValidSidecarDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path datasetsRoot = projectRoot / "datasets";
+    const fs::path csvPath = datasetsRoot / "escaping_unicode_sidecar_points.csv";
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 56;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "baseline_without_escaping_unicode_sidecar_loading";
+    config.determinism.seed = 20260305;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    Application::Session baseline;
+    baseline.setProjectRoot(projectRoot.string());
+    baseline.getWorkspace().createWorld("Escaping Unicode Guard Baseline World", 30, 15);
+    const std::string baselineReportPath = baseline.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    fs::create_directories(datasetsRoot);
+    {
+        std::ofstream csvOut(csvPath);
+        ASSERT_TRUE(csvOut.is_open());
+        csvOut << "0,0,0\n";
+        csvOut << "1,0,0\n";
+        csvOut << "0,1,0\n";
+    }
+
+    const std::string edgeText =
+        "actual-newline:\nactual-tab:\tjson:{\"k\":\"v\"} path:C:\\\\temp\\\\x "
+        "escaped-unicode:\\u03B1\\u4F60\\u597D\\ud83c\\udf31";
+
+    Application::Session sidecarWriter;
+    sidecarWriter.setProjectRoot(projectRoot.string());
+    sidecarWriter.getWorkspace().createWorld("Escaping Unicode Guard Writer World", 30, 15);
+
+    Application::DTO::NarrativeStateDTO narrative{};
+    narrative.id = "NARR-ESC-001";
+    narrative.source = {
+        .sourceType = "field_report",
+        .sourceId = "SRC-ESC-001",
+        .productionDate = "2026-03-05T10:00:00Z",
+        .author = std::string("observer")
+    };
+    narrative.temporalContext = {
+        .category = "weekly",
+        .label = "week-10"
+    };
+    narrative.intent = {.intentType = "describe_observation"};
+    narrative.axes.push_back({
+        .label = "soil-hydro-boundary",
+        .description = edgeText,
+        .abstractionLevel = "meso"
+    });
+    sidecarWriter.registerNarrativeStateDTO(narrative);
+
+    Application::DTO::DiscursiveSystemDTO discursive{};
+    discursive.id = "DISC-ESC-001";
+    discursive.declaredProblems = {"string-boundary stress"};
+    discursive.declaredActions = {
+        "escaped payload: {\"op\":\"noop\"}, keep deterministic membrane unchanged"
+    };
+    discursive.allegedMechanisms = {"unicode-escaping boundary parsing"};
+    discursive.expectedEffects = {"no deterministic coupling across contexts"};
+    discursive.temporalContext = {
+        .category = "monthly",
+        .label = "march"
+    };
+    sidecarWriter.registerDiscursiveSystemDTO(discursive);
+
+    Application::DTO::RecommendationSnapshotDTO recommendation{};
+    recommendation.id = "REC-ESC-001";
+    recommendation.recommendationText = edgeText;
+    recommendation.contextConditions = {"escaping_unicode_payload"};
+    recommendation.intendedAction = "preserve_pipeline";
+    recommendation.expectedOutcome = "deterministic isolation";
+    recommendation.sourceReference = {
+        .sourceType = "recommendation_engine",
+        .sourceId = "SRC-REC-ESC-001",
+        .productionDate = "2026-03-05T10:05:00Z",
+        .author = std::string("system")
+    };
+    recommendation.temporalContext = {
+        .category = "immediate",
+        .label = "current-cycle"
+    };
+    sidecarWriter.addRecommendationSnapshotDTO(recommendation);
+
+    EXPECT_NO_THROW(sidecarWriter.saveNarrativeToFile(csvPath.string() + ".json"));
+    EXPECT_NO_THROW(sidecarWriter.saveDiscursiveSystemsToFile(csvPath.string() + ".discursive.json"));
+    EXPECT_NO_THROW(
+        sidecarWriter.saveRecommendationTrajectoryToFile(csvPath.string() + ".recommendation.json"));
+
+    Application::Session replay;
+    replay.setProjectRoot(projectRoot.string());
+    replay.getWorkspace().createWorld("Escaping Unicode Guard Replay World", 30, 15);
+    EXPECT_NO_THROW(replay.loadWorld(csvPath.string()));
+
+    ASSERT_FALSE(replay.getNarrativeHistoryDTO().empty());
+    ASSERT_FALSE(replay.getDiscursiveSystemDTOs().empty());
+    ASSERT_FALSE(replay.getRecommendationTrajectoryDTO().snapshots.empty());
+
+    config.trigger = "after_escaping_unicode_schema_valid_sidecar_loading";
+    const std::string afterLoadReportPath = replay.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterLoadReportPath.empty());
+    const json afterLoadReport = readJson(afterLoadReportPath);
+    ASSERT_TRUE(afterLoadReport.contains("stateHash"));
+    ASSERT_TRUE(afterLoadReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterLoadReport.contains("finalState"));
+
+    EXPECT_EQ(afterLoadReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(afterLoadReport["deterministicStatePayload"], baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterLoadReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
