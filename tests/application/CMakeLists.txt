@@ -31,4 +31,22 @@ target_link_libraries(application_mapper_tests
     Threads::Threads
 )
 target_include_directories(application_mapper_tests PRIVATE ${CMAKE_SOURCE_DIR})
-add_test(NAME ApplicationMapperTest COMMAND application_mapper_tests)
+
+function(add_application_mapper_gtest_ctest test_name gtest_filter)
+  add_test(
+    NAME ${test_name}
+    COMMAND application_mapper_tests "--gtest_filter=${gtest_filter}"
+  )
+endfunction()
+
+add_application_mapper_gtest_ctest(ApplicationMapper_CognitiveAssistance "CognitiveAssistanceServiceTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_CrossContextIsolation "CrossContextIsolationTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_IngestionSynthesis "IngestionSynthesisReportTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_InfrastructureResilience "InfrastructureResilienceRunTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_MembraneContract "MembraneContractEnforcementTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_ImpactProfileMapper "ImpactProfileMapperTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_IWMapper "IWMapperTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_NarrativeContextAnalyzer "NarrativeContextAnalyzerTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_SimulationService "SimulationServiceTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_ProjectPersistence "ProjectPersistenceServiceTest.*")
+add_application_mapper_gtest_ctest(ApplicationMapper_IWIngestion "IWIngestionServiceTest.*")

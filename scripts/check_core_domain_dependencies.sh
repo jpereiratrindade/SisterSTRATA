@@ -10,15 +10,20 @@ if ! command -v rg >/dev/null 2>&1; then
 fi
 
 FAILED=0
+MATCH_FILE="$(mktemp /tmp/core_domain_guard_match.XXXXXX)"
+cleanup() {
+    rm -f "${MATCH_FILE}"
+}
+trap cleanup EXIT
 
 run_guard() {
     local label="$1"
     local search_dir="$2"
     local pattern="$3"
 
-    if rg -n --glob '*.{hpp,cpp}' "${pattern}" "${search_dir}" >/tmp/core_domain_guard_match.txt; then
+    if rg -n --glob '*.{hpp,cpp}' "${pattern}" "${search_dir}" >"${MATCH_FILE}"; then
         echo "[core-boundary-guard][FAIL] ${label}"
-        cat /tmp/core_domain_guard_match.txt
+        cat "${MATCH_FILE}"
         FAILED=1
     else
         echo "[core-boundary-guard][OK] ${label}"
@@ -30,8 +35,6 @@ run_guard \
     "core/domain must not include outer-layer headers (application/ui/world3d/observational/infrastructure adapters)" \
     "src/core/domain" \
     '#include "(src/)?(application|ui|world3d|observational|infrastructure)/'
-
-rm -f /tmp/core_domain_guard_match.txt
 
 if [[ "${FAILED}" -ne 0 ]]; then
     echo "[core-boundary-guard] core domain dependency checks failed."

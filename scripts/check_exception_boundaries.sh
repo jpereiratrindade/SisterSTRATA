@@ -9,7 +9,11 @@ if ! command -v rg >/dev/null 2>&1; then
     exit 2
 fi
 
-MATCH_FILE="/tmp/exception_boundary_guard_match.txt"
+MATCH_FILE="$(mktemp /tmp/exception_boundary_guard_match.XXXXXX)"
+cleanup() {
+    rm -f "${MATCH_FILE}"
+}
+trap cleanup EXIT
 FAILED=0
 
 # Allowed broad catch(...) boundary shields.
@@ -30,7 +34,6 @@ is_allowed_file() {
 
 if ! rg -n --glob '*.{hpp,cpp}' 'catch\s*\(\s*\.\.\.\s*\)' src >"${MATCH_FILE}"; then
     echo "[exception-boundary-guard][OK] no catch(...) usage found in src/"
-    rm -f "${MATCH_FILE}"
     exit 0
 fi
 
@@ -42,8 +45,6 @@ while IFS=: read -r file line_number _; do
         FAILED=1
     fi
 done < "${MATCH_FILE}"
-
-rm -f "${MATCH_FILE}"
 
 if [[ "${FAILED}" -ne 0 ]]; then
     echo "[exception-boundary-guard] forbidden catch(...) usage detected."
