@@ -151,9 +151,10 @@ jobs:
       actions: read
       contents: read
     env:
-      STRATA_DETERMINISM_STABILITY_MODE: warn
+      STRATA_DETERMINISM_STABILITY_MODE: adaptive
       STRATA_DETERMINISM_STABILITY_WINDOW: "20"
       STRATA_DETERMINISM_STABILITY_MIN_SAMPLES: "5"
+      STRATA_DETERMINISM_STABILITY_PROMOTION_MIN_SAMPLES: "20"
 
     steps:
       - name: Checkout
@@ -177,6 +178,7 @@ jobs:
             --current-run-id "${GITHUB_RUN_ID}" \
             --window "${STRATA_DETERMINISM_STABILITY_WINDOW}" \
             --min-samples "${STRATA_DETERMINISM_STABILITY_MIN_SAMPLES}" \
+            --promotion-min-samples "${STRATA_DETERMINISM_STABILITY_PROMOTION_MIN_SAMPLES}" \
             --mode "${STRATA_DETERMINISM_STABILITY_MODE}"
 
       - name: Upload Stability Window Report Artifact
@@ -186,13 +188,20 @@ jobs:
           path: |
             build/headless/determinism/stability_window_summary.md
             build/headless/determinism/stability_window_report.json
+            build/headless/determinism/stability_window_promotion_ready.txt
           if-no-files-found: warn
 
       - name: Publish Stability Window Summary
         run: |
           SUMMARY="build/headless/determinism/stability_window_summary.md"
+          READY="build/headless/determinism/stability_window_promotion_ready.txt"
           if [[ -f "${SUMMARY}" ]]; then
             cat "${SUMMARY}" >> "${GITHUB_STEP_SUMMARY}"
           else
             echo "No determinism stability summary was generated." >> "${GITHUB_STEP_SUMMARY}"
+          fi
+          if [[ -f "${READY}" ]]; then
+            VALUE="$(tr -d '[:space:]' < "${READY}")"
+            echo "" >> "${GITHUB_STEP_SUMMARY}"
+            echo "- Promotion ready flag: \`${VALUE}\`" >> "${GITHUB_STEP_SUMMARY}"
           fi

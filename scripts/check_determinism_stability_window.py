@@ -46,9 +46,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--current-run-id", type=int, default=int(os.environ.get("GITHUB_RUN_ID", "0")))
     parser.add_argument("--window", type=int, default=20)
     parser.add_argument("--min-samples", type=int, default=5)
-    parser.add_argument("--mode", choices=("warn", "enforce"), default="warn")
+    parser.add_argument("--promotion-min-samples", type=int, default=20)
+    parser.add_argument("--mode", choices=("warn", "enforce", "adaptive"), default="warn")
     parser.add_argument("--summary-path", default="build/headless/determinism/stability_window_summary.md")
     parser.add_argument("--json-path", default="build/headless/determinism/stability_window_report.json")
+    parser.add_argument(
+        "--promotion-ready-path",
+        default="build/headless/determinism/stability_window_promotion_ready.txt",
+    )
     return parser.parse_args()
 
 
@@ -60,9 +65,18 @@ def fail_or_warn(mode: str, message: str) -> int:
     return 0
 
 
+def write_promotion_ready_flag(path: pathlib.Path, value: bool | None) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if value is None:
+        path.write_text("unknown\n", encoding="utf-8")
+        return
+    path.write_text(("1\n" if value else "0\n"), encoding="utf-8")
+
+
 def write_issue_outputs(
     summary_path: pathlib.Path,
     report_path: pathlib.Path,
+    promotion_ready_path: pathlib.Path,
     mode: str,
     message: str,
     current_hash: str,
@@ -70,12 +84,16 @@ def write_issue_outputs(
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
+    effective_mode = mode if mode in ("warn", "enforce") else "warn"
+    recommended_mode = "enforce" if mode == "enforce" else "warn"
     summary = [
         "## Determinism Stability Window",
         "",
         f"- Mode: `{mode}`",
+        f"- Effective mode: `{effective_mode}`",
         f"- Current hash: `{current_hash or 'unavailable'}`",
         f"- Status: issue",
+        f"- Promotion readiness: `unknown`",
         f"- Detail: {message}",
         "",
     ]
@@ -85,12 +103,16 @@ def write_issue_outputs(
         "mode": mode,
         "status": "issue",
         "currentHash": current_hash,
+        "effectiveMode": effective_mode,
         "message": message,
+        "promotionReady": None,
+        "recommendedMode": recommended_mode,
         "historicalSampleCount": 0,
         "uniqueHashes": [current_hash] if current_hash else [],
         "samples": [],
     }
     report_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    write_promotion_ready_flag(promotion_ready_path, None)
 
 
 def request_json(url: str, token: str) -> dict:
@@ -193,17 +215,25 @@ def write_summary(
     historical: list[RunHash],
     unique_hashes: list[str],
     min_samples: int,
+    promotion_min_samples: int,
+    promotion_ready: bool,
+    recommended_mode: str,
     mode: str,
+    effective_mode: str,
 ) -> None:
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     lines: list[str] = []
     lines.append("## Determinism Stability Window")
     lines.append("")
     lines.append(f"- Mode: `{mode}`")
+    lines.append(f"- Effective mode: `{effective_mode}`")
     lines.append(f"- Current hash: `{current_hash}`")
     lines.append(f"- Historical samples considered: `{len(historical)}`")
     lines.append(f"- Required minimum samples: `{min_samples}`")
+    lines.append(f"- Promotion minimum samples: `{promotion_min_samples}`")
     lines.append(f"- Unique hashes in window+current: `{len(unique_hashes)}`")
+    lines.append(f"- Promotion readiness: `{'ready' if promotion_ready else 'not-ready'}`")
+    lines.append(f"- Recommended mode: `{recommended_mode}`")
     lines.append("")
     if unique_hashes:
         lines.append("### Hashes")
@@ -228,14 +258,22 @@ def write_json_report(
     current_hash: str,
     historical: list[RunHash],
     unique_hashes: list[str],
+    promotion_min_samples: int,
+    promotion_ready: bool,
+    recommended_mode: str,
     mode: str,
+    effective_mode: str,
 ) -> None:
     report_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "mode": mode,
+        "effectiveMode": effective_mode,
         "currentHash": current_hash,
         "historicalSampleCount": len(historical),
         "uniqueHashes": unique_hashes,
+        "promotionMinSamples": promotion_min_samples,
+        "promotionReady": promotion_ready,
+        "recommendedMode": recommended_mode,
         "samples": [
             {
                 "runId": sample.run_id,
@@ -262,6 +300,7 @@ def main() -> int:
         write_issue_outputs(
             pathlib.Path(args.summary_path),
             pathlib.Path(args.json_path),
+            pathlib.Path(args.promotion_ready_path),
             args.mode,
             message,
             current_hash,
@@ -273,6 +312,7 @@ def main() -> int:
         write_issue_outputs(
             pathlib.Path(args.summary_path),
             pathlib.Path(args.json_path),
+            pathlib.Path(args.promotion_ready_path),
             args.mode,
             message,
             current_hash,
@@ -285,6 +325,7 @@ def main() -> int:
         write_issue_outputs(
             pathlib.Path(args.summary_path),
             pathlib.Path(args.json_path),
+            pathlib.Path(args.promotion_ready_path),
             args.mode,
             message,
             current_hash,
@@ -305,6 +346,14 @@ def main() -> int:
                 continue
             if value == "__INTERNAL_MISMATCH__":
                 message = f"historical run {run_id} has internal cross-runner hash mismatch"
+                write_issue_outputs(
+                    pathlib.Path(args.summary_path),
+                    pathlib.Path(args.json_path),
+                    pathlib.Path(args.promotion_ready_path),
+                    args.mode,
+                    message,
+                    current_hash,
+                )
                 return fail_or_warn(args.mode, message)
             historical.append(
                 RunHash(
@@ -322,6 +371,7 @@ def main() -> int:
         write_issue_outputs(
             pathlib.Path(args.summary_path),
             pathlib.Path(args.json_path),
+            pathlib.Path(args.promotion_ready_path),
             args.mode,
             message,
             current_hash,
@@ -332,6 +382,7 @@ def main() -> int:
         write_issue_outputs(
             pathlib.Path(args.summary_path),
             pathlib.Path(args.json_path),
+            pathlib.Path(args.promotion_ready_path),
             args.mode,
             message,
             current_hash,
@@ -340,6 +391,11 @@ def main() -> int:
 
     all_hashes = [current_hash] + [item.hash_value for item in historical]
     unique_hashes = sorted(set(all_hashes))
+    promotion_ready = len(historical) >= args.promotion_min_samples and len(unique_hashes) == 1
+    effective_mode = args.mode
+    if args.mode == "adaptive":
+        effective_mode = "enforce" if promotion_ready else "warn"
+    recommended_mode = "enforce" if promotion_ready else "warn"
 
     write_summary(
         pathlib.Path(args.summary_path),
@@ -347,32 +403,48 @@ def main() -> int:
         historical=historical,
         unique_hashes=unique_hashes,
         min_samples=args.min_samples,
+        promotion_min_samples=args.promotion_min_samples,
+        promotion_ready=promotion_ready,
+        recommended_mode=recommended_mode,
         mode=args.mode,
+        effective_mode=effective_mode,
     )
     write_json_report(
         pathlib.Path(args.json_path),
         current_hash=current_hash,
         historical=historical,
         unique_hashes=unique_hashes,
+        promotion_min_samples=args.promotion_min_samples,
+        promotion_ready=promotion_ready,
+        recommended_mode=recommended_mode,
         mode=args.mode,
+        effective_mode=effective_mode,
     )
+    write_promotion_ready_flag(pathlib.Path(args.promotion_ready_path), promotion_ready)
 
     print(
         "[determinism-stability] samples="
-        f"{len(historical)} unique_hashes={len(unique_hashes)} mode={args.mode}"
+        f"{len(historical)} unique_hashes={len(unique_hashes)} mode={args.mode} "
+        f"effective_mode={effective_mode} promotion_ready={promotion_ready}"
     )
 
     if len(historical) < args.min_samples:
         return fail_or_warn(
-            args.mode,
+            effective_mode,
             f"insufficient historical samples for determinism stability window "
             f"({len(historical)} < {args.min_samples})",
         )
 
     if len(unique_hashes) > 1:
         return fail_or_warn(
-            args.mode,
+            effective_mode,
             "determinism stability window detected multiple distinct hashes",
+        )
+
+    if args.mode != "enforce" and promotion_ready:
+        print(
+            "::notice::determinism stability window meets promotion criteria; "
+            "recommended mode is enforce"
         )
 
     print("[determinism-stability] stability window is consistent.")

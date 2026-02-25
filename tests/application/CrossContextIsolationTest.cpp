@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <random>
 #include <stdexcept>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -34,6 +35,39 @@ json readJson(const fs::path& path) {
         throw std::runtime_error("failed to open JSON file: " + path.string());
     }
     return json::parse(in);
+}
+
+std::string buildSeededSchemaValidPayload(std::mt19937& rng, size_t caseIndex) {
+    static const std::vector<std::string> tokens = {
+        "literal-newline:\\n",
+        "literal-tab:\\t",
+        "json:{\\\"k\\\":\\\"v\\\"}",
+        "path:C:\\\\temp\\\\x",
+        "escaped-unicode:\\\\u03B1\\\\u4F60\\\\u597D",
+        "quoted:\\\"alpha beta\\\"",
+        "slashes://alpha/beta/gamma",
+        "braces:{}[]()",
+        "double-escaped:{\\\\\\\"nested\\\\\\\":\\\\\\\"v\\\\\\\"}",
+        "control-literals:\\\\r\\\\n\\\\t",
+        "utf-seq:\\\\ud83c\\\\udf31",
+        "payload-case"
+    };
+
+    static const std::vector<std::string> separators = {" ", " | ", " :: ", " ; ", " / "};
+
+    std::uniform_int_distribution<int> lengthDist(10, 18);
+    std::uniform_int_distribution<int> tokenDist(0, static_cast<int>(tokens.size() - 1));
+    std::uniform_int_distribution<int> separatorDist(0, static_cast<int>(separators.size() - 1));
+
+    const int length = lengthDist(rng);
+    std::string out = "seeded-case=" + std::to_string(caseIndex) + " ";
+    for (int i = 0; i < length; ++i) {
+        out += tokens[tokenDist(rng)];
+        if (i + 1 < length) {
+            out += separators[separatorDist(rng)];
+        }
+    }
+    return out;
 }
 
 class DeterministicFakeLLMService final : public Application::Ports::ILLMService {
@@ -1569,6 +1603,144 @@ TEST(
         ASSERT_FALSE(replay.getRecommendationTrajectoryDTO().snapshots.empty());
 
         config.trigger = "after_permutation_corpus_case_" + item.id;
+        const std::string afterLoadReportPath = replay.runInfrastructureResilienceSimulation(config);
+        ASSERT_FALSE(afterLoadReportPath.empty());
+        const json afterLoadReport = readJson(afterLoadReportPath);
+        ASSERT_TRUE(afterLoadReport.contains("stateHash"));
+        ASSERT_TRUE(afterLoadReport.contains("deterministicStatePayload"));
+        ASSERT_TRUE(afterLoadReport.contains("finalState"));
+
+        EXPECT_EQ(afterLoadReport["stateHash"], baselineReport["stateHash"]);
+        EXPECT_EQ(
+            afterLoadReport["deterministicStatePayload"], baselineReport["deterministicStatePayload"]);
+        EXPECT_EQ(afterLoadReport["finalState"], baselineReport["finalState"]);
+    }
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(
+    CrossContextIsolationTest,
+    SeededSchemaValidFuzzCorpusAcrossCsvAndObjDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path datasetsRoot = projectRoot / "datasets";
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 60;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "baseline_without_seeded_schema_fuzz_corpus";
+    config.determinism.seed = 20260307;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    Application::Session baseline;
+    baseline.setProjectRoot(projectRoot.string());
+    baseline.getWorkspace().createWorld("Seeded Fuzz Corpus Baseline World", 34, 17);
+    const std::string baselineReportPath = baseline.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    fs::create_directories(datasetsRoot);
+    std::mt19937 rng(0x5EED1234u);
+    constexpr size_t kCorpusCases = 12;
+
+    for (size_t i = 0; i < kCorpusCases; ++i) {
+        const std::string caseId = (i < 10 ? "0" : "") + std::to_string(i);
+        const bool useCsv = (i % 2 == 0);
+        const fs::path worldPath =
+            datasetsRoot / ("seeded_fuzz_corpus_" + caseId + (useCsv ? ".csv" : ".obj"));
+
+        if (useCsv) {
+            std::ofstream csvOut(worldPath);
+            ASSERT_TRUE(csvOut.is_open());
+            csvOut << "0,0,0\n";
+            csvOut << "1,0,0\n";
+            csvOut << "0,1,0\n";
+        } else {
+            std::ofstream objOut(worldPath);
+            ASSERT_TRUE(objOut.is_open());
+            objOut << "v 0 0 0\n";
+            objOut << "v 1 0 0\n";
+            objOut << "v 0 1 0\n";
+            objOut << "p 1 2 3\n";
+        }
+
+        const std::string fuzzPayload = buildSeededSchemaValidPayload(rng, i);
+
+        Application::Session sidecarWriter;
+        sidecarWriter.setProjectRoot(projectRoot.string());
+        sidecarWriter.getWorkspace().createWorld("Seeded Fuzz Corpus Writer World", 34, 17);
+
+        Application::DTO::NarrativeStateDTO narrative{};
+        narrative.id = "NARR-FUZZ-" + caseId;
+        narrative.source = {
+            .sourceType = "field_report",
+            .sourceId = "SRC-FUZZ-" + caseId,
+            .productionDate = "2026-03-07T10:00:00Z",
+            .author = std::string("observer")
+        };
+        narrative.temporalContext = {
+            .category = "weekly",
+            .label = "week-10"
+        };
+        narrative.intent = {.intentType = "describe_observation"};
+        narrative.axes.push_back({
+            .label = "seeded-fuzz-boundary",
+            .description = fuzzPayload,
+            .abstractionLevel = "meso"
+        });
+        sidecarWriter.registerNarrativeStateDTO(narrative);
+
+        Application::DTO::DiscursiveSystemDTO discursive{};
+        discursive.id = "DISC-FUZZ-" + caseId;
+        discursive.declaredProblems = {"seeded schema-valid boundary case"};
+        discursive.declaredActions = {"payload=" + fuzzPayload};
+        discursive.allegedMechanisms = {"deterministic fuzz corpus replay"};
+        discursive.expectedEffects = {"no deterministic coupling"};
+        discursive.temporalContext = {
+            .category = "monthly",
+            .label = "march"
+        };
+        sidecarWriter.registerDiscursiveSystemDTO(discursive);
+
+        Application::DTO::RecommendationSnapshotDTO recommendation{};
+        recommendation.id = "REC-FUZZ-" + caseId;
+        recommendation.recommendationText = fuzzPayload;
+        recommendation.contextConditions = {"seeded_schema_valid_fuzz"};
+        recommendation.intendedAction = "preserve_pipeline";
+        recommendation.expectedOutcome = "deterministic isolation";
+        recommendation.sourceReference = {
+            .sourceType = "recommendation_engine",
+            .sourceId = "SRC-REC-FUZZ-" + caseId,
+            .productionDate = "2026-03-07T10:05:00Z",
+            .author = std::string("system")
+        };
+        recommendation.temporalContext = {
+            .category = "immediate",
+            .label = "current-cycle"
+        };
+        sidecarWriter.addRecommendationSnapshotDTO(recommendation);
+
+        EXPECT_NO_THROW(sidecarWriter.saveNarrativeToFile(worldPath.string() + ".json"));
+        EXPECT_NO_THROW(
+            sidecarWriter.saveDiscursiveSystemsToFile(worldPath.string() + ".discursive.json"));
+        EXPECT_NO_THROW(
+            sidecarWriter.saveRecommendationTrajectoryToFile(worldPath.string() + ".recommendation.json"));
+
+        Application::Session replay;
+        replay.setProjectRoot(projectRoot.string());
+        replay.getWorkspace().createWorld("Seeded Fuzz Corpus Replay World", 34, 17);
+        EXPECT_NO_THROW(replay.loadWorld(worldPath.string()));
+
+        ASSERT_FALSE(replay.getNarrativeHistoryDTO().empty());
+        ASSERT_FALSE(replay.getDiscursiveSystemDTOs().empty());
+        ASSERT_FALSE(replay.getRecommendationTrajectoryDTO().snapshots.empty());
+
+        config.trigger = "after_seeded_schema_valid_fuzz_case_" + caseId;
         const std::string afterLoadReportPath = replay.runInfrastructureResilienceSimulation(config);
         ASSERT_FALSE(afterLoadReportPath.empty());
         const json afterLoadReport = readJson(afterLoadReportPath);

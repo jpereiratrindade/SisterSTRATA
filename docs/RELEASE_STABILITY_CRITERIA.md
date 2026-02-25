@@ -68,3 +68,9 @@ Operational parameters are configured in workflow env:
 - `STRATA_DETERMINISM_STABILITY_MODE`
 - `STRATA_DETERMINISM_STABILITY_WINDOW`
 - `STRATA_DETERMINISM_STABILITY_MIN_SAMPLES`
+- `STRATA_DETERMINISM_STABILITY_PROMOTION_MIN_SAMPLES`
+
+Implementation note:
+
+- CI can run in `adaptive` mode (warn until promotion criteria are met; enforce when ready).
+- The stability job emits `build/headless/determinism/stability_window_promotion_ready.txt` (`1`, `0`, or `unknown`) to support transparent promotion tracking in run artifacts and step summary.
