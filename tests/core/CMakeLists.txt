@@ -57,3 +57,9 @@ add_executable(hydro_domain_tests
 )
 target_link_libraries(hydro_domain_tests PRIVATE core gtest gtest_main)
 add_test(NAME CoreHydroDomainTest COMMAND hydro_domain_tests)
+
+add_executable(environment_controller_determinism_tests
+    EnvironmentControllerDeterminismTest.cpp
+)
+target_link_libraries(environment_controller_determinism_tests PRIVATE core gtest gtest_main)
+add_test(NAME CoreEnvironmentControllerDeterminismTest COMMAND environment_controller_determinism_tests)
