@@ -2,6 +2,8 @@ name: STRATA-CI
 
 on:
   push:
+    tags-ignore:
+      - "v*"
   pull_request:
 
 jobs:
@@ -19,8 +21,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update -y
+          sudo apt-get update -y -o Acquire::Retries=3 -o Acquire::http::Timeout=30
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            -o Acquire::Retries=3 -o Acquire::http::Timeout=30 \
             build-essential \
             gcc-12 \
             g++-12 \
@@ -77,8 +80,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update -y
+          sudo apt-get update -y -o Acquire::Retries=3 -o Acquire::http::Timeout=30
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            -o Acquire::Retries=3 -o Acquire::http::Timeout=30 \
             build-essential \
             gcc-12 \
             g++-12 \
@@ -124,7 +128,7 @@ jobs:
     timeout-minutes: 10
     needs: f2-determinism-replay
     runs-on: ubuntu-latest
-    if: always()
+    if: ${{ needs.f2-determinism-replay.result == 'success' }}
     env:
       STRATA_DETERMINISM_COMPARE_MODE: enforce
 
@@ -146,7 +150,7 @@ jobs:
     timeout-minutes: 10
     needs: f2-determinism-compare
     runs-on: ubuntu-latest
-    if: always()
+    if: ${{ needs.f2-determinism-compare.result == 'success' }}
     permissions:
       actions: read
       contents: read
