@@ -7,6 +7,7 @@ on:
 jobs:
   f1-hardening:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     env:
       TZ: UTC
       LANG: C.UTF-8
@@ -59,6 +60,7 @@ jobs:
           ctest --test-dir build/headless --output-on-failure
 
   f2-determinism-replay:
+    timeout-minutes: 20
     env:
       TZ: UTC
       LANG: C.UTF-8
@@ -119,6 +121,7 @@ jobs:
           path: build/headless/determinism/state_hash.txt
 
   f2-determinism-compare:
+    timeout-minutes: 10
     needs: f2-determinism-replay
     runs-on: ubuntu-latest
     if: always()
@@ -140,6 +143,7 @@ jobs:
           bash scripts/compare_determinism_hashes.sh determinism-hashes "${STRATA_DETERMINISM_COMPARE_MODE}"
 
   f2-determinism-stability-window:
+    timeout-minutes: 10
     needs: f2-determinism-compare
     runs-on: ubuntu-latest
     if: always()

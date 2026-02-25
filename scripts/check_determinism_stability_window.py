@@ -60,6 +60,39 @@ def fail_or_warn(mode: str, message: str) -> int:
     return 0
 
 
+def write_issue_outputs(
+    summary_path: pathlib.Path,
+    report_path: pathlib.Path,
+    mode: str,
+    message: str,
+    current_hash: str,
+) -> None:
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+
+    summary = [
+        "## Determinism Stability Window",
+        "",
+        f"- Mode: `{mode}`",
+        f"- Current hash: `{current_hash or 'unavailable'}`",
+        f"- Status: issue",
+        f"- Detail: {message}",
+        "",
+    ]
+    summary_path.write_text("\n".join(summary), encoding="utf-8")
+
+    payload = {
+        "mode": mode,
+        "status": "issue",
+        "currentHash": current_hash,
+        "message": message,
+        "historicalSampleCount": 0,
+        "uniqueHashes": [current_hash] if current_hash else [],
+        "samples": [],
+    }
+    report_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
 def request_json(url: str, token: str) -> dict:
     req = urllib.request.Request(url)
     req.add_header("Accept", "application/vnd.github+json")
@@ -221,20 +254,42 @@ def main() -> int:
     args = parse_args()
     hash_root = pathlib.Path(args.hash_root)
 
+    current_hash = ""
     try:
         current_hash = extract_current_hash(hash_root)
     except (FileNotFoundError, ValueError) as exc:
-        return fail_or_warn(args.mode, str(exc))
+        message = str(exc)
+        write_issue_outputs(
+            pathlib.Path(args.summary_path),
+            pathlib.Path(args.json_path),
+            args.mode,
+            message,
+            current_hash,
+        )
+        return fail_or_warn(args.mode, message)
 
     if not args.repo:
-        return fail_or_warn(args.mode, "missing --repo (or GITHUB_REPOSITORY)")
+        message = "missing --repo (or GITHUB_REPOSITORY)"
+        write_issue_outputs(
+            pathlib.Path(args.summary_path),
+            pathlib.Path(args.json_path),
+            args.mode,
+            message,
+            current_hash,
+        )
+        return fail_or_warn(args.mode, message)
 
     token = os.environ.get("GITHUB_TOKEN", "")
     if not token:
-        return fail_or_warn(
+        message = "missing GITHUB_TOKEN; cannot evaluate historical determinism stability window"
+        write_issue_outputs(
+            pathlib.Path(args.summary_path),
+            pathlib.Path(args.json_path),
             args.mode,
-            "missing GITHUB_TOKEN; cannot evaluate historical determinism stability window",
+            message,
+            current_hash,
         )
+        return fail_or_warn(args.mode, message)
 
     historical: list[RunHash] = []
 
@@ -263,9 +318,25 @@ def main() -> int:
             if len(historical) >= args.window:
                 break
     except urllib.error.URLError as exc:
-        return fail_or_warn(args.mode, f"failed to query GitHub Actions API: {exc}")
+        message = f"failed to query GitHub Actions API: {exc}"
+        write_issue_outputs(
+            pathlib.Path(args.summary_path),
+            pathlib.Path(args.json_path),
+            args.mode,
+            message,
+            current_hash,
+        )
+        return fail_or_warn(args.mode, message)
     except Exception as exc:  # noqa: BLE001
-        return fail_or_warn(args.mode, f"unexpected stability window error: {exc}")
+        message = f"unexpected stability window error: {exc}"
+        write_issue_outputs(
+            pathlib.Path(args.summary_path),
+            pathlib.Path(args.json_path),
+            args.mode,
+            message,
+            current_hash,
+        )
+        return fail_or_warn(args.mode, message)
 
     all_hashes = [current_hash] + [item.hash_value for item in historical]
     unique_hashes = sorted(set(all_hashes))
