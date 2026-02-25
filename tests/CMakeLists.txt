@@ -25,6 +25,11 @@ add_test(
 )
 
 add_test(
+  NAME CoreDeterminismPrimitiveGuard
+  COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/check_core_determinism_primitives.sh ${CMAKE_SOURCE_DIR}
+)
+
+add_test(
   NAME ExceptionBoundaryGuard
   COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/check_exception_boundaries.sh ${CMAKE_SOURCE_DIR}
 )

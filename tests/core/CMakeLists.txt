@@ -63,3 +63,9 @@ add_executable(environment_controller_determinism_tests
 )
 target_link_libraries(environment_controller_determinism_tests PRIVATE core gtest gtest_main)
 add_test(NAME CoreEnvironmentControllerDeterminismTest COMMAND environment_controller_determinism_tests)
+
+add_executable(hypothesis_id_determinism_tests
+    HypothesisIdDeterminismTest.cpp
+)
+target_link_libraries(hypothesis_id_determinism_tests PRIVATE core gtest gtest_main)
+add_test(NAME CoreHypothesisIdDeterminismTest COMMAND hypothesis_id_determinism_tests)

@@ -14,6 +14,7 @@ TEST(CoreTrajectoryLODTest, OffloadsOlderSlicesAndCanReloadProxy) {
         std::vector<int> cover(100, i);
         std::vector<bool> water(100, (i % 2 == 0));
         TimeSlice slice(i, i, cover, water, "Metadata " + std::to_string(i));
+        EXPECT_EQ(slice.getTimestamp(), static_cast<time_t>(i));
         traj.addTimeSlice(slice);
     }
 

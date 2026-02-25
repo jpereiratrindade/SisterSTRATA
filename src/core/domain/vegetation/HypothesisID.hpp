@@ -11,8 +11,10 @@ namespace Core::Domain::Vegetation {
  */
 class HypothesisID {
 public:
-    HypothesisID(std::string id) 
-        : id_(std::move(id)), createdAt_(std::chrono::system_clock::now()) {}
+    explicit HypothesisID(
+        std::string id,
+        std::chrono::system_clock::time_point createdAt = std::chrono::system_clock::time_point{})
+        : id_(std::move(id)), createdAt_(createdAt) {}
 
     const std::string& getValue() const { return id_; }
     std::chrono::system_clock::time_point getTimestamp() const { return createdAt_; }

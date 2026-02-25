@@ -20,7 +20,8 @@ class TimeSlice {
 public:
     TimeSlice(int id, int ordinal, const std::vector<int>& cover, const std::vector<bool>& water, const std::string& meta, ClassificationType type = ClassificationType::ScenarioIndex)
         : id_(id), ordinalIndex_(ordinal), ecologicalCoverState_(cover), waterMask_(water), metadata_(meta), type_(type) {
-        timestamp_ = std::time(nullptr);
+        // Keep a stable metadata timestamp derived from ordinal sequence to preserve Tier-1 determinism.
+        timestamp_ = static_cast<time_t>(ordinalIndex_);
     }
 
     // Identity
