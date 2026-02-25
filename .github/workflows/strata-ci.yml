@@ -52,7 +52,7 @@ jobs:
 
       - name: Run ADR Gates - Static Contract Guards
         run: |
-          ctest --test-dir build/headless --output-on-failure -R "MembraneDependencyGuard|CoreDomainBoundaryGuard|CoreDeterminismPrimitiveGuard|ExceptionBoundaryGuard|GitArtifactHygieneGuard"
+          ctest --test-dir build/headless --output-on-failure -R "MembraneDependencyGuard|CoreDomainBoundaryGuard|CoreDeterminismPrimitiveGuard|ExceptionBoundaryGuard|GitArtifactHygieneGuard|VersionAlignmentGuard"
 
       - name: Run Full Headless Test Suite
         run: |
