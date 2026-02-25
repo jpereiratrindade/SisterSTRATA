@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     env:
-      STRATA_DETERMINISM_COMPARE_MODE: ${{ github.ref == 'refs/heads/main' && 'enforce' || 'warn' }}
+      STRATA_DETERMINISM_COMPARE_MODE: enforce
 
     steps:
       - name: Download Hash Artifacts

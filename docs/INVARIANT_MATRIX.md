@@ -37,7 +37,7 @@ This matrix complements:
 
 1. Build profile standardization was introduced with `CMakePresets.json`, but team adoption in local/dev/CI scripts still needs consolidation.
 2. Scenario-level enforcement currently focuses on infrastructure resilience flow; additional cross-context scenario families are still pending (for example narrative/observational coupling constraints).
-3. Determinism enforcement is currently Tier-1 (same binary/config/seed); cross-runner replay compare in CI is progressive (`warn` in PR, `enforce` on `main`).
+3. Determinism enforcement is Tier-1 (same binary/config/seed) and cross-runner replay compare is merge-blocking in CI (`enforce` in PR and `main`); next hardening step is tracking stability trends over time.
 
 ## 4. F2 Exit Hint
 
