@@ -27,6 +27,7 @@ Current ADRs:
 - [ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md](ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md)
 - [ADR-005_Scientific_Hardening_Phase_F1.md](ADR-005_Scientific_Hardening_Phase_F1.md)
 - [ADR-006_Domain_Naming_Disambiguation_Soil_vs_SETO.md](ADR-006_Domain_Naming_Disambiguation_Soil_vs_SETO.md)
+- [ADR-007_Canonical_Versioning_Contract_for_Engine_and_Scientific_Model.md](ADR-007_Canonical_Versioning_Contract_for_Engine_and_Scientific_Model.md)
 
 Normative governance reference:
 

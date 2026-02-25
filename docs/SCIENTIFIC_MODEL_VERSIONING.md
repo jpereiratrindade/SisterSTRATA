@@ -12,6 +12,7 @@ Normative references:
 - `adr/ADR-002_Deterministic_Core_Non_Negotiable_Constraint.md`
 - `adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md`
 - `adr/ADR-005_Scientific_Hardening_Phase_F1.md`
+- `adr/ADR-007_Canonical_Versioning_Contract_for_Engine_and_Scientific_Model.md`
 
 ## 2. Versioning Layers
 
@@ -65,4 +66,3 @@ For pull requests affecting scientific behavior:
 - PR checklist item "Versioning (engine + scientific) preenchido" must be checked.
 - `docs/SCIENTIFIC_MODEL_VERSION.json` must stay valid and SemVer-compliant.
 - If scientific meaning changes, apply MAJOR bump and follow `docs/BREAKING_CHANGES_POLICY.md`.
-

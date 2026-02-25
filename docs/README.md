@@ -37,6 +37,7 @@ Indice rapido para os documentos cientificos do SisterSTRATA.
 - [ADR-004 Integration Contract Observability -> Infrastructure -> Fourth Dimension](../adr/ADR-004_Integration_Contract_Observability_Infrastructure_FourthDimension.md)
 - [ADR-005 Scientific Hardening Phase F1](../adr/ADR-005_Scientific_Hardening_Phase_F1.md)
 - [ADR-006 Domain Naming Disambiguation (`soils` vs `seto`)](../adr/ADR-006_Domain_Naming_Disambiguation_Soil_vs_SETO.md)
+- [ADR-007 Canonical Versioning Contract (engine + scientific model)](../adr/ADR-007_Canonical_Versioning_Contract_for_Engine_and_Scientific_Model.md)
 - [Memorando F1 Scientific Hardening](F1_SCIENTIFIC_HARDENING_MEMORANDUM_2026-02-24.md)
 - [Matriz ADR -> Enforcement (F1)](ADR_ENFORCEMENT_MATRIX_F1.md)
 - [Invariant Matrix (ADR -> Test -> Gate)](INVARIANT_MATRIX.md)
