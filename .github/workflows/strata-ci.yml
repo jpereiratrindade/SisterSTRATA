@@ -138,3 +138,57 @@ jobs:
       - name: Compare Determinism Hashes Across Runners
         run: |
           bash scripts/compare_determinism_hashes.sh determinism-hashes "${STRATA_DETERMINISM_COMPARE_MODE}"
+
+  f2-determinism-stability-window:
+    needs: f2-determinism-compare
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      actions: read
+      contents: read
+    env:
+      STRATA_DETERMINISM_STABILITY_MODE: warn
+      STRATA_DETERMINISM_STABILITY_WINDOW: "20"
+      STRATA_DETERMINISM_STABILITY_MIN_SAMPLES: "5"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Hash Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: determinism-state-hash-*
+          path: determinism-hashes
+
+      - name: Analyze Determinism Stability Window
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/check_determinism_stability_window.py \
+            --hash-root determinism-hashes \
+            --repo "${GITHUB_REPOSITORY}" \
+            --branch "main" \
+            --workflow-name "${GITHUB_WORKFLOW}" \
+            --current-run-id "${GITHUB_RUN_ID}" \
+            --window "${STRATA_DETERMINISM_STABILITY_WINDOW}" \
+            --min-samples "${STRATA_DETERMINISM_STABILITY_MIN_SAMPLES}" \
+            --mode "${STRATA_DETERMINISM_STABILITY_MODE}"
+
+      - name: Upload Stability Window Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: determinism-stability-window-report
+          path: |
+            build/headless/determinism/stability_window_summary.md
+            build/headless/determinism/stability_window_report.json
+          if-no-files-found: warn
+
+      - name: Publish Stability Window Summary
+        run: |
+          SUMMARY="build/headless/determinism/stability_window_summary.md"
+          if [[ -f "${SUMMARY}" ]]; then
+            cat "${SUMMARY}" >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "No determinism stability summary was generated." >> "${GITHUB_STEP_SUMMARY}"
+          fi
