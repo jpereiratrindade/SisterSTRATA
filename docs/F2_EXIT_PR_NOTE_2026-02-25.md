@@ -24,7 +24,7 @@ F2 hardening is finalized as an exit-candidate with canonical CI closure evidenc
 
 ## Versioning Declaration
 
-- Engine version target: `1.10.6`
+- Engine version target: `1.10.7`
 - Scientific model version target: `1.0.0`
 - Scientific breaking change declared: `no`
 

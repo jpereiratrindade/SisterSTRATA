@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.10.7] - 2026-02-25
+### Added
+- **Release artifacts**:
+  - Added `docs/releases/v1.10.7.md`.
+
+### Changed
+- **CI trigger policy**:
+  - Updated `STRATA-CI` to run on all branch pushes while ignoring release tags (`v*`) to avoid duplicate/non-canonical tag runs.
+- **Determinism pipeline robustness**:
+  - Added retry/timeout hardening to dependency installation steps used by `f1-hardening` and `f2-determinism-replay`.
+  - Updated `f2-determinism-compare` to run only when replay jobs complete successfully.
+  - Updated `f2-determinism-stability-window` to run only when determinism compare succeeds.
+- **Version alignment**:
+  - Synced `CMakeLists.txt`, `Doxyfile`, `README.md`, and `docs/SCIENTIFIC_MODEL_VERSION.json` to `1.10.7`.
+
 ## [v1.10.6] - 2026-02-25
 ### Added
 - **F2 closure documentation artifact**:
