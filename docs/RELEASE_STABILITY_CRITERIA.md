@@ -53,3 +53,18 @@ A release is considered Stable only when all items below are true:
 - Beta -> Stable: all mandatory stable gates satisfied.
 - Stable -> LTS: explicit maintenance policy and compatibility window approved.
 
+## 6. Determinism Stability Window Promotion (F2 -> Enforced Gate)
+
+The historical determinism trend check (`f2-determinism-stability-window`) starts in monitoring mode (`warn`) and is promoted to merge-blocking (`enforce`) only when all criteria below are met:
+
+1. At least 20 successful historical samples on `main` are available (window size >= 20).
+2. No hash divergence in the full window (`uniqueHashes == 1`).
+3. No internal artifact inconsistency in any sampled run.
+4. No CI infrastructure incident flagged for determinism jobs in the same observation window.
+5. Scientific Governance Lead + Release Engineering Lead approve the mode switch in PR notes.
+
+Operational parameters are configured in workflow env:
+
+- `STRATA_DETERMINISM_STABILITY_MODE`
+- `STRATA_DETERMINISM_STABILITY_WINDOW`
+- `STRATA_DETERMINISM_STABILITY_MIN_SAMPLES`

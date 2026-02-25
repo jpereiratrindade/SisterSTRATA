@@ -43,7 +43,7 @@ This matrix complements:
 
 1. Build profile standardization was introduced with `CMakePresets.json`, but team adoption in local/dev/CI scripts still needs consolidation.
 2. Scenario-level enforcement now includes observational/cognitive-to-infrastructure coupling protection; additional cross-context scenario families are still pending (for example trajectory impact-profile side-effect constraints).
-3. Determinism trend tracking was added in CI (`f2-determinism-stability-window`) in monitoring mode; next hardening step is promotion from `warn` to `enforce` after sustained stability window evidence.
+3. Determinism trend tracking was added in CI (`f2-determinism-stability-window`) in monitoring mode; promotion from `warn` to `enforce` follows the objective criteria in `docs/RELEASE_STABILITY_CRITERIA.md` (section "Determinism Stability Window Promotion").
 
 ## 4. F2 Exit Hint
 
