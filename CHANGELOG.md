@@ -1,5 +1,18 @@
 # Changelog
 
+## [v1.10.5] - 2026-02-25
+### Added
+- **Canonical governance contract**:
+  - Added `ADR-007` to formalize versioning as an architectural contract (`engineVersion` + `scientificModelVersion`) with merge-blocking CI enforcement mapping.
+- **Release artifacts**:
+  - Added `docs/releases/v1.10.5.md`.
+
+### Changed
+- **Version policy traceability**:
+  - Linked `docs/SCIENTIFIC_MODEL_VERSIONING.md` and `docs/INVARIANT_MATRIX.md` directly to `ADR-007`.
+- **Version alignment**:
+  - Synced `CMakeLists.txt`, `Doxyfile`, `README.md`, and `docs/SCIENTIFIC_MODEL_VERSION.json` to `1.10.5`.
+
 ## [v1.10.4] - 2026-02-25
 ### Added
 - **Core simulation hardening**:

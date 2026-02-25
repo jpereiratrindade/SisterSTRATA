@@ -5,7 +5,7 @@
 
 SisterSTRATA é um instrumento científico digital projetado para a simulação de ecossistemas complexos. Ele integra modelos de pedosfera (Solo), hidrologia e vegetação em um ambiente 3D de alta performance, focando na consistência causal e integridade científica.
 
-## Principais Funcionalidades (v1.10.4)
+## Principais Funcionalidades (v1.10.5)
 
 *   **Quarta Dimensão (Resiliência)**: Sistema de análise temporal que permite navegar por trajetórias históricas e simular futuros possíveis.
 *   **Analysis Workspace (Contextos Observacionais)**: Espaço dedicado para Contexto Narrativo, Discursivo, Trajectory e Recomendações, separado das operações 3D.
