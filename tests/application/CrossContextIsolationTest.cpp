@@ -708,3 +708,47 @@ TEST(CrossContextIsolationTest, CognitiveInterpretationDoesNotChangeInfrastructu
 
     fs::remove_all(tempRoot);
 }
+
+TEST(CrossContextIsolationTest, TrajectoryImpactProfileGenerationDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+    session.getWorkspace().createWorld("Impact Profile Coupling Guard World", 18, 12);
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 50;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::SevereDrought;
+    config.trigger = "baseline_without_impact_profile_generation";
+    config.determinism.seed = 20260227;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    const std::string baselineReportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    std::string impactProfileText;
+    EXPECT_NO_THROW(impactProfileText = session.generateImpactProfileText());
+    EXPECT_GE(impactProfileText.size(), 0u);
+
+    config.trigger = "after_impact_profile_generation";
+    const std::string afterImpactProfilePath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterImpactProfilePath.empty());
+    const json afterImpactProfileReport = readJson(afterImpactProfilePath);
+    ASSERT_TRUE(afterImpactProfileReport.contains("stateHash"));
+    ASSERT_TRUE(afterImpactProfileReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterImpactProfileReport.contains("finalState"));
+
+    EXPECT_EQ(afterImpactProfileReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(
+        afterImpactProfileReport["deterministicStatePayload"],
+        baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterImpactProfileReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
