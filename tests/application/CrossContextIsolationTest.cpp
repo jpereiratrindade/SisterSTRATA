@@ -8,6 +8,7 @@
 #include <fstream>
 #include <memory>
 #include <stdexcept>
+#include <vector>
 #include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
@@ -1435,6 +1436,151 @@ TEST(
     EXPECT_EQ(afterLoadReport["stateHash"], baselineReport["stateHash"]);
     EXPECT_EQ(afterLoadReport["deterministicStatePayload"], baselineReport["deterministicStatePayload"]);
     EXPECT_EQ(afterLoadReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(
+    CrossContextIsolationTest,
+    SchemaValidSidecarPermutationCorpusAcrossCsvAndObjDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path datasetsRoot = projectRoot / "datasets";
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 58;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "baseline_without_sidecar_permutation_corpus";
+    config.determinism.seed = 20260306;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    Application::Session baseline;
+    baseline.setProjectRoot(projectRoot.string());
+    baseline.getWorkspace().createWorld("Permutation Corpus Baseline World", 32, 16);
+    const std::string baselineReportPath = baseline.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    struct CorpusCase {
+        std::string id;
+        std::string extension;
+        std::string payload;
+    };
+
+    const std::vector<CorpusCase> corpus = {
+        {"01", ".csv", "literal-newline:\\n literal-tab:\\t json:{\\\"k\\\":\\\"v\\\"}"},
+        {"02", ".obj", "windows-path:C:\\\\temp\\\\dataset\\\\sidecar quote:\\\"alpha\\\""},
+        {"03", ".csv", "escaped-unicode:\\\\u03B1 \\\\u4F60\\\\u597D \\\\ud83c\\\\udf31"},
+        {"04", ".obj", "mixed-slashes://a/b/c and C:\\\\a\\\\b\\\\c and braces:{}[]()"},
+        {"05", ".csv", "double-escaped-json:{\\\\\\\"nested\\\\\\\":\\\\\\\"value\\\\\\\"}"},
+        {"06", ".obj", "control-sequence-literals:\\\\n\\\\r\\\\t end-of-payload"}
+    };
+
+    fs::create_directories(datasetsRoot);
+
+    for (const auto& item : corpus) {
+        const fs::path worldPath = datasetsRoot / ("permutation_corpus_" + item.id + item.extension);
+        if (item.extension == ".csv") {
+            std::ofstream csvOut(worldPath);
+            ASSERT_TRUE(csvOut.is_open());
+            csvOut << "0,0,0\n";
+            csvOut << "1,0,0\n";
+            csvOut << "0,1,0\n";
+        } else {
+            std::ofstream objOut(worldPath);
+            ASSERT_TRUE(objOut.is_open());
+            objOut << "v 0 0 0\n";
+            objOut << "v 1 0 0\n";
+            objOut << "v 0 1 0\n";
+            objOut << "p 1 2 3\n";
+        }
+
+        Application::Session sidecarWriter;
+        sidecarWriter.setProjectRoot(projectRoot.string());
+        sidecarWriter.getWorkspace().createWorld("Permutation Corpus Writer World", 32, 16);
+
+        Application::DTO::NarrativeStateDTO narrative{};
+        narrative.id = "NARR-PERM-" + item.id;
+        narrative.source = {
+            .sourceType = "field_report",
+            .sourceId = "SRC-PERM-" + item.id,
+            .productionDate = "2026-03-06T10:00:00Z",
+            .author = std::string("observer")
+        };
+        narrative.temporalContext = {
+            .category = "weekly",
+            .label = "week-10"
+        };
+        narrative.intent = {.intentType = "describe_observation"};
+        narrative.axes.push_back({
+            .label = "boundary-stress",
+            .description = item.payload,
+            .abstractionLevel = "meso"
+        });
+        sidecarWriter.registerNarrativeStateDTO(narrative);
+
+        Application::DTO::DiscursiveSystemDTO discursive{};
+        discursive.id = "DISC-PERM-" + item.id;
+        discursive.declaredProblems = {"schema-valid text-boundary case"};
+        discursive.declaredActions = {"payload=" + item.payload};
+        discursive.allegedMechanisms = {"serialization-boundary stress"};
+        discursive.expectedEffects = {"no deterministic coupling"};
+        discursive.temporalContext = {
+            .category = "monthly",
+            .label = "march"
+        };
+        sidecarWriter.registerDiscursiveSystemDTO(discursive);
+
+        Application::DTO::RecommendationSnapshotDTO recommendation{};
+        recommendation.id = "REC-PERM-" + item.id;
+        recommendation.recommendationText = item.payload;
+        recommendation.contextConditions = {"schema_valid_permutation"};
+        recommendation.intendedAction = "preserve_pipeline";
+        recommendation.expectedOutcome = "deterministic isolation";
+        recommendation.sourceReference = {
+            .sourceType = "recommendation_engine",
+            .sourceId = "SRC-REC-PERM-" + item.id,
+            .productionDate = "2026-03-06T10:05:00Z",
+            .author = std::string("system")
+        };
+        recommendation.temporalContext = {
+            .category = "immediate",
+            .label = "current-cycle"
+        };
+        sidecarWriter.addRecommendationSnapshotDTO(recommendation);
+
+        EXPECT_NO_THROW(sidecarWriter.saveNarrativeToFile(worldPath.string() + ".json"));
+        EXPECT_NO_THROW(
+            sidecarWriter.saveDiscursiveSystemsToFile(worldPath.string() + ".discursive.json"));
+        EXPECT_NO_THROW(
+            sidecarWriter.saveRecommendationTrajectoryToFile(worldPath.string() + ".recommendation.json"));
+
+        Application::Session replay;
+        replay.setProjectRoot(projectRoot.string());
+        replay.getWorkspace().createWorld("Permutation Corpus Replay World", 32, 16);
+        EXPECT_NO_THROW(replay.loadWorld(worldPath.string()));
+
+        ASSERT_FALSE(replay.getNarrativeHistoryDTO().empty());
+        ASSERT_FALSE(replay.getDiscursiveSystemDTOs().empty());
+        ASSERT_FALSE(replay.getRecommendationTrajectoryDTO().snapshots.empty());
+
+        config.trigger = "after_permutation_corpus_case_" + item.id;
+        const std::string afterLoadReportPath = replay.runInfrastructureResilienceSimulation(config);
+        ASSERT_FALSE(afterLoadReportPath.empty());
+        const json afterLoadReport = readJson(afterLoadReportPath);
+        ASSERT_TRUE(afterLoadReport.contains("stateHash"));
+        ASSERT_TRUE(afterLoadReport.contains("deterministicStatePayload"));
+        ASSERT_TRUE(afterLoadReport.contains("finalState"));
+
+        EXPECT_EQ(afterLoadReport["stateHash"], baselineReport["stateHash"]);
+        EXPECT_EQ(
+            afterLoadReport["deterministicStatePayload"], baselineReport["deterministicStatePayload"]);
+        EXPECT_EQ(afterLoadReport["finalState"], baselineReport["finalState"]);
+    }
 
     fs::remove_all(tempRoot);
 }
