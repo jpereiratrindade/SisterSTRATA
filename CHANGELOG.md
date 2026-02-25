@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.10.6] - 2026-02-25
+### Added
+- **F2 closure documentation artifact**:
+  - Added `docs/F2_EXIT_PR_NOTE_2026-02-25.md` as canonical PR/release summary for the F2 exit-candidate declaration.
+- **Release artifacts**:
+  - Added `docs/releases/v1.10.6.md`.
+
+### Changed
+- **F2 checkpoint evidence**:
+  - Updated `docs/F2_HARDENING_CHECKPOINT_2026-02-25.md` to include canonical CI closure evidence (run `#48`) and CI-backed closure wording.
+- **Documentation index**:
+  - Updated `docs/README.md` with the new F2 exit note and release note index entry.
+- **Version alignment**:
+  - Synced `CMakeLists.txt`, `Doxyfile`, `README.md`, and `docs/SCIENTIFIC_MODEL_VERSION.json` to `1.10.6`.
+
 ## [v1.10.5] - 2026-02-25
 ### Added
 - **Canonical governance contract**:
