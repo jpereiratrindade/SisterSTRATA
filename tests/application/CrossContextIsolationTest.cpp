@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 
 #include "application/Session.hpp"
+#include "application/ports/ILLMService.hpp"
 
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <stdexcept>
 #include <nlohmann/json.hpp>
 
@@ -32,6 +34,21 @@ json readJson(const fs::path& path) {
     }
     return json::parse(in);
 }
+
+class DeterministicFakeLLMService final : public Application::Ports::ILLMService {
+public:
+    void requestCompletion(
+        const std::vector<Application::Ports::LLMMessage>& messages,
+        CompletionCallback callback) override {
+        lastMessageCount = messages.size();
+        callback({true, "Coherence preserved under read-only cognitive interpretation.", ""});
+    }
+
+    bool isAvailable() const override { return true; }
+    std::string getModelName() const override { return "fake-coherence-model"; }
+
+    size_t lastMessageCount{0};
+};
 
 void expectSourceReferenceEqual(
     const Application::DTO::SourceReferenceDTO& lhs,
@@ -616,6 +633,78 @@ TEST(CrossContextIsolationTest, ObservationalIngestionDoesNotChangeInfrastructur
         afterIngestionReport["deterministicStatePayload"],
         baselineReport["deterministicStatePayload"]);
     EXPECT_EQ(afterIngestionReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(CrossContextIsolationTest, CognitiveInterpretationDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+    session.getWorkspace().createWorld("Cognitive Coupling Guard World", 15, 10);
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 45;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "baseline_without_cognitive_interpretation";
+    config.determinism.seed = 20260226;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    const std::string baselineReportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    auto fakeLLM = std::make_unique<DeterministicFakeLLMService>();
+    auto* fakeLLMPtr = fakeLLM.get();
+    session.setLLMService(std::move(fakeLLM));
+
+    Application::DTO::Cognitive::ContextBundleDTO bundle;
+    bundle.bundleId = "BUNDLE-F2-COGNITIVE-GUARD";
+    bundle.intent = "coherence_check";
+    bundle.narratives = {
+        "--- OBSERVATION [obs_cognitive_1] ---\n"
+        "Source: field_report_1 (2026-02-26T09:00:00Z)\n"
+    };
+    bundle.discursive = {
+        "### DISCURSIVE SYSTEM [disc_cognitive_1]\n"
+        "Source Refs: field_report_1\n"
+    };
+    bundle.recommendation =
+        "=> RECOMMENDATION SNAPSHOT [rec_cognitive_1]\n"
+        "Source: recommendation_engine (2026-02-26T09:10:00Z)\n";
+
+    bool callbackInvoked = false;
+    session.requestAIInterpretation(
+        bundle,
+        Application::Services::Cognitive::InterpretationMode::CoherenceCheck,
+        [&](const Application::DTO::Cognitive::InterpretationSnapshotDTO& snapshot) {
+            callbackInvoked = true;
+            session.saveInterpretationSnapshotDTO(snapshot);
+        });
+
+    EXPECT_TRUE(callbackInvoked);
+    EXPECT_EQ(fakeLLMPtr->lastMessageCount, 1u);
+    ASSERT_EQ(session.getInterpretationSnapshots().size(), 1u);
+
+    config.trigger = "after_cognitive_interpretation";
+    const std::string afterCognitivePath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterCognitivePath.empty());
+    const json afterCognitiveReport = readJson(afterCognitivePath);
+    ASSERT_TRUE(afterCognitiveReport.contains("stateHash"));
+    ASSERT_TRUE(afterCognitiveReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterCognitiveReport.contains("finalState"));
+
+    EXPECT_EQ(afterCognitiveReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(
+        afterCognitiveReport["deterministicStatePayload"],
+        baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterCognitiveReport["finalState"], baselineReport["finalState"]);
 
     fs::remove_all(tempRoot);
 }
