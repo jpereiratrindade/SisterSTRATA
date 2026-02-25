@@ -1,8 +1,8 @@
-# Doxyfile 1.10.3
+# Doxyfile 1.10.4
 
 # Project Options
 PROJECT_NAME           = "SisterSTRATA"
-PROJECT_NUMBER         = "1.10.3"
+PROJECT_NUMBER         = "1.10.4"
 PROJECT_BRIEF          = "Scientific Data Platform for Soil and Environment Simulation"
 OUTPUT_DIRECTORY       = docs/doxygen
 CREATE_SUBDIRS         = NO

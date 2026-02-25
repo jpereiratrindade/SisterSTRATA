@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.10.4] - 2026-02-25
+### Added
+- **Core simulation hardening**:
+  - Added `tests/core/EnvironmentControllerDeterminismTest.cpp` with deterministic CSV replay checks and scenario monotonicity assertions (`Normal` vs `SevereDrought`).
+- **Release artifacts**:
+  - Added `docs/releases/v1.10.4.md`.
+
+### Changed
+- **CI determinism compare reliability**:
+  - Added `actions/checkout` to `f2-determinism-compare` so repository scripts are always available before hash comparison.
+- **CI core scientific gate coverage**:
+  - Included `CoreEnvironmentControllerDeterminismTest` in ADR core scientific suite gates.
+- **Version alignment**:
+  - Synced `CMakeLists.txt`, `Doxyfile`, `README.md`, and `docs/SCIENTIFIC_MODEL_VERSION.json` to `1.10.4`.
+
 ## [v1.10.3] - 2026-02-25
 ### Added
 - **F2 hardening gates**:
