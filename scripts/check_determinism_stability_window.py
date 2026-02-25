@@ -35,6 +35,11 @@ class RunHash:
     hash_value: str
 
 
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[override]
+        return None
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Check determinism hash stability over recent successful CI runs."
@@ -117,6 +122,7 @@ def write_issue_outputs(
 
 def request_json(url: str, token: str) -> dict:
     req = urllib.request.Request(url)
+    req.add_header("User-Agent", "SisterSTRATA-determinism-stability-check/1.0")
     req.add_header("Accept", "application/vnd.github+json")
     if token:
         req.add_header("Authorization", f"Bearer {token}")
@@ -124,13 +130,35 @@ def request_json(url: str, token: str) -> dict:
         return json.load(response)
 
 
-def request_bytes(url: str, token: str) -> bytes:
+def request_bytes(url: str, token: str, accept: str = "application/vnd.github+json") -> bytes:
     req = urllib.request.Request(url)
-    req.add_header("Accept", "application/vnd.github+json")
+    req.add_header("User-Agent", "SisterSTRATA-determinism-stability-check/1.0")
+    req.add_header("Accept", accept)
     if token:
         req.add_header("Authorization", f"Bearer {token}")
     with urllib.request.urlopen(req, timeout=30) as response:
         return response.read()
+
+
+def request_bytes_with_presigned_redirect(url: str, token: str) -> bytes:
+    req = urllib.request.Request(url)
+    req.add_header("User-Agent", "SisterSTRATA-determinism-stability-check/1.0")
+    req.add_header("Accept", "application/vnd.github+json")
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+
+    opener = urllib.request.build_opener(_NoRedirectHandler())
+    try:
+        with opener.open(req, timeout=30) as response:
+            return response.read()
+    except urllib.error.HTTPError as exc:
+        if exc.code not in (301, 302, 303, 307, 308):
+            raise
+        location = exc.headers.get("Location")
+        if not location:
+            raise
+        # The redirected URL is a pre-signed blob URL and must be fetched without GitHub auth header.
+        return request_bytes(location, token="", accept="application/zip")
 
 
 def read_hash_file(path: pathlib.Path) -> str:
@@ -187,10 +215,11 @@ def read_run_hash(repo: str, run_id: int, token: str) -> str | None:
             continue
         if artifact.get("expired", False):
             continue
-        archive_url = artifact.get("archive_download_url")
-        if not archive_url:
+        artifact_id = int(artifact.get("id", 0))
+        if artifact_id <= 0:
             continue
-        raw = request_bytes(archive_url, token)
+        archive_url = f"https://api.github.com/repos/{repo}/actions/artifacts/{artifact_id}/zip"
+        raw = request_bytes_with_presigned_redirect(archive_url, token)
         with zipfile.ZipFile(io.BytesIO(raw)) as zf:
             members = [n for n in zf.namelist() if n.endswith("state_hash.txt")]
             if not members:

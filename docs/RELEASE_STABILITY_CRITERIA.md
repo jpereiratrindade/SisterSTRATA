@@ -55,7 +55,7 @@ A release is considered Stable only when all items below are true:
 
 ## 6. Determinism Stability Window Promotion (F2 -> Enforced Gate)
 
-The historical determinism trend check (`f2-determinism-stability-window`) starts in monitoring mode (`warn`) and is promoted to merge-blocking (`enforce`) only when all criteria below are met:
+The historical determinism trend check (`f2-determinism-stability-window`) can start in monitoring mode (`warn` or `adaptive`) and is promoted to merge-blocking (`enforce`) only when all criteria below are met:
 
 1. At least 20 successful historical samples on `main` are available (window size >= 20).
 2. No hash divergence in the full window (`uniqueHashes == 1`).

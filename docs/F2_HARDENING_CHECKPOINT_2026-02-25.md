@@ -12,7 +12,7 @@ F2 is in late-stage hardening with broad executable coverage across:
 - governance/versioning contracts,
 - CI and local headless preset standardization.
 
-Current phase status: **F2 exit-candidate (not formally closed yet)**.
+Current phase status: **F2 formally closed (subject to human validation of this checkpoint document)**.
 
 ## 2. Exit Criteria Assessment
 
@@ -45,7 +45,7 @@ Evidence:
 - `tests/core/*` deterministic/core scientific suites.
 
 ### Criterion 3. Merge-blocking CI gates
-Status: **Partial**
+Status: **Achieved**
 
 Evidence:
 - Enforced/merge-blocking gates:
@@ -54,8 +54,8 @@ Evidence:
   - static guards (`MembraneDependencyGuard`, `CoreDomainBoundaryGuard`, `CoreDeterminismPrimitiveGuard`, `ExceptionBoundaryGuard`, `GitArtifactHygieneGuard`, `VersionAlignmentGuard`),
   - cross-runner determinism compare.
 - Determinism stability window:
-  - active in `adaptive` mode (`warn` until promotion-ready, `enforce` when ready).
-  - not yet permanently fixed as unconditional `enforce`.
+  - objective readiness confirmed with `samples=20`, `uniqueHashes=1`, `promotion_ready=1` in historical evaluation,
+  - workflow mode fixed to merge-blocking `enforce`.
 
 Relevant files:
 - `.github/workflows/strata-ci.yml`
@@ -71,6 +71,7 @@ Evidence:
 ## 3. Recent F2 Hardening Evidence (Commits)
 
 - `a56c83c` test: add interleaved ingestion-reload cycle isolation guard
+- `bf1c853` docs: assign invariant owners and promote f2 to exit-candidate
 - `1251009` docs: add formal f2 hardening checkpoint
 - `dd8123c` test: add bundle-to-sidecar transport chain isolation guard
 - `e9ab689` hardening: add seeded sidecar fuzz guard and adaptive determinism readiness
@@ -93,19 +94,13 @@ Observed result:
 - Core scientific gates: pass
 - Governance/static guards: pass
 
-## 5. Remaining Work Before Formal F2 Closure
+## 5. Post-F2 Follow-ups
 
-1. Determinism stability promotion governance:
-   - keep collecting successful historical window samples,
-   - confirm `promotion_ready=1` artifact in CI stability job,
-   - execute formal approval step (Scientific Governance Lead + Release Engineering Lead),
-   - optionally pin mode to permanent `enforce` once approved.
-
-2. Optional stress expansion:
+1. Optional stress expansion:
    - concurrent high-volume ingestion/reload stress family (if required for F2 closure policy).
 
 ## 6. Decision Recommendation
 
 Recommended current declaration:
-- **F2 = "Measurably Hardened (Exit Candidate)"**
-- **Not yet "Formally Closed"** until Criterion 3 (determinism stability promotion governance) is closed by policy.
+- **F2 = "Measurably Hardened (Formally Closed)"**
+- Continue post-F2 follow-ups as incremental hardening workstreams.
