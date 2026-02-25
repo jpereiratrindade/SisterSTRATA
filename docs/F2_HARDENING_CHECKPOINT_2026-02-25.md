@@ -1,6 +1,6 @@
 # F2 Hardening Checkpoint
 
-Status: Draft (requires human validation)  
+Status: Exit-candidate validated by CI (human sign-off pending)  
 Date: 2026-02-25  
 Scope: SisterSTRATA `main` (checkpoint state on 2026-02-25)
 
@@ -12,7 +12,11 @@ F2 is in late-stage hardening with broad executable coverage across:
 - governance/versioning contracts,
 - CI and local headless preset standardization.
 
-Current phase status: **F2 formally closed (subject to human validation of this checkpoint document)**.
+Current phase status: **F2 formally closed in CI, pending final human governance sign-off**.
+
+Canonical CI closure evidence:
+- `STRATA-CI` run `#48` (commit `9a699ce`) completed with success in all jobs:
+  - https://github.com/jpereiratrindade/SisterSTRATA/actions/runs/22400154856
 
 ## 2. Exit Criteria Assessment
 
@@ -60,6 +64,7 @@ Evidence:
 Relevant files:
 - `.github/workflows/strata-ci.yml`
 - `scripts/check_determinism_stability_window.py`
+- Canonical CI run: `STRATA-CI #48` (all gates green)
 
 ### Criterion 4. Owner + review cadence declared
 Status: **Achieved**
@@ -94,6 +99,11 @@ Observed result:
 - Core scientific gates: pass
 - Governance/static guards: pass
 
+CI validation snapshot (UTC): `2026-02-25T14:06:35Z`
+- Run: `STRATA-CI #48`
+- Status: `success`
+- Scope: `f1-hardening`, `f2-determinism-replay (ubuntu-22.04/24.04)`, `f2-determinism-compare`, `f2-determinism-stability-window`
+
 ## 5. Post-F2 Follow-ups
 
 1. Optional stress expansion:
@@ -104,3 +114,17 @@ Observed result:
 Recommended current declaration:
 - **F2 = "Measurably Hardened (Formally Closed)"**
 - Continue post-F2 follow-ups as incremental hardening workstreams.
+
+## 7. PR/Release Summary Template
+
+Use this text as a PR/release summary:
+
+```
+F2 hardening checkpoint finalized as exit-candidate with canonical CI evidence.
+
+- All invariant classes in docs/INVARIANT_MATRIX.md are mapped to ADR + test/evidence + merge-blocking gate + owner.
+- Determinism stability window is enforced in merge-blocking mode (`enforce`).
+- Canonical closure evidence: STRATA-CI run #48 (commit 9a699ce), all jobs green.
+
+Status declaration: F2 = Measurably Hardened (Formally Closed), pending final human governance sign-off.
+```
