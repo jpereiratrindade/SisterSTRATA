@@ -7,6 +7,7 @@ Indice rapido para os documentos cientificos do SisterSTRATA.
 - [Funcionalidades Científicas](SCIENTIFIC_FUNCTIONALITIES.md)
 - [Revisao da avaliacao STRATA v1.10.0 (com verificacao de commits)](reviews/2026-02-24_review_of_review_STRATA_v1.10.0.md)
 - [Release Notes v1.10.5](releases/v1.10.5.md)
+- [F2 Hardening Checkpoint (2026-02-25)](F2_HARDENING_CHECKPOINT_2026-02-25.md)
 - [Release Notes v1.10.4](releases/v1.10.4.md)
 - [Release Notes v1.10.3](releases/v1.10.3.md)
 - [Release Notes v1.10.2](releases/v1.10.2.md)
