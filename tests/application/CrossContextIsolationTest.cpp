@@ -443,3 +443,96 @@ TEST(CrossContextIsolationTest, InvalidObservationalIngestionThenInfrastructureR
 
     fs::remove_all(tempRoot);
 }
+
+TEST(CrossContextIsolationTest, InvalidBundleDirectoryIngestionThenInfrastructureRunPreservesCrossContextState) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path inputsRoot = projectRoot / "inputs";
+    const fs::path invalidBundle = inputsRoot / "attack_bundle";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+    session.getWorkspace().createWorld("Membrane Attack Bundle World", 13, 8);
+
+    json manifestPayload;
+    manifestPayload["artifactId"] = "BUNDLE-ATTACK-001";
+    writeJson(invalidBundle / "Manifest.json", manifestPayload);
+
+    json narrativePayload;
+    narrativePayload["history"] = json::array();
+    narrativePayload["history"].push_back({
+        {"id", "OBS-ATTACK-BUNDLE-001"},
+        {"intent", {{"type", "describe"}}},
+        {"source", {{"sourceId", "SRC-ATTACK-BUNDLE-001"}, {"sourceType", "DOCUMENT"}}},
+        {"temporalContext", {{"category", "CONTEMPORARY"}, {"label", "2026-Q1"}}},
+        {"axes", json::array({
+            {{"label", "Soil"}, {"description", "bundle payload should be rejected"}}
+        })}
+    });
+    writeJson(invalidBundle / "NarrativeObservation.json", narrativePayload);
+
+    json invalidDiscursivePayload;
+    invalidDiscursivePayload["decisionDirective"] = "mutate_core_state";
+    invalidDiscursivePayload["systems"] = json::array();
+    invalidDiscursivePayload["systems"].push_back({
+        {"id", "DS-ATTACK-BUNDLE-001"},
+        {"label", "Invalid bundle directive"},
+        {"declaredProblems", json::array({"cross_context_mutation_attempt"})}
+    });
+    writeJson(invalidBundle / "DiscursiveSystem.json", invalidDiscursivePayload);
+
+    const auto* worldBefore = session.getWorkspace().getWorld().get();
+    ASSERT_NE(worldBefore, nullptr);
+
+    const std::string worldNameBefore = worldBefore->getName();
+    const auto worldWidthBefore = worldBefore->getResolution().width;
+    const auto worldHeightBefore = worldBefore->getResolution().height;
+    const auto datasetsBefore = session.getWorkspace().getDatasets().size();
+    const auto trajectorySlicesBefore = session.getTrajectory().getTimeSlices().size();
+    const auto narrativeBefore = session.getNarrativeHistoryDTO();
+    const auto discursiveBefore = session.getDiscursiveSystemDTOs();
+    const auto recommendationBefore = session.getRecommendationTrajectoryDTO();
+    const auto contextGraphBefore = session.getNarrativeContextGraph().dump();
+
+    EXPECT_THROW(session.ingestFromIWDirectory(inputsRoot.string()), std::logic_error);
+
+    const auto* worldAfterRejectedIngestion = session.getWorkspace().getWorld().get();
+    ASSERT_NE(worldAfterRejectedIngestion, nullptr);
+    EXPECT_EQ(worldAfterRejectedIngestion->getName(), worldNameBefore);
+    EXPECT_EQ(worldAfterRejectedIngestion->getResolution().width, worldWidthBefore);
+    EXPECT_EQ(worldAfterRejectedIngestion->getResolution().height, worldHeightBefore);
+    EXPECT_EQ(session.getWorkspace().getDatasets().size(), datasetsBefore);
+    EXPECT_EQ(session.getTrajectory().getTimeSlices().size(), trajectorySlicesBefore);
+    EXPECT_EQ(session.getNarrativeHistoryDTO().size(), narrativeBefore.size());
+    EXPECT_EQ(session.getDiscursiveSystemDTOs().size(), discursiveBefore.size());
+    expectRecommendationTrajectoryEqual(recommendationBefore, session.getRecommendationTrajectoryDTO());
+    EXPECT_EQ(session.getNarrativeContextGraph().dump(), contextGraphBefore);
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 32;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "invalid_bundle_directory_ingestion_then_infra_isolation_guard";
+
+    const std::string reportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(reportPath.empty());
+
+    const auto* worldAfterRun = session.getWorkspace().getWorld().get();
+    ASSERT_NE(worldAfterRun, nullptr);
+    const auto narrativeAfterRun = session.getNarrativeHistoryDTO();
+    const auto discursiveAfterRun = session.getDiscursiveSystemDTOs();
+    const auto recommendationAfterRun = session.getRecommendationTrajectoryDTO();
+    const auto contextGraphAfterRun = session.getNarrativeContextGraph().dump();
+
+    EXPECT_EQ(worldAfterRun->getName(), worldNameBefore);
+    EXPECT_EQ(worldAfterRun->getResolution().width, worldWidthBefore);
+    EXPECT_EQ(worldAfterRun->getResolution().height, worldHeightBefore);
+    EXPECT_EQ(session.getWorkspace().getDatasets().size(), datasetsBefore);
+    EXPECT_EQ(session.getTrajectory().getTimeSlices().size(), trajectorySlicesBefore);
+
+    ASSERT_EQ(narrativeAfterRun.size(), narrativeBefore.size());
+    ASSERT_EQ(discursiveAfterRun.size(), discursiveBefore.size());
+    expectRecommendationTrajectoryEqual(recommendationBefore, recommendationAfterRun);
+    EXPECT_EQ(contextGraphAfterRun, contextGraphBefore);
+
+    fs::remove_all(tempRoot);
+}
