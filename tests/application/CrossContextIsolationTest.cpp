@@ -858,3 +858,130 @@ TEST(CrossContextIsolationTest, ProjectPersistenceRoundTripDoesNotChangeInfrastr
 
     fs::remove_all(tempRoot);
 }
+
+TEST(CrossContextIsolationTest, MixedDatasetWorldLoadingWithSidecarsDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path datasetsRoot = projectRoot / "datasets";
+    const fs::path csvPath = datasetsRoot / "mixed_points.csv";
+    const fs::path objPath = datasetsRoot / "mixed_points.obj";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+    session.getWorkspace().createWorld("Mixed Dataset Sidecar Guard World", 24, 14);
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 48;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "baseline_without_world_loading";
+    config.determinism.seed = 20260301;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    const std::string baselineReportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    Application::DTO::NarrativeStateDTO narrative{};
+    narrative.id = "NARR-MIXED-001";
+    narrative.source = {
+        .sourceType = "field_report",
+        .sourceId = "SRC-MIXED-001",
+        .productionDate = "2026-03-01T10:00:00Z",
+        .author = std::string("observer")
+    };
+    narrative.temporalContext = {
+        .category = "weekly",
+        .label = "week-10"
+    };
+    narrative.intent = {.intentType = "describe_observation"};
+    narrative.axes.push_back({
+        .label = "hydrology",
+        .description = "mixed dataset sidecar narrative",
+        .abstractionLevel = "meso"
+    });
+    session.registerNarrativeStateDTO(narrative);
+
+    Application::DTO::DiscursiveSystemDTO discursive{};
+    discursive.id = "DISC-MIXED-001";
+    discursive.declaredProblems = {"sensor uncertainty"};
+    discursive.declaredActions = {"maintain mixed dataset context"};
+    discursive.allegedMechanisms = {"sampling heterogeneity"};
+    discursive.expectedEffects = {"stable cross-context interpretation"};
+    discursive.temporalContext = {
+        .category = "monthly",
+        .label = "march"
+    };
+    session.registerDiscursiveSystemDTO(discursive);
+
+    Application::DTO::RecommendationSnapshotDTO recommendation{};
+    recommendation.id = "REC-MIXED-001";
+    recommendation.recommendationText = "Preserve mixed dataset ingestion path";
+    recommendation.contextConditions = {"mixed_dataset"};
+    recommendation.intendedAction = "preserve_pipeline";
+    recommendation.expectedOutcome = "no causal leakage";
+    recommendation.sourceReference = {
+        .sourceType = "recommendation_engine",
+        .sourceId = "SRC-REC-MIXED-001",
+        .productionDate = "2026-03-01T10:05:00Z",
+        .author = std::string("system")
+    };
+    recommendation.temporalContext = {
+        .category = "immediate",
+        .label = "current-cycle"
+    };
+    session.addRecommendationSnapshotDTO(recommendation);
+
+    fs::create_directories(datasetsRoot);
+
+    {
+        std::ofstream csvOut(csvPath);
+        ASSERT_TRUE(csvOut.is_open());
+        csvOut << "0,0,0\n";
+        csvOut << "1,0,0\n";
+        csvOut << "0,1,0\n";
+    }
+
+    {
+        std::ofstream objOut(objPath);
+        ASSERT_TRUE(objOut.is_open());
+        objOut << "v 0 0 0\n";
+        objOut << "v 1 0 0\n";
+        objOut << "v 0 1 0\n";
+        objOut << "p 1 2 3\n";
+    }
+
+    EXPECT_NO_THROW(session.saveNarrativeToFile(csvPath.string() + ".json"));
+    EXPECT_NO_THROW(session.saveDiscursiveSystemsToFile(csvPath.string() + ".discursive.json"));
+    EXPECT_NO_THROW(session.saveRecommendationTrajectoryToFile(csvPath.string() + ".recommendation.json"));
+
+    EXPECT_NO_THROW(session.saveNarrativeToFile(objPath.string() + ".json"));
+    EXPECT_NO_THROW(session.saveDiscursiveSystemsToFile(objPath.string() + ".discursive.json"));
+    EXPECT_NO_THROW(session.saveRecommendationTrajectoryToFile(objPath.string() + ".recommendation.json"));
+
+    EXPECT_NO_THROW(session.loadWorld(csvPath.string()));
+    EXPECT_NO_THROW(session.loadWorld(objPath.string()));
+
+    ASSERT_FALSE(session.getNarrativeHistoryDTO().empty());
+    ASSERT_FALSE(session.getDiscursiveSystemDTOs().empty());
+    ASSERT_FALSE(session.getRecommendationTrajectoryDTO().snapshots.empty());
+
+    config.trigger = "after_mixed_world_loading";
+    const std::string afterWorldLoadReportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterWorldLoadReportPath.empty());
+    const json afterWorldLoadReport = readJson(afterWorldLoadReportPath);
+    ASSERT_TRUE(afterWorldLoadReport.contains("stateHash"));
+    ASSERT_TRUE(afterWorldLoadReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterWorldLoadReport.contains("finalState"));
+
+    EXPECT_EQ(afterWorldLoadReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(
+        afterWorldLoadReport["deterministicStatePayload"],
+        baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterWorldLoadReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
