@@ -25,6 +25,14 @@ void writeJson(const fs::path& path, const json& payload) {
     out << payload.dump(2);
 }
 
+json readJson(const fs::path& path) {
+    std::ifstream in(path);
+    if (!in.is_open()) {
+        throw std::runtime_error("failed to open JSON file: " + path.string());
+    }
+    return json::parse(in);
+}
+
 void expectSourceReferenceEqual(
     const Application::DTO::SourceReferenceDTO& lhs,
     const Application::DTO::SourceReferenceDTO& rhs) {
@@ -533,6 +541,81 @@ TEST(CrossContextIsolationTest, InvalidBundleDirectoryIngestionThenInfrastructur
     ASSERT_EQ(discursiveAfterRun.size(), discursiveBefore.size());
     expectRecommendationTrajectoryEqual(recommendationBefore, recommendationAfterRun);
     EXPECT_EQ(contextGraphAfterRun, contextGraphBefore);
+
+    fs::remove_all(tempRoot);
+}
+
+TEST(CrossContextIsolationTest, ObservationalIngestionDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path inputsRoot = projectRoot / "inputs";
+    const fs::path narrativesPath = inputsRoot / "narratives" / "NarrativeObservation.valid.json";
+    const fs::path discursivePath = inputsRoot / "discursive" / "DiscursiveSystem.valid.json";
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+    session.getWorkspace().createWorld("Observational Coupling Guard World", 14, 9);
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 40;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::SevereDrought;
+    config.trigger = "baseline_without_observational_ingestion";
+    config.determinism.seed = 20260225;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    const std::string baselineReportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    json narrativePayload;
+    narrativePayload["history"] = json::array();
+    narrativePayload["history"].push_back({
+        {"id", "OBS-COUPLING-001"},
+        {"intent", {{"type", "describe"}}},
+        {"source", {{"sourceId", "SRC-COUPLING-001"}, {"sourceType", "DOCUMENT"}}},
+        {"temporalContext", {{"category", "CONTEMPORARY"}, {"label", "2026-Q1"}}},
+        {"axes", json::array({
+            {{"label", "Hydrology"}, {"description", "observational update should remain read-only"}}
+        })}
+    });
+    writeJson(narrativesPath, narrativePayload);
+
+    json discursivePayload;
+    discursivePayload["systems"] = json::array();
+    discursivePayload["systems"].push_back({
+        {"id", "DS-COUPLING-001"},
+        {"label", "Cross-context observational update"},
+        {"declaredProblems", json::array({"seasonal water stress"})},
+        {"declaredActions", json::array({"increase field observation"})},
+        {"allegedMechanisms", json::array({"dry cycle persistence"})},
+        {"expectedEffects", json::array({"monitoring adaptation"})}
+    });
+    writeJson(discursivePath, discursivePayload);
+
+    EXPECT_NO_THROW(session.ingestFromIW(narrativesPath.string()));
+    EXPECT_NO_THROW(session.ingestFromIW(discursivePath.string()));
+    ASSERT_FALSE(session.getNarrativeHistoryDTO().empty());
+    ASSERT_FALSE(session.getDiscursiveSystemDTOs().empty());
+
+    config.trigger = "after_observational_ingestion";
+    const std::string afterIngestionReportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterIngestionReportPath.empty());
+
+    const json afterIngestionReport = readJson(afterIngestionReportPath);
+    ASSERT_TRUE(afterIngestionReport.contains("stateHash"));
+    ASSERT_TRUE(afterIngestionReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterIngestionReport.contains("finalState"));
+
+    EXPECT_EQ(afterIngestionReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(
+        afterIngestionReport["deterministicStatePayload"],
+        baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterIngestionReport["finalState"], baselineReport["finalState"]);
 
     fs::remove_all(tempRoot);
 }
