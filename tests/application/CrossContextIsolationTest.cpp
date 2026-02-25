@@ -752,3 +752,109 @@ TEST(CrossContextIsolationTest, TrajectoryImpactProfileGenerationDoesNotChangeIn
 
     fs::remove_all(tempRoot);
 }
+
+TEST(CrossContextIsolationTest, ProjectPersistenceRoundTripDoesNotChangeInfrastructureDeterministicOutcome) {
+    const fs::path tempRoot = uniqueTempRoot();
+    const fs::path projectRoot = tempRoot / "project";
+    const fs::path sidecarBasePath = projectRoot / "inputs" / "synthetic_world";
+    const std::string sidecarBase = sidecarBasePath.string();
+
+    Application::Session session;
+    session.setProjectRoot(projectRoot.string());
+    session.getWorkspace().createWorld("Persistence Coupling Guard World", 20, 10);
+
+    Application::InfrastructureEvaluationConfig config;
+    config.days = 42;
+    config.ecologicalScenario = Application::InfrastructureEcologicalScenario::Normal;
+    config.trigger = "baseline_without_persistence_roundtrip";
+    config.determinism.seed = 20260228;
+    config.determinism.tier = Application::DTO::DeterminismTier::T1_SeededDeterministic;
+    config.determinism.entropySources = {"seeded_simulation"};
+
+    const std::string baselineReportPath = session.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(baselineReportPath.empty());
+    const json baselineReport = readJson(baselineReportPath);
+    ASSERT_TRUE(baselineReport.contains("stateHash"));
+    ASSERT_TRUE(baselineReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(baselineReport.contains("finalState"));
+
+    Application::DTO::NarrativeStateDTO narrative{};
+    narrative.id = "NARR-PERSIST-001";
+    narrative.source = {
+        .sourceType = "field_report",
+        .sourceId = "SRC-PERSIST-001",
+        .productionDate = "2026-02-28T10:00:00Z",
+        .author = std::string("observer")
+    };
+    narrative.temporalContext = {
+        .category = "weekly",
+        .label = "week-09"
+    };
+    narrative.intent = {.intentType = "describe_observation"};
+    narrative.axes.push_back({
+        .label = "soil_moisture",
+        .description = "persistence guard narrative",
+        .abstractionLevel = "meso"
+    });
+    session.registerNarrativeStateDTO(narrative);
+
+    Application::DTO::DiscursiveSystemDTO discursive{};
+    discursive.id = "DISC-PERSIST-001";
+    discursive.declaredProblems = {"water stress"};
+    discursive.declaredActions = {"maintain observation protocol"};
+    discursive.allegedMechanisms = {"seasonal variability"};
+    discursive.expectedEffects = {"stable detection quality"};
+    discursive.temporalContext = {
+        .category = "monthly",
+        .label = "february"
+    };
+    session.registerDiscursiveSystemDTO(discursive);
+
+    Application::DTO::RecommendationSnapshotDTO recommendation{};
+    recommendation.id = "REC-PERSIST-001";
+    recommendation.recommendationText = "Maintain current infrastructure cadence";
+    recommendation.contextConditions = {"normal"};
+    recommendation.intendedAction = "keep_policy";
+    recommendation.expectedOutcome = "stable operation";
+    recommendation.sourceReference = {
+        .sourceType = "recommendation_engine",
+        .sourceId = "SRC-REC-PERSIST-001",
+        .productionDate = "2026-02-28T10:05:00Z",
+        .author = std::string("system")
+    };
+    recommendation.temporalContext = {
+        .category = "immediate",
+        .label = "current-cycle"
+    };
+    session.addRecommendationSnapshotDTO(recommendation);
+
+    fs::create_directories(sidecarBasePath.parent_path());
+    EXPECT_NO_THROW(session.saveNarrativeToFile(sidecarBase + ".json"));
+    EXPECT_NO_THROW(session.saveDiscursiveSystemsToFile(sidecarBase + ".discursive.json"));
+    EXPECT_NO_THROW(session.saveRecommendationTrajectoryToFile(sidecarBase + ".recommendation.json"));
+    EXPECT_NO_THROW(session.loadSidecarData(sidecarBase));
+
+    Application::Session reloaded;
+    reloaded.setProjectRoot(projectRoot.string());
+    reloaded.getWorkspace().createWorld("Persistence Coupling Guard World Reloaded", 20, 10);
+    EXPECT_NO_THROW(reloaded.loadSidecarData(sidecarBase));
+    ASSERT_FALSE(reloaded.getNarrativeHistoryDTO().empty());
+    ASSERT_FALSE(reloaded.getDiscursiveSystemDTOs().empty());
+    ASSERT_FALSE(reloaded.getRecommendationTrajectoryDTO().snapshots.empty());
+
+    config.trigger = "after_persistence_roundtrip";
+    const std::string afterPersistencePath = reloaded.runInfrastructureResilienceSimulation(config);
+    ASSERT_FALSE(afterPersistencePath.empty());
+    const json afterPersistenceReport = readJson(afterPersistencePath);
+    ASSERT_TRUE(afterPersistenceReport.contains("stateHash"));
+    ASSERT_TRUE(afterPersistenceReport.contains("deterministicStatePayload"));
+    ASSERT_TRUE(afterPersistenceReport.contains("finalState"));
+
+    EXPECT_EQ(afterPersistenceReport["stateHash"], baselineReport["stateHash"]);
+    EXPECT_EQ(
+        afterPersistenceReport["deterministicStatePayload"],
+        baselineReport["deterministicStatePayload"]);
+    EXPECT_EQ(afterPersistenceReport["finalState"], baselineReport["finalState"]);
+
+    fs::remove_all(tempRoot);
+}
