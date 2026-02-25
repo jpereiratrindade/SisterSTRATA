@@ -40,7 +40,7 @@ run_guard \
 run_guard \
     "infrastructure must not include outer-layer modules" \
     "src/core/domain/infrastructure" \
-    '#include ".*(application|ui|world3d|infrastructure|observational)/'
+    '#include ".*(src/)?(application|ui|world3d|observational)/'
 
 # Fourth Dimension domain must not depend directly on infrastructure domain.
 run_guard \
