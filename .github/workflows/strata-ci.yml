@@ -6,7 +6,11 @@ on:
 
 jobs:
   f1-hardening:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      TZ: UTC
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
 
     steps:
       - name: Checkout
@@ -17,6 +21,8 @@ jobs:
           sudo apt-get update -y
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
             build-essential \
+            gcc-12 \
+            g++-12 \
             libglm-dev \
             ripgrep \
             libssl-dev
@@ -26,7 +32,12 @@ jobs:
           bash scripts/validate_governance.sh ${GITHUB_WORKSPACE}
 
       - name: Configure
-        run: cmake --preset headless
+        run: |
+          cmake --preset headless \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DCMAKE_C_FLAGS_RELEASE="-O2 -g -fno-fast-math" \
+            -DCMAKE_CXX_FLAGS_RELEASE="-O2 -g -fno-fast-math -ffp-contract=off"
 
       - name: Build
         run: cmake --build --preset headless
@@ -41,18 +52,22 @@ jobs:
 
       - name: Run ADR Gates - Static Contract Guards
         run: |
-          ctest --test-dir build/headless --output-on-failure -R "MembraneDependencyGuard|CoreDomainBoundaryGuard|ExceptionBoundaryGuard"
+          ctest --test-dir build/headless --output-on-failure -R "MembraneDependencyGuard|CoreDomainBoundaryGuard|ExceptionBoundaryGuard|GitArtifactHygieneGuard"
 
       - name: Run Full Headless Test Suite
         run: |
           ctest --test-dir build/headless --output-on-failure
 
   f2-determinism-replay:
+    env:
+      TZ: UTC
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-latest]
+        os: [ubuntu-22.04, ubuntu-24.04]
 
     steps:
       - name: Checkout
@@ -63,12 +78,19 @@ jobs:
           sudo apt-get update -y
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
             build-essential \
+            gcc-12 \
+            g++-12 \
             libglm-dev \
             ripgrep \
             libssl-dev
 
       - name: Configure
-        run: cmake --preset headless
+        run: |
+          cmake --preset headless \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DCMAKE_C_FLAGS_RELEASE="-O2 -g -fno-fast-math" \
+            -DCMAKE_CXX_FLAGS_RELEASE="-O2 -g -fno-fast-math -ffp-contract=off"
 
       - name: Build Determinism Probe Test Binary
         run: cmake --build --preset headless --target application_mapper_tests

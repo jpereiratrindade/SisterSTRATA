@@ -28,3 +28,8 @@ add_test(
   NAME ExceptionBoundaryGuard
   COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/check_exception_boundaries.sh ${CMAKE_SOURCE_DIR}
 )
+
+add_test(
+  NAME GitArtifactHygieneGuard
+  COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/check_git_artifact_hygiene.sh ${CMAKE_SOURCE_DIR}
+)
